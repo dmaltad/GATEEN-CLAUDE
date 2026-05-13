@@ -1,0 +1,56 @@
+{% load static %}
+<footer class="footer-gateen mt-5">
+  <div class="container py-5">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <img src="{% static 'base/img/logo.svg' %}" alt="Gateen" height="48">
+          <span class="fw-800 fs-3 text-white">Gateen</span>
+        </div>
+        <p class="text-white-50">Cuidando do seu pet com amor e dedicação. Produtos, planos e serviços pensados para o bem-estar dos seus animais.</p>
+        <div class="d-flex gap-3 mt-3">
+          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-facebook"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h6 class="fw-700 text-white mb-3">Navegação</h6>
+        <ul class="list-unstyled footer-links">
+          <li><a href="{% url 'home' %}">Início</a></li>
+          <li><a href="{% url 'catalog:product_list' %}">Produtos</a></li>
+          <li><a href="{% url 'plans:plan_list' %}">Planos</a></li>
+          <li><a href="{% url 'events:event_list' %}">Eventos</a></li>
+          <li><a href="{% url 'events:promotion_list' %}">Promoções</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h6 class="fw-700 text-white mb-3">Minha Conta</h6>
+        <ul class="list-unstyled footer-links">
+          <li><a href="{% url 'account_login' %}">Entrar</a></li>
+          <li><a href="{% url 'account_signup' %}">Cadastrar</a></li>
+          <li><a href="{% url 'orders:order_list' %}">Meus Pedidos</a></li>
+          <li><a href="{% url 'accounts:profile' %}">Meu Perfil</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-4 col-md-4">
+        <h6 class="fw-700 text-white mb-3">Contato</h6>
+        <ul class="list-unstyled text-white-50">
+          <li class="mb-2"><i class="fa fa-map-marker-alt me-2 text-primary"></i>Rua dos Pets, 123 — Centro</li>
+          <li class="mb-2"><i class="fa fa-phone me-2 text-primary"></i>(86) 99999-9999</li>
+          <li class="mb-2"><i class="fa fa-envelope me-2 text-primary"></i>contato@gateen.com.br</li>
+          <li class="mb-2"><i class="fa fa-clock me-2 text-primary"></i>Seg–Sáb: 8h–18h</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="border-secondary mt-4">
+    <div class="row align-items-center">
+      <div class="col-md-6 text-white-50 small">
+        &copy; {% now "Y" %} Gateen Petshop. Todos os direitos reservados.
+      </div>
+      <div class="col-md-6 text-end text-white-50 small">
+        Desenvolvido com <i class="fa fa-heart text-danger"></i> para seu pet
+      </div>
+    </div>
+  </div>
+</footer>

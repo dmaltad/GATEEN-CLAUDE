@@ -1,0 +1,70 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-5">
+    <div class="col-lg-8">
+      {% if event.image %}
+      <img src="{{ event.image.url }}" alt="{{ event.title }}" class="img-fluid rounded-4 mb-4 w-100" style="max-height:400px;object-fit:cover;">
+      {% endif %}
+      <span class="badge event-type-badge mb-3">{{ event.get_event_type_display }}</span>
+      <h1 class="fw-800 mb-3">{{ event.title }}</h1>
+      <p class="lead text-muted mb-4">{{ event.short_description }}</p>
+      <div class="event-description">{{ event.description|linebreaks }}</div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm sticky-top" style="top:80px;">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-4">Informações do evento</h5>
+          <ul class="list-unstyled">
+            <li class="mb-3 d-flex align-items-start gap-3">
+              <i class="fa fa-calendar text-primary mt-1"></i>
+              <div>
+                <div class="fw-600">Data</div>
+                <div class="text-muted small">{{ event.start_date|date:"d \d\e F \d\e Y, H:i" }}</div>
+                {% if event.end_date %}
+                <div class="text-muted small">até {{ event.end_date|date:"d/m/Y H:i" }}</div>
+                {% endif %}
+              </div>
+            </li>
+            {% if event.location %}
+            <li class="mb-3 d-flex align-items-start gap-3">
+              <i class="fa fa-map-marker-alt text-primary mt-1"></i>
+              <div>
+                <div class="fw-600">Local</div>
+                <div class="text-muted small">{{ event.location }}</div>
+              </div>
+            </li>
+            {% endif %}
+            {% if event.is_online and event.online_link %}
+            <li class="mb-3 d-flex align-items-start gap-3">
+              <i class="fa fa-link text-primary mt-1"></i>
+              <div>
+                <div class="fw-600">Link do evento</div>
+                <a href="{{ event.online_link }}" class="text-primary small" target="_blank">Acessar online</a>
+              </div>
+            </li>
+            {% endif %}
+          </ul>
+          {% if event.is_upcoming %}
+          <div class="alert alert-primary rounded-3 text-center">
+            <i class="fa fa-calendar-check me-2"></i>Evento em breve!
+          </div>
+          {% elif event.is_ongoing %}
+          <div class="alert alert-success rounded-3 text-center">
+            <i class="fa fa-circle me-2"></i>Acontecendo agora!
+          </div>
+          {% endif %}
+          <a href="{% url 'events:event_list' %}" class="btn btn-outline-secondary w-100 rounded-pill mt-2">
+            <i class="fa fa-arrow-left me-1"></i>Todos os eventos
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

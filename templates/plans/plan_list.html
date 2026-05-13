@@ -1,0 +1,157 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Planos de Serviço — Gateen{% endblock %}
+
+{% block content %}
+
+<!-- HERO PLANOS -->
+<section class="plans-hero py-5" style="background: linear-gradient(135deg, #1a1a2e 0%, #2c3e50 100%);">
+  <div class="container text-center py-3">
+    <span class="section-badge mb-3 d-inline-block">Planos Gateen</span>
+    <h1 class="fw-800 text-white display-5 mb-3">Cuide do seu pet todo mês<br>sem se preocupar</h1>
+    <p class="text-white-50 fs-5 mb-0">Ração, banho, tosa e plano de saúde num único plano. Cancele quando quiser.</p>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+      {% for plan in plans %}
+      <div class="col-lg-4 col-md-6">
+        <div class="plan-card card border-0 shadow h-100 {% if plan.is_featured %}plan-featured{% endif %}">
+          {% if plan.is_featured %}
+          <div class="plan-popular-badge">
+            <i class="fa fa-star me-1"></i>Mais popular
+          </div>
+          {% endif %}
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="plan-icon mb-3" style="background-color: {{ plan.color }}20;">
+              <i class="fa fa-paw fa-2x" style="color: {{ plan.color }};"></i>
+            </div>
+            <h3 class="fw-800 mb-1">{{ plan.name }}</h3>
+            <p class="text-muted small mb-4">{{ plan.description }}</p>
+
+            <div class="plan-price mb-4">
+              <span class="text-muted">R$</span>
+              <span class="display-4 fw-800" style="color: {{ plan.color }};">{{ plan.price }}</span>
+              <span class="text-muted">/{{ plan.get_period_display|lower }}</span>
+            </div>
+
+            <!-- Lista flexível que empurra o botão para baixo -->
+            <ul class="list-unstyled mb-4 flex-grow-1">
+              {% if plan.food_bags_per_month %}
+              <li class="mb-3 d-flex align-items-start gap-2">
+                <!-- Adicionado flex-shrink-0 para o ícone não espremer -->
+                <i class="fa fa-check-circle text-success mt-1 flex-shrink-0"></i>
+                <span><strong>{{ plan.food_bags_per_month }}</strong> saco(s) de ração por mês</span>
+              </li>
+              {% endif %}
+              {% if plan.grooming_sessions_per_month %}
+              <li class="mb-3 d-flex align-items-start gap-2">
+                <i class="fa fa-check-circle text-success mt-1 flex-shrink-0"></i>
+                <span><strong>{{ plan.grooming_sessions_per_month }}</strong> banho(s) e tosa por mês</span>
+              </li>
+              {% endif %}
+              {% if plan.includes_health_plan %}
+              <li class="mb-3 d-flex align-items-start gap-2">
+                <i class="fa fa-check-circle text-success mt-1 flex-shrink-0"></i>
+                <span>Plano de saúde incluído</span>
+              </li>
+              {% endif %}
+              {% for feature in plan.features.all %}
+              <li class="mb-3 d-flex align-items-start gap-2">
+                <i class="fa fa-{% if feature.is_included %}check-circle text-success{% else %}times-circle text-muted{% endif %} mt-1 flex-shrink-0"></i>
+                <span class="{% if not feature.is_included %}text-muted{% endif %}">{{ feature.description }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+
+            <!-- Div com mt-auto que fica sempre colada na base -->
+            <div class="mt-auto">
+              {% if user.is_authenticated %}
+              <a href="{% url 'plans:subscribe' plan.slug %}" class="btn btn-lg w-100 rounded-pill fw-700"
+                style="background-color: {{ plan.color }}; color: white; border: none;">
+                Assinar {{ plan.name }}
+              </a>
+              {% else %}
+              <a href="{% url 'account_login' %}?next={% url 'plans:subscribe' plan.slug %}"
+                class="btn btn-lg w-100 rounded-pill fw-700"
+                style="background-color: {{ plan.color }}; color: white; border: none;">
+                Entrar para assinar
+              </a>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- FAQ MINI -->
+    <div class="row justify-content-center mt-5">
+      <div class="col-lg-8">
+        <h4 class="fw-800 text-center mb-4">Perguntas frequentes</h4>
+        <div class="accordion" id="faqAccordion">
+
+          <div class="accordion-item border-0 shadow-sm mb-3 rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                Posso cancelar a qualquer momento?
+              </button>
+            </h2>
+            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted">
+                Sim! Você pode cancelar o plano a qualquer momento, sem multa, diretamente pelo seu perfil ou entrando em contato conosco.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item border-0 shadow-sm mb-3 rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                Como funciona o agendamento do banho e tosa?
+              </button>
+            </h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted">
+                Após assinar o plano, você pode agendar os banhos e tosas diretamente pelo site ou pelo WhatsApp. Os horários disponíveis são exibidos em tempo real.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item border-0 shadow-sm mb-3 rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                A ração é entregue em casa?
+              </button>
+            </h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted">
+                Sim! A ração incluída no plano pode ser retirada na loja ou entregue em casa (taxa de frete aplicável conforme a região).
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item border-0 shadow-sm rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                O plano vale para mais de um pet?
+              </button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted">
+                Cada plano é válido para um pet cadastrado. Para múltiplos pets, você pode assinar planos separados com condições especiais — fale com a gente!
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

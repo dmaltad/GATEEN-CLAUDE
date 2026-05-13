@@ -1,0 +1,196 @@
+{% extends 'layouts/base.html' %}
+{% load static humanize %}
+
+{% block title %}Dashboard — Gateen{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-800 mb-0">Dashboard</h3>
+      <p class="text-muted mb-0">Bem-vindo, {{ request.user.first_name }}!</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'dashboard:stock' %}" class="btn btn-outline-primary btn-sm rounded-pill">
+        <i class="fa fa-boxes me-1"></i>Estoque
+      </a>
+      <a href="{% url 'dashboard:cash_register' %}" class="btn btn-outline-success btn-sm rounded-pill">
+        <i class="fa fa-cash-register me-1"></i>Caixa
+      </a>
+      <a href="{% url 'dashboard:orders' %}" class="btn btn-primary btn-sm rounded-pill">
+        <i class="fa fa-list me-1"></i>Pedidos
+      </a>
+    </div>
+  </div>
+
+  <!-- MÉTRICAS -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="dashboard-card card border-0 shadow-sm bg-primary text-white">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="mb-1 opacity-75 small">Pedidos hoje</p>
+              <h2 class="fw-800 mb-0">{{ total_orders_today }}</h2>
+            </div>
+            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
+              <i class="fa fa-shopping-bag fa-xl text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="dashboard-card card border-0 shadow-sm bg-success text-white">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="mb-1 opacity-75 small">Receita hoje</p>
+              <h2 class="fw-800 mb-0">R$ {{ revenue_today|floatformat:2 }}</h2>
+            </div>
+            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
+              <i class="fa fa-dollar-sign fa-xl text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="dashboard-card card border-0 shadow-sm bg-warning text-white">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="mb-1 opacity-75 small">Receita do mês</p>
+              <h2 class="fw-800 mb-0">R$ {{ revenue_month|floatformat:2 }}</h2>
+            </div>
+            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
+              <i class="fa fa-chart-line fa-xl text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="dashboard-card card border-0 shadow-sm bg-info text-white">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="mb-1 opacity-75 small">Novos usuários (7d)</p>
+              <h2 class="fw-800 mb-0">{{ new_users }}</h2>
+            </div>
+            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
+              <i class="fa fa-users fa-xl text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- PEDIDOS RECENTES -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
+          <h5 class="fw-700 mb-0">Pedidos Recentes</h5>
+          <a href="{% url 'dashboard:orders' %}" class="btn btn-sm btn-outline-primary rounded-pill">Ver todos</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Pedido</th>
+                  <th>Cliente</th>
+                  <th>Valor</th>
+                  <th>Tipo</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                  <td class="ps-4 fw-600">#{{ order.order_number }}</td>
+                  <td>{{ order.user.get_full_name }}</td>
+                  <td class="fw-600 text-primary">R$ {{ order.total }}</td>
+                  <td><span class="badge bg-light text-dark">{{ order.get_delivery_type_display }}</span></td>
+                  <td>
+                    <span class="badge status-badge status-{{ order.status }}">
+                      {{ order.get_status_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <form method="post" action="{% url 'dashboard:update_order_status' order.pk %}" class="d-flex gap-1">
+                      {% csrf_token %}
+                      <select name="status" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                        {% for val, lbl in order.STATUS_CHOICES %}
+                        <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ lbl }}</option>
+                        {% endfor %}
+                      </select>
+                    </form>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">Nenhum pedido ainda.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTOQUE BAIXO + CAIXA -->
+    <div class="col-lg-4">
+      <!-- Caixa -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-3"><i class="fa fa-cash-register me-2 text-success"></i>Caixa</h5>
+          {% if open_cash %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-success">Aberto</span>
+            <span class="text-muted small">desde {{ open_cash.opened_at|date:"H:i" }}</span>
+          </div>
+          <p class="mb-1 small text-muted">Saldo inicial: <strong>R$ {{ open_cash.opening_balance }}</strong></p>
+          <a href="{% url 'dashboard:cash_register' %}" class="btn btn-outline-success btn-sm w-100 rounded-pill mt-2">Gerenciar caixa</a>
+          {% else %}
+          <p class="text-muted small mb-3">Nenhum caixa aberto.</p>
+          <a href="{% url 'dashboard:cash_register' %}" class="btn btn-success btn-sm w-100 rounded-pill">Abrir caixa</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Estoque baixo -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4 pb-0">
+          <h5 class="fw-700 mb-0"><i class="fa fa-exclamation-triangle me-2 text-warning"></i>Estoque baixo</h5>
+          <a href="{% url 'dashboard:stock' %}" class="btn btn-sm btn-outline-warning rounded-pill">Ver tudo</a>
+        </div>
+        <div class="card-body p-4">
+          {% for stock in low_stock %}
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="flex-grow-1 me-3">
+              <p class="fw-600 mb-0 small">{{ stock.product.name|truncatechars:25 }}</p>
+              <div class="progress mt-1" style="height: 4px;">
+                {% with pct=stock.quantity|floatformat:0 %}
+                <div class="progress-bar {% if stock.is_out %}bg-danger{% else %}bg-warning{% endif %}"
+                  style="width: {{ pct }}%"></div>
+                {% endwith %}
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge {% if stock.is_out %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                {{ stock.quantity }} un.
+              </span>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-muted small text-center py-2">Estoque em dia! 🎉</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

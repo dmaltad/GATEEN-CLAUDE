@@ -1,0 +1,58 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}Criar Conta — Gateen{% endblock %}
+
+{% block content %}
+<div class="min-vh-75 d-flex align-items-center py-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #fff4f0 100%);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7">
+        <div class="text-center mb-4">
+          <img src="{% static 'base/img/logo.svg' %}" alt="Gateen" height="64" class="mb-3">
+          <h3 class="fw-800">Crie sua conta</h3>
+          <p class="text-muted">Junte-se à família Gateen e cuide melhor do seu pet</p>
+        </div>
+
+        <div class="card border-0 shadow-lg">
+          <div class="card-body p-5">
+            <form method="post" action="{% url 'account_signup' %}">
+              {% csrf_token %}
+              {{ form|crispy }}
+              <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill fw-700 mt-2">
+                <i class="fa fa-user-plus me-2"></i>Criar conta grátis
+              </button>
+            </form>
+            <hr class="my-4">
+            <p class="text-center text-muted mb-0">
+              Já tem conta?
+              <a href="{% url 'account_login' %}" class="text-primary fw-600 text-decoration-none">Entrar</a>
+            </p>
+          </div>
+        </div>
+
+        <!-- BENEFÍCIOS -->
+        <div class="mt-4 d-flex justify-content-center gap-4 text-center">
+          <div class="text-muted small">
+            <i class="fa fa-shield-alt text-primary mb-1 d-block fs-5"></i>
+            Seguro
+          </div>
+          <div class="text-muted small">
+            <i class="fa fa-gift text-primary mb-1 d-block fs-5"></i>
+            Pontos grátis
+          </div>
+          <div class="text-muted small">
+            <i class="fa fa-truck text-primary mb-1 d-block fs-5"></i>
+            Entrega rápida
+          </div>
+          <div class="text-muted small">
+            <i class="fa fa-headset text-primary mb-1 d-block fs-5"></i>
+            Suporte
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

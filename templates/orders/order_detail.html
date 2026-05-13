@@ -1,0 +1,107 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Pedido #{{ order.order_number }} — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-800 mb-0">Pedido #{{ order.order_number }}</h3>
+      <p class="text-muted mb-0">{{ order.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary rounded-pill btn-sm">
+      <i class="fa fa-arrow-left me-1"></i>Meus pedidos
+    </a>
+  </div>
+
+  <!-- STATUS TRACKER -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="order-tracker d-flex justify-content-between">
+        {% for step_val, step_label in steps %}
+        <div class="tracker-step text-center {% if order.status == step_val %}active{% endif %} {% if step_passed %}passed{% endif %}">
+          <div class="tracker-dot mx-auto mb-2"></div>
+          <div class="small fw-600">{{ step_label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0 p-4 pb-0">
+          <h5 class="fw-700">Itens do pedido</h5>
+        </div>
+        <div class="card-body p-0">
+          {% for item in order.items.all %}
+          <div class="d-flex align-items-center p-4 {% if not forloop.last %}border-bottom{% endif %}">
+            {% if item.product.image %}
+            <img src="{{ item.product.image.url }}" class="rounded me-3" style="width:64px;height:64px;object-fit:cover;">
+            {% endif %}
+            <div class="flex-grow-1">
+              <h6 class="fw-600 mb-1">{{ item.product.name }}</h6>
+              <p class="text-muted small mb-0">{{ item.quantity }}x R$ {{ item.unit_price }}</p>
+            </div>
+            <div class="fw-700 text-primary">R$ {{ item.subtotal }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-3">Resumo</h5>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Subtotal</span>
+            <span>R$ {{ order.subtotal }}</span>
+          </div>
+          {% if order.delivery_fee %}
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Frete</span>
+            <span>R$ {{ order.delivery_fee }}</span>
+          </div>
+          {% endif %}
+          {% if order.discount %}
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Desconto</span>
+            <span class="text-success">-R$ {{ order.discount }}</span>
+          </div>
+          {% endif %}
+          <hr>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="fw-700">Total</span>
+            <span class="fw-800 text-primary fs-5">R$ {{ order.total }}</span>
+          </div>
+          <div class="mb-2">
+            <span class="text-muted small">Pagamento:</span>
+            <span class="fw-600 small ms-1">{{ order.get_payment_method_display }}</span>
+          </div>
+          <div>
+            <span class="text-muted small">Entrega:</span>
+            <span class="fw-600 small ms-1">{{ order.get_delivery_type_display }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% if order.address %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h6 class="fw-700 mb-2"><i class="fa fa-map-marker-alt me-2 text-primary"></i>Endereço de entrega</h6>
+          <p class="mb-0 small text-muted">
+            {{ order.address.street }}, {{ order.address.number }}<br>
+            {% if order.address.complement %}{{ order.address.complement }}<br>{% endif %}
+            {{ order.address.neighborhood }} — {{ order.address.city }}/{{ order.address.state }}<br>
+            CEP: {{ order.address.cep }}
+          </p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Promoções — Gateen{% endblock %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-badge">Ofertas</span>
+      <h2 class="fw-800 mt-2">Promoções em andamento</h2>
+      <p class="text-muted">Aproveite as melhores ofertas para o seu pet!</p>
+    </div>
+
+    <div class="row g-4">
+      {% for promo in promotions %}
+      <div class="col-md-6 col-lg-4">
+        <div class="promo-card card border-0 shadow-sm h-100 overflow-hidden">
+          {% if promo.banner %}
+          <img src="{{ promo.banner.url }}" class="card-img-top" style="height:180px;object-fit:cover;">
+          {% else %}
+          <div class="promo-placeholder p-5 text-center text-white"
+            style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+            <div class="display-4 fw-800">
+              {% if promo.discount_type == 'percentage' %}-{{ promo.discount_value|floatformat:0 }}%
+              {% elif promo.discount_type == 'fixed' %}R$ {{ promo.discount_value }} OFF
+              {% else %}FRETE GRÁTIS{% endif %}
+            </div>
+          </div>
+          {% endif %}
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-2">{{ promo.title }}</h5>
+            <p class="text-muted small mb-3">{{ promo.description|truncatechars:100 }}</p>
+            {% if promo.coupon_code %}
+            <div class="coupon-box d-flex align-items-center gap-2 mb-3 p-3 rounded-3">
+              <i class="fa fa-tag text-primary"></i>
+              <span class="fw-700 text-primary">{{ promo.coupon_code }}</span>
+              <button class="btn btn-sm btn-outline-primary ms-auto rounded-pill"
+                onclick="copyCode('{{ promo.coupon_code }}')">
+                <i class="fa fa-copy me-1"></i>Copiar
+              </button>
+            </div>
+            {% endif %}
+            {% if promo.min_purchase %}
+            <p class="text-muted small mb-0">
+              <i class="fa fa-info-circle me-1"></i>Compra mínima: R$ {{ promo.min_purchase }}
+            </p>
+            {% endif %}
+            <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+              <span class="text-muted small"><i class="fa fa-clock me-1"></i>Até {{ promo.end_date|date:"d/m/Y" }}</span>
+              <a href="{% url 'catalog:product_list' %}" class="btn btn-primary btn-sm rounded-pill">
+                Ver produtos
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-5">
+        <i class="fa fa-tag fa-4x text-muted mb-4 opacity-25"></i>
+        <h4 class="text-muted">Nenhuma promoção ativa</h4>
+        <p class="text-muted">Volte em breve para conferir nossas ofertas!</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(function() {
+    showToast('Cupom copiado: ' + code, 'success');
+  });
+}
+</script>
+{% endblock %}

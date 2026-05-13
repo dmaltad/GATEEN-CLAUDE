@@ -1,0 +1,46 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}Entrar — Gateen{% endblock %}
+
+{% block content %}
+<div class="min-vh-75 d-flex align-items-center py-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #fff4f0 100%);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7">
+        <div class="text-center mb-4">
+          <img src="{% static 'base/img/logo.svg' %}" alt="Gateen" height="64" class="mb-3">
+          <h3 class="fw-800">Bem-vindo de volta!</h3>
+          <p class="text-muted">Entre na sua conta Gateen</p>
+        </div>
+
+        <div class="card border-0 shadow-lg">
+          <div class="card-body p-5">
+            <form method="post" action="{% url 'account_login' %}">
+              {% csrf_token %}
+              {{ form|crispy }}
+              <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                  <label class="form-check-label text-muted small" for="remember">Lembrar de mim</label>
+                </div>
+                <a href="{% url 'account_reset_password' %}" class="text-primary small text-decoration-none">
+                  Esqueci minha senha
+                </a>
+              </div>
+              <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill fw-700">
+                <i class="fa fa-sign-in-alt me-2"></i>Entrar
+              </button>
+            </form>
+            <hr class="my-4">
+            <p class="text-center text-muted mb-0">
+              Ainda não tem conta?
+              <a href="{% url 'account_signup' %}" class="text-primary fw-600 text-decoration-none">Cadastre-se grátis</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

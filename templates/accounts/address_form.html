@@ -1,0 +1,30 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}Novo Endereço — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow">
+        <div class="card-body p-5">
+          <h4 class="fw-800 mb-4"><i class="fa fa-map-marker-alt me-2 text-primary"></i>Novo Endereço</h4>
+          <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary rounded-pill px-4 fw-600">
+                <i class="fa fa-save me-2"></i>Salvar endereço
+              </button>
+              <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                Cancelar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

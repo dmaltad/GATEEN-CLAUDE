@@ -1,0 +1,232 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Programa de Fidelidade — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- CABEÇALHO -->
+  <div class="loyalty-header rounded-4 p-5 mb-5 text-white position-relative overflow-hidden">
+    <div class="loyalty-header-bg"></div>
+    <div class="row align-items-center position-relative">
+      <div class="col-lg-7">
+        <span class="badge bg-warning text-dark fw-600 mb-3">Programa Fidelidade</span>
+        <h2 class="fw-800 display-5 mb-2">Olá, {{ request.user.first_name }}! 🐾</h2>
+        <p class="fs-5 opacity-75 mb-0">Continue comprando e acumule mais pontos.</p>
+      </div>
+      <div class="col-lg-5 text-center mt-4 mt-lg-0">
+        <div class="points-display">
+          <div class="points-number">{{ account.points }}</div>
+          <div class="points-label">pontos disponíveis</div>
+          <div class="level-badge mt-3">
+            <span class="badge loyalty-badge-{{ account.level }} px-4 py-2 rounded-pill fs-6">
+              <i class="fa fa-{% if account.level == 'diamond' %}gem{% elif account.level == 'gold' %}crown{% elif account.level == 'silver' %}medal{% else %}award{% endif %} me-2"></i>
+              Nível {{ account.level|capfirst }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- NÍVEIS -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-4">Seus níveis de fidelidade</h5>
+          {% for level_key, level_name, icon, min_pts, color in levels %}
+          <div class="level-item d-flex align-items-center gap-3 mb-3 p-3 rounded-3
+            {% if account.level == level_key %}level-item-active{% endif %}">
+            <div class="level-icon-sm" style="color: {{ color }}; font-size: 1.5rem;">
+              <i class="fa fa-{{ icon }}"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-700">{{ level_name }}</div>
+              <div class="text-muted small">A partir de {{ min_pts }} pts</div>
+            </div>
+            {% if account.level == level_key %}
+            <i class="fa fa-check-circle text-success"></i>
+            {% endif %}
+          </div>
+          {% endfor %}
+
+          <div class="mt-3 pt-3 border-top">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="small text-muted">Total acumulado</span>
+              <span class="fw-700">{{ account.lifetime_points }} pts</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              {% with pct=account.lifetime_points %}
+              <div class="progress-bar bg-primary" style="width: {% if pct >= 5000 %}100{% elif pct >= 2000 %}{% widthratio pct 5000 100 %}{% elif pct >= 500 %}{% widthratio pct 2000 100 %}{% else %}{% widthratio pct 500 100 %}{% endif %}%"></div>
+              {% endwith %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REGRAS ATIVAS -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-4"><i class="fa fa-gift me-2 text-warning"></i>Promoções ativas</h5>
+          {% for rule in active_rules %}
+          <div class="rule-card p-3 bg-light rounded-3 mb-3">
+            <div class="fw-600 mb-1">{{ rule.name }}</div>
+            <p class="text-muted small mb-0">{{ rule.description }}</p>
+            {% if rule.reward_type == 'gift_product' and rule.reward_product %}
+            <div class="mt-2">
+              <span class="badge bg-warning text-dark">
+                <i class="fa fa-gift me-1"></i>Brinde: {{ rule.reward_product.name|truncatechars:30 }}
+              </span>
+            </div>
+            {% elif rule.reward_type == 'discount_percent' %}
+            <div class="mt-2">
+              <span class="badge bg-success">
+                <i class="fa fa-percent me-1"></i>{{ rule.reward_discount }}% de desconto
+              </span>
+            </div>
+            {% elif rule.reward_type == 'loyalty_points' %}
+            <div class="mt-2">
+              <span class="badge bg-primary">
+                <i class="fa fa-star me-1"></i>+{{ rule.reward_points }} pontos
+              </span>
+            </div>
+            {% endif %}
+          </div>
+          {% empty %}
+          <p class="text-muted small text-center py-2">Nenhuma promoção ativa no momento.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- EXTRATO -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 p-4 pb-0">
+          <h5 class="fw-700 mb-0">Extrato de pontos</h5>
+          <p class="text-muted small mb-0">Histórico das suas últimas movimentações</p>
+        </div>
+        <div class="card-body p-0">
+          {% if transactions %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Data</th>
+                  <th>Descrição</th>
+                  <th>Tipo</th>
+                  <th class="text-end pe-4">Pontos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for tx in transactions %}
+                <tr>
+                  <td class="ps-4 text-muted small">{{ tx.created_at|date:"d/m/Y" }}</td>
+                  <td class="small">{{ tx.description }}</td>
+                  <td>
+                    <span class="badge rounded-pill
+                      {% if tx.transaction_type == 'earn' %}bg-success
+                      {% elif tx.transaction_type == 'redeem' %}bg-warning text-dark
+                      {% elif tx.transaction_type == 'expire' %}bg-danger
+                      {% else %}bg-primary{% endif %}">
+                      {{ tx.get_transaction_type_display }}
+                    </span>
+                  </td>
+                  <td class="text-end pe-4 fw-700
+                    {% if tx.points > 0 %}text-success{% else %}text-danger{% endif %}">
+                    {% if tx.points > 0 %}+{% endif %}{{ tx.points }}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fa fa-star fa-3x text-muted mb-3 opacity-25"></i>
+            <h5 class="text-muted">Nenhuma movimentação ainda</h5>
+            <p class="text-muted small">Faça sua primeira compra e comece a acumular pontos!</p>
+            <a href="{% url 'catalog:product_list' %}" class="btn btn-primary rounded-pill px-4">
+              <i class="fa fa-shopping-bag me-2"></i>Comprar agora
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- COMO FUNCIONA -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-4">Como funciona?</h5>
+          <div class="row g-3">
+            <div class="col-md-4 text-center">
+              <div class="how-step-icon mb-3">
+                <i class="fa fa-shopping-cart fa-2x text-primary"></i>
+              </div>
+              <div class="fw-700 mb-1">1. Compre</div>
+              <p class="text-muted small mb-0">A cada R$ 1,00 em compras você acumula pontos de fidelidade.</p>
+            </div>
+            <div class="col-md-4 text-center">
+              <div class="how-step-icon mb-3">
+                <i class="fa fa-chart-line fa-2x text-primary"></i>
+              </div>
+              <div class="fw-700 mb-1">2. Acumule</div>
+              <p class="text-muted small mb-0">Suba de nível e desbloqueie benefícios exclusivos como Bronze, Prata, Ouro e Diamante.</p>
+            </div>
+            <div class="col-md-4 text-center">
+              <div class="how-step-icon mb-3">
+                <i class="fa fa-gift fa-2x text-primary"></i>
+              </div>
+              <div class="fw-700 mb-1">3. Resgate</div>
+              <p class="text-muted small mb-0">Troque seus pontos por descontos, brindes e produtos exclusivos.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.loyalty-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #E85D26 100%);
+}
+.loyalty-header-bg {
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.points-number {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+.points-label {
+  font-size: .9rem;
+  color: rgba(255,255,255,.7);
+  margin-top: 4px;
+}
+.level-item { transition: all .2s; }
+.level-item-active {
+  background: linear-gradient(135deg, #fff4f0, #ffe8e0) !important;
+  border: 1px solid var(--primary);
+}
+.how-step-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff4f0, #ffe8e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+</style>
+{% endblock %}

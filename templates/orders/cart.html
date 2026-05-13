@@ -1,0 +1,94 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Meu Carrinho — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="fw-800 mb-4"><i class="fa fa-shopping-cart me-2 text-primary"></i>Meu Carrinho</h2>
+
+  {% if cart.items.all %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          {% for item in cart.items.all %}
+          <div class="cart-item d-flex align-items-center p-4 {% if not forloop.last %}border-bottom{% endif %}">
+            {% if item.product.image %}
+            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item-img rounded me-3">
+            {% endif %}
+            <div class="flex-grow-1">
+              <h6 class="fw-600 mb-1">
+                <a href="{% url 'catalog:product_detail' item.product.slug %}" class="text-dark text-decoration-none">
+                  {{ item.product.name }}
+                </a>
+              </h6>
+              <p class="text-muted small mb-2">{{ item.product.category.name }}</p>
+              <span class="fw-700 text-primary">R$ {{ item.product.current_price }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 me-4">
+              <form method="post" action="{% url 'orders:update_cart' item.pk %}" class="d-flex align-items-center gap-2">
+                {% csrf_token %}
+                <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}" class="btn btn-outline-secondary btn-sm rounded-circle qty-btn">
+                  <i class="fa fa-minus"></i>
+                </button>
+                <span class="fw-600 px-2">{{ item.quantity }}</span>
+                <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}" class="btn btn-outline-secondary btn-sm rounded-circle qty-btn">
+                  <i class="fa fa-plus"></i>
+                </button>
+              </form>
+            </div>
+            <div class="text-end me-3" style="min-width: 80px;">
+              <span class="fw-700 text-dark">R$ {{ item.subtotal }}</span>
+            </div>
+            <form method="post" action="{% url 'orders:remove_from_cart' item.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-link text-danger p-0">
+                <i class="fa fa-trash"></i>
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm sticky-top" style="top: 80px;">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-4">Resumo do pedido</h5>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Subtotal ({{ cart.total_items }} itens)</span>
+            <span class="fw-600">R$ {{ cart.total }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Frete</span>
+            <span class="text-success small">Calculado no checkout</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between mb-4">
+            <span class="fw-700 fs-5">Total estimado</span>
+            <span class="fw-800 fs-5 text-primary">R$ {{ cart.total }}</span>
+          </div>
+          <a href="{% url 'orders:checkout' %}" class="btn btn-primary w-100 btn-lg rounded-pill fw-700">
+            <i class="fa fa-lock me-2"></i>Finalizar pedido
+          </a>
+          <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-secondary w-100 mt-2 rounded-pill">
+            <i class="fa fa-arrow-left me-2"></i>Continuar comprando
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fa fa-shopping-cart fa-4x text-muted mb-4 opacity-25"></i>
+    <h4 class="text-muted">Seu carrinho está vazio</h4>
+    <p class="text-muted mb-4">Explore nossa loja e adicione produtos incríveis!</p>
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-primary rounded-pill px-5">
+      <i class="fa fa-shopping-bag me-2"></i>Ver produtos
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

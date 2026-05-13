@@ -1,0 +1,156 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Produtos — Gateen Petshop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-4">
+    <!-- SIDEBAR FILTROS -->
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm sticky-lg-top" style="top: 80px;">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-4">
+            <i class="fa fa-filter me-2 text-primary"></i>Filtros
+          </h5>
+
+          <form method="get" id="filterForm">
+            {% if request.GET.q %}
+            <input type="hidden" name="q" value="{{ request.GET.q }}">
+            {% endif %}
+
+            <div class="mb-4">
+              <h6 class="fw-600 mb-3">Categorias</h6>
+              <div class="list-group list-group-flush">
+                <a href="{% url 'catalog:product_list' %}" class="list-group-item list-group-item-action border-0 px-0 py-1 {% if not selected_category %}fw-600 text-primary{% endif %}">
+                  <i class="fa fa-th me-2"></i>Todos
+                </a>
+                {% for cat in categories %}
+                <a href="{% url 'catalog:by_category' cat.slug %}" class="list-group-item list-group-item-action border-0 px-0 py-1 {% if selected_category == cat.slug %}fw-600 text-primary{% endif %}">
+                  <i class="fa {{ cat.icon|default:'fa-box' }} me-2"></i>{{ cat.name }}
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="mb-4">
+                <h6 class="fw-600 mb-3">Para qual pet?</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for value, label in species_choices %}
+                    <div class="form-check">
+                    <input class="form-check-input" type="radio" name="species"
+                        id="sp_{{ value }}" value="{{ value }}"
+                        {% if request.GET.species == value %}checked{% endif %}
+                        onchange="document.getElementById('filterForm').submit()">
+                    <label class="form-check-label small" for="sp_{{ value }}">{{ label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+              <h6 class="fw-600 mb-3">Ordenar por</h6>
+              <select name="order" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="-created_at" {% if request.GET.order == '-created_at' or not request.GET.order %}selected{% endif %}>Mais recentes</option>
+                <option value="price" {% if request.GET.order == 'price' %}selected{% endif %}>Menor preço</option>
+                <option value="-price" {% if request.GET.order == '-price' %}selected{% endif %}>Maior preço</option>
+                <option value="name" {% if request.GET.order == 'name' %}selected{% endif %}>Nome A-Z</option>
+              </select>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTAGEM -->
+    <div class="col-lg-9">
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+          <h4 class="fw-700 mb-0">
+            {% if query %}Resultados para "{{ query }}"
+            {% elif selected_category %}{{ selected_category }}
+            {% else %}Todos os produtos{% endif %}
+          </h4>
+          <small class="text-muted">{{ page_obj.paginator.count }} produto(s) encontrado(s)</small>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        {% for product in products %}
+        <div class="col-6 col-md-4">
+          <div class="product-card card border-0 shadow-sm h-100">
+            <div class="product-img-wrap position-relative">
+              {% if product.image %}
+              <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+              {% endif %}
+              {% if product.has_discount %}
+              <span class="badge bg-danger position-absolute top-0 start-0 m-2">-{{ product.discount_percentage }}%</span>
+              {% endif %}
+              <div class="product-actions">
+                <form method="post" action="{% url 'orders:add_to_cart' product.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="quantity" value="1">
+                  <button type="submit" class="btn btn-primary btn-sm rounded-circle add-cart-btn">
+                    <i class="fa fa-cart-plus"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div class="card-body p-3">
+              <p class="text-muted small mb-1">{{ product.category.name }}</p>
+              <h6 class="fw-600 mb-2 product-title">
+                <a href="{% url 'catalog:product_detail' product.slug %}" class="text-dark text-decoration-none">{{ product.name }}</a>
+              </h6>
+              {% if product.brand %}
+              <p class="text-muted small mb-2">{{ product.brand.name }}</p>
+              {% endif %}
+              <div class="d-flex align-items-center gap-2">
+                {% if product.has_discount %}
+                <span class="fw-800 text-primary">R$ {{ product.current_price }}</span>
+                <span class="text-muted text-decoration-line-through small">R$ {{ product.price }}</span>
+                {% else %}
+                <span class="fw-800 text-primary">R$ {{ product.price }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+          <i class="fa fa-search fa-3x text-muted mb-3"></i>
+          <h5 class="text-muted">Nenhum produto encontrado.</h5>
+          <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-primary mt-2">Ver todos os produtos</a>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- PAGINAÇÃO -->
+      {% if is_paginated %}
+      <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="fa fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+          </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="fa fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

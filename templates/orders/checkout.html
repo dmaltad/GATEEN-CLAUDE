@@ -1,0 +1,268 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Checkout — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- FORMULÁRIO -->
+    <div class="col-lg-7">
+      <h3 class="fw-800 mb-4">
+        <i class="fa fa-lock me-2 text-primary"></i>Finalizar Pedido
+      </h3>
+
+      <form method="post" id="checkoutForm">
+        {% csrf_token %}
+
+        <!-- TIPO DE ENTREGA -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-3">
+              <i class="fa fa-truck me-2 text-primary"></i>Entrega
+            </h5>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="delivery-option w-100 h-100 cursor-pointer">
+                  <input type="radio" name="delivery_type" value="pickup"
+                    class="d-none delivery-radio" checked>
+                  <div class="delivery-card selected p-3 border rounded-3 text-center h-100">
+                    <i class="fa fa-store fa-2x text-primary mb-2 d-block"></i>
+                    <div class="fw-700">Retirada na loja</div>
+                    <div class="text-muted small">Grátis • Pronto em até 2h</div>
+                  </div>
+                </label>
+              </div>
+              <div class="col-md-6">
+                <label class="delivery-option w-100 h-100 cursor-pointer">
+                  <input type="radio" name="delivery_type" value="delivery"
+                    class="d-none delivery-radio">
+                  <div class="delivery-card p-3 border rounded-3 text-center h-100">
+                    <i class="fa fa-motorcycle fa-2x text-primary mb-2 d-block"></i>
+                    <div class="fw-700">Entrega em casa</div>
+                    <div class="text-muted small">+ R$ 10,00 • Até 24h</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ENDEREÇO (aparece quando delivery selecionado) -->
+        <div class="card border-0 shadow-sm mb-4 d-none" id="addressSection">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-3">
+              <i class="fa fa-map-marker-alt me-2 text-primary"></i>Endereço de Entrega
+            </h5>
+            {% if addresses %}
+              {% for address in addresses %}
+              <label class="w-100 mb-3 d-flex align-items-start gap-2 cursor-pointer">
+                <input type="radio" name="address_id" value="{{ address.pk }}"
+                  class="mt-1 flex-shrink-0"
+                  {% if address.is_default %}checked{% endif %}>
+                <div>
+                  <strong>{{ address.label }}</strong>
+                  <div class="text-muted small">
+                    {{ address.street }}, {{ address.number }}
+                    {% if address.complement %} / {{ address.complement }}{% endif %} —
+                    {{ address.neighborhood }}, {{ address.city }}/{{ address.state }}
+                    (CEP: {{ address.cep }})
+                  </div>
+                </div>
+              </label>
+              {% endfor %}
+              <a href="{% url 'accounts:add_address' %}"
+                class="btn btn-outline-primary btn-sm mt-1 rounded-pill">
+                <i class="fa fa-plus me-1"></i>Novo endereço
+              </a>
+            {% else %}
+              <p class="text-muted mb-3">Você não tem endereços cadastrados.</p>
+              <a href="{% url 'accounts:add_address' %}"
+                class="btn btn-primary btn-sm rounded-pill">
+                <i class="fa fa-plus me-1"></i>Adicionar endereço
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- PAGAMENTO -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-3">
+              <i class="fa fa-credit-card me-2 text-primary"></i>Forma de Pagamento
+            </h5>
+            <div class="row g-2">
+              {% for value, label, icon in payment_methods %}
+              <div class="col-6 col-md-3">
+                <label class="payment-option w-100 cursor-pointer">
+                  <input type="radio" name="payment_method" value="{{ value }}"
+                    class="d-none payment-radio"
+                    {% if forloop.first %}checked{% endif %}>
+                  <div class="payment-card p-3 border rounded-3 text-center
+                    {% if forloop.first %}selected{% endif %}">
+                    <i class="fa {{ icon }} fa-lg text-primary mb-1 d-block"></i>
+                    <div class="small fw-600">{{ label }}</div>
+                  </div>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- OBSERVAÇÕES -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-3">
+              <i class="fa fa-comment me-2 text-primary"></i>Observações
+            </h5>
+            <textarea name="notes" class="form-control" rows="2"
+              placeholder="Alguma instrução especial para o pedido?"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-700">
+          <i class="fa fa-check-circle me-2"></i>Confirmar Pedido
+        </button>
+      </form>
+    </div>
+
+    <!-- RESUMO -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm sticky-top" style="top:80px;">
+        <div class="card-body p-4">
+          <h5 class="fw-700 mb-4">Resumo do pedido</h5>
+
+          {% for item in cart.items.all %}
+          <div class="d-flex align-items-center mb-3">
+            {% if item.product.image %}
+            <img src="{{ item.product.image.url }}" class="rounded me-3"
+              style="width:48px;height:48px;object-fit:cover;">
+            {% endif %}
+            <div class="flex-grow-1">
+              <div class="fw-600 small">{{ item.product.name|truncatechars:35 }}</div>
+              <div class="text-muted small">
+                {{ item.quantity }}x R$ {{ item.product.current_price }}
+              </div>
+            </div>
+            <div class="fw-700 text-primary small">R$ {{ item.subtotal }}</div>
+          </div>
+          {% endfor %}
+
+          <hr>
+
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Subtotal</span>
+            <span class="fw-600">R$ {{ cart.total }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 d-none" id="deliveryFeeRow">
+            <span class="text-muted">Frete</span>
+            <span class="fw-600 text-danger">+ R$ 10,00</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span class="fw-700 fs-5">Total</span>
+            <span class="fw-800 fs-5 text-primary" id="orderTotal">
+              R$ {{ cart.total }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.cursor-pointer { cursor: pointer; }
+
+.delivery-card,
+.payment-card {
+  transition: all .2s ease;
+  border-color: #dee2e6 !important;
+  cursor: pointer;
+}
+
+.delivery-card:hover,
+.payment-card:hover {
+  border-color: var(--primary) !important;
+  background: #fff9f7;
+}
+
+.delivery-card.selected,
+.payment-card.selected {
+  border-color: var(--primary) !important;
+  background: linear-gradient(135deg, #fff4f0, #ffe8e0);
+  box-shadow: 0 0 0 2px rgba(232, 93, 38, .25);
+}
+
+.delivery-card.selected .fa,
+.payment-card.selected .fa {
+  color: var(--primary) !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var cartTotal = parseFloat('{{ cart.total }}'.replace(',', '.'));
+
+  // ── Entrega ──────────────────────────────────────────
+  document.querySelectorAll('.delivery-radio').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      // Remove seleção visual de todos
+      document.querySelectorAll('.delivery-card').forEach(function (c) {
+        c.classList.remove('selected');
+      });
+      // Marca o card do radio selecionado
+      this.closest('label').querySelector('.delivery-card').classList.add('selected');
+
+      var addressSection = document.getElementById('addressSection');
+      var deliveryFeeRow = document.getElementById('deliveryFeeRow');
+      var orderTotal    = document.getElementById('orderTotal');
+
+      if (this.value === 'delivery') {
+        addressSection.classList.remove('d-none');
+        deliveryFeeRow.classList.remove('d-none');
+        orderTotal.textContent = 'R$ ' + (cartTotal + 10).toFixed(2).replace('.', ',');
+      } else {
+        addressSection.classList.add('d-none');
+        deliveryFeeRow.classList.add('d-none');
+        orderTotal.textContent = 'R$ ' + cartTotal.toFixed(2).replace('.', ',');
+      }
+    });
+  });
+
+  // ── Pagamento ─────────────────────────────────────────
+  document.querySelectorAll('.payment-radio').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      document.querySelectorAll('.payment-card').forEach(function (c) {
+        c.classList.remove('selected');
+      });
+      this.closest('label').querySelector('.payment-card').classList.add('selected');
+    });
+  });
+
+  // Clique direto no card (para melhor UX sem precisar clicar exatamente no radio)
+  document.querySelectorAll('.delivery-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var radio = this.closest('label').querySelector('input[type="radio"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change'));
+    });
+  });
+
+  document.querySelectorAll('.payment-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var radio = this.closest('label').querySelector('input[type="radio"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change'));
+    });
+  });
+})();
+</script>
+{% endblock %}

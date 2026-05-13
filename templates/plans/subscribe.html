@@ -1,0 +1,85 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Assinar {{ plan.name }} — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+
+      {% if active_plan %}
+      <div class="alert alert-warning rounded-3 mb-4">
+        <i class="fa fa-exclamation-triangle me-2"></i>
+        Você já possui o plano <strong>{{ active_plan.plan.name }}</strong> ativo.
+        Assinar um novo substituirá o atual.
+      </div>
+      {% endif %}
+
+      <div class="card border-0 shadow">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <div class="plan-icon mx-auto mb-3" style="background-color: {{ plan.color }}20; width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+              <i class="fa fa-paw fa-2x" style="color: {{ plan.color }};"></i>
+            </div>
+            <h3 class="fw-800">{{ plan.name }}</h3>
+            <div class="display-5 fw-800 mb-1" style="color: {{ plan.color }};">
+              R$ {{ plan.price }}
+              <span class="fs-6 text-muted fw-400">/{{ plan.get_period_display|lower }}</span>
+            </div>
+            <p class="text-muted">{{ plan.description }}</p>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+
+            {% if pets %}
+            <div class="mb-4">
+              <label class="form-label fw-600">Para qual pet é o plano?</label>
+              <select name="pet_id" class="form-select">
+                <option value="">— Selecione (opcional) —</option>
+                {% for pet in pets %}
+                <option value="{{ pet.pk }}">{{ pet.name }} ({{ pet.get_species_display }})</option>
+                {% endfor %}
+              </select>
+              <div class="form-text">
+                Você pode vincular o plano a um pet específico ou deixar em branco.
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="plan-summary bg-light rounded-3 p-4 mb-4">
+              <h6 class="fw-700 mb-3">O que está incluído:</h6>
+              <ul class="list-unstyled mb-0">
+                {% if plan.food_bags_per_month %}
+                <li class="mb-2"><i class="fa fa-check-circle text-success me-2"></i>{{ plan.food_bags_per_month }} saco(s) de ração/mês</li>
+                {% endif %}
+                {% if plan.grooming_sessions_per_month %}
+                <li class="mb-2"><i class="fa fa-check-circle text-success me-2"></i>{{ plan.grooming_sessions_per_month }} banho(s) e tosa/mês</li>
+                {% endif %}
+                {% if plan.includes_health_plan %}
+                <li class="mb-2"><i class="fa fa-check-circle text-success me-2"></i>Plano de saúde</li>
+                {% endif %}
+                {% for feature in plan.features.all %}
+                {% if feature.is_included %}
+                <li class="mb-2"><i class="fa fa-check-circle text-success me-2"></i>{{ feature.description }}</li>
+                {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+
+            <button type="submit" class="btn btn-lg w-100 rounded-pill fw-700"
+              style="background-color: {{ plan.color }}; color: white; border: none;">
+              <i class="fa fa-check me-2"></i>Confirmar assinatura
+            </button>
+            <a href="{% url 'plans:plan_list' %}" class="btn btn-outline-secondary w-100 rounded-pill mt-2">
+              Voltar aos planos
+            </a>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

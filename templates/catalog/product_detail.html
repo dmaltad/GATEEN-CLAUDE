@@ -1,0 +1,262 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- BREADCRUMB -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Início</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'catalog:product_list' %}" class="text-decoration-none text-primary">Produtos</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'catalog:by_category' product.category.slug %}" class="text-decoration-none text-primary">{{ product.category.name }}</a></li>
+      <li class="breadcrumb-item active">{{ product.name|truncatechars:30 }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-5">
+
+    <!-- GALERIA -->
+    <div class="col-lg-5">
+      <div class="product-detail-gallery">
+        <div class="main-image-wrap mb-3">
+          {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded-4 main-product-img" id="mainImage">
+          {% else %}
+          <div class="no-image-placeholder rounded-4 d-flex align-items-center justify-content-center">
+            <i class="fa fa-image fa-4x text-muted opacity-25"></i>
+          </div>
+          {% endif %}
+          {% if product.has_discount %}
+          <span class="badge bg-danger position-absolute top-0 start-0 m-3 fs-6">
+            -{{ product.discount_percentage }}% OFF
+          </span>
+          {% endif %}
+        </div>
+
+        {% if product.images.exists %}
+        <div class="d-flex gap-2 flex-wrap">
+          <img src="{{ product.image.url }}" class="thumb-img rounded-3 active" onclick="changeImage(this, '{{ product.image.url }}')">
+          {% for img in product.images.all %}
+          <img src="{{ img.image.url }}" class="thumb-img rounded-3" onclick="changeImage(this, '{{ img.image.url }}')">
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- DETALHES -->
+    <div class="col-lg-7">
+      <div class="mb-2">
+        {% if product.brand %}
+        <a href="{% url 'catalog:by_brand' product.brand.slug %}" class="text-decoration-none">
+          <span class="badge bg-light text-dark border fw-600">{{ product.brand.name }}</span>
+        </a>
+        {% endif %}
+        <span class="badge bg-light text-muted ms-1">{{ product.category.name }}</span>
+        <span class="badge ms-1
+          {% if product.species == 'dog' %}bg-primary
+          {% elif product.species == 'cat' %}bg-warning text-dark
+          {% elif product.species == 'bird' %}bg-success
+          {% elif product.species == 'fish' %}bg-info
+          {% else %}bg-secondary{% endif %}">
+          {{ product.get_species_display }}
+        </span>
+      </div>
+
+      <h1 class="fw-800 fs-3 mb-3">{{ product.name }}</h1>
+
+      <!-- PREÇO -->
+      <div class="price-block mb-4">
+        {% if product.has_discount %}
+        <div class="text-muted text-decoration-line-through mb-1">R$ {{ product.price }}</div>
+        <div class="d-flex align-items-center gap-3">
+          <span class="display-6 fw-800 text-primary">R$ {{ product.current_price }}</span>
+          <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">
+            Economize R$ {{ product.price|floatformat:2 }}
+          </span>
+        </div>
+        {% else %}
+        <span class="display-6 fw-800 text-primary">R$ {{ product.price }}</span>
+        {% endif %}
+        <p class="text-muted small mt-1">em até 3x sem juros no cartão</p>
+      </div>
+
+      <!-- ESTOQUE -->
+      {% if product.stock %}
+        {% if product.stock.is_out %}
+        <div class="alert alert-danger d-flex align-items-center gap-2 rounded-3 mb-4">
+          <i class="fa fa-times-circle"></i>
+          <span>Produto fora de estoque no momento.</span>
+        </div>
+        {% elif product.stock.is_low %}
+        <div class="alert alert-warning d-flex align-items-center gap-2 rounded-3 mb-4">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span>Últimas {{ product.stock.available_quantity }} unidades!</span>
+        </div>
+        {% else %}
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
+            <i class="fa fa-check-circle me-1"></i>Em estoque ({{ product.stock.available_quantity }} un.)
+          </span>
+        </div>
+        {% endif %}
+      {% endif %}
+
+      <!-- ADICIONAR AO CARRINHO -->
+      {% if not product.stock.is_out %}
+      <form method="post" action="{% url 'orders:add_to_cart' product.pk %}" class="mb-4">
+        {% csrf_token %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="qty-control d-flex align-items-center border rounded-pill px-2">
+            <button type="button" class="btn btn-link text-dark p-2 qty-dec" onclick="changeQty(-1)">
+              <i class="fa fa-minus"></i>
+            </button>
+            <input type="number" name="quantity" id="qtyInput" value="1" min="1"
+              max="{{ product.stock.available_quantity|default:99 }}"
+              class="form-control border-0 text-center fw-700 qty-field">
+            <button type="button" class="btn btn-link text-dark p-2 qty-inc" onclick="changeQty(1)">
+              <i class="fa fa-plus"></i>
+            </button>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-700 flex-grow-1">
+            <i class="fa fa-cart-plus me-2"></i>Adicionar ao carrinho
+          </button>
+        </div>
+      </form>
+      {% endif %}
+
+      <!-- PESO / ESPÉCIE -->
+      {% if product.weight %}
+      <div class="d-flex gap-3 mb-4 flex-wrap">
+        <div class="info-chip">
+          <i class="fa fa-weight-hanging me-2 text-primary"></i>
+          <span>{{ product.weight }} kg</span>
+        </div>
+        <div class="info-chip">
+          <i class="fa fa-paw me-2 text-primary"></i>
+          <span>{{ product.get_species_display }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- DESCRIÇÃO -->
+      <div class="product-description">
+        <h5 class="fw-700 mb-3">Descrição do produto</h5>
+        <p class="text-muted lh-lg">{{ product.description }}</p>
+      </div>
+
+      <!-- PROGRAMA FIDELIDADE BADGE -->
+      <div class="loyalty-hint mt-4 p-3 rounded-3 d-flex align-items-center gap-3">
+        <i class="fa fa-gift fa-2x text-warning"></i>
+        <div>
+          <div class="fw-700 small">Ganhe pontos de fidelidade!</div>
+          <div class="text-muted small">Cada compra acumula pontos que podem ser trocados por brindes e descontos.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUTOS RELACIONADOS -->
+  {% if related_products %}
+  <div class="mt-5 pt-4 border-top">
+    <h4 class="fw-800 mb-4">Você também pode gostar</h4>
+    <div class="row g-3">
+      {% for p in related_products %}
+      <div class="col-6 col-md-3">
+        <div class="product-card card border-0 shadow-sm h-100">
+          <div class="product-img-wrap position-relative">
+            {% if p.image %}
+            <img src="{{ p.image.url }}" class="card-img-top product-img" alt="{{ p.name }}">
+            {% endif %}
+            {% if p.has_discount %}
+            <span class="badge bg-danger position-absolute top-0 start-0 m-2">-{{ p.discount_percentage }}%</span>
+            {% endif %}
+            <div class="product-actions">
+              <form method="post" action="{% url 'orders:add_to_cart' p.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" class="btn btn-primary btn-sm rounded-circle add-cart-btn">
+                  <i class="fa fa-cart-plus"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="card-body p-3">
+            <p class="text-muted small mb-1">{{ p.brand.name|default:p.category.name }}</p>
+            <h6 class="fw-600 mb-2 product-title">
+              <a href="{% url 'catalog:product_detail' p.slug %}" class="text-dark text-decoration-none">{{ p.name }}</a>
+            </h6>
+            <span class="fw-800 text-primary">R$ {{ p.current_price }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.main-product-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid #f0f0f0;
+}
+.no-image-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+}
+.thumb-img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all .2s;
+}
+.thumb-img:hover, .thumb-img.active {
+  border-color: var(--primary);
+}
+.qty-control { background: #f8f9fa; }
+.qty-field { width: 48px; font-size: 1rem; }
+.info-chip {
+  background: #f8f9fa;
+  border-radius: 50px;
+  padding: 6px 16px;
+  font-size: .875rem;
+  font-weight: 500;
+}
+.loyalty-hint {
+  background: linear-gradient(135deg, #fff9e6, #fff3cd);
+  border: 1px solid #ffc107;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeImage(el, src) {
+  document.getElementById('mainImage').src = src;
+  document.querySelectorAll('.thumb-img').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+}
+
+function changeQty(delta) {
+  var input = document.getElementById('qtyInput');
+  var val = parseInt(input.value) + delta;
+  var max = parseInt(input.max) || 99;
+  if (val < 1) val = 1;
+  if (val > max) val = max;
+  input.value = val;
+}
+</script>
+{% endblock %}

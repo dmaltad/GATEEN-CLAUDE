@@ -1,0 +1,182 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-gateen sticky-top shadow-sm">
+  <div class="container">
+
+    <!-- LOGO -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+      <img src="{% static 'base/img/logo.svg' %}" alt="Gateen" height="38">
+      <span class="fw-800 text-white fs-5">Gateen</span>
+    </a>
+
+    <!-- MOBILE: carrinho + toggler (sem sobreposição) -->
+    <div class="d-flex align-items-center gap-2 d-lg-none ms-auto">
+      <a href="{% url 'orders:cart' %}"
+        class="btn btn-outline-light btn-sm position-relative cart-btn-mobile">
+        <i class="fa fa-shopping-cart"></i>
+        {% if cart_count %}
+        <span class="position-absolute top-0 start-100 translate-middle
+          badge rounded-pill bg-danger cart-badge" style="font-size:.6rem;">
+          {{ cart_count }}
+        </span>
+        {% endif %}
+      </a>
+      <button class="navbar-toggler border-0 p-1" type="button"
+        data-bs-toggle="collapse" data-bs-target="#navMain"
+        aria-expanded="false" aria-label="Menu">
+        <i class="fa fa-bars text-white fa-lg"></i>
+      </button>
+    </div>
+
+    <!-- CONTEÚDO COLAPSÁVEL -->
+    <div class="collapse navbar-collapse" id="navMain">
+
+      <!-- Links principais -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 mt-3 mt-lg-0 gap-lg-1">
+        <li class="nav-item">
+          <a class="nav-link text-white fw-500" href="{% url 'catalog:product_list' %}">
+            <i class="fa fa-box me-1"></i>Produtos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white fw-500" href="{% url 'plans:plan_list' %}">
+            <i class="fa fa-star me-1"></i>Planos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white fw-500" href="{% url 'events:event_list' %}">
+            <i class="fa fa-calendar me-1"></i>Eventos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white fw-500" href="{% url 'events:promotion_list' %}">
+            <i class="fa fa-tag me-1"></i>Promoções
+          </a>
+        </li>
+      </ul>
+
+      <!-- Busca -->
+      <form class="d-flex me-2 my-2 my-lg-0 search-form"
+        action="{% url 'catalog:product_list' %}" method="get">
+        <div class="input-group input-group-sm">
+          <input class="form-control rounded-start-pill border-0 search-input"
+            type="search" name="q" placeholder="Buscar produtos..."
+            value="{{ request.GET.q }}" style="min-width:0;">
+          <button class="btn btn-light btn-sm rounded-end-pill px-2" type="submit">
+            <i class="fa fa-search text-primary"></i>
+          </button>
+        </div>
+      </form>
+
+      <!-- DESKTOP: carrinho + usuário -->
+      <div class="d-none d-lg-flex align-items-center gap-2">
+        <a href="{% url 'orders:cart' %}"
+          class="btn btn-outline-light btn-sm position-relative">
+          <i class="fa fa-shopping-cart"></i>
+          {% if cart_count %}
+          <span class="position-absolute top-0 start-100 translate-middle
+            badge rounded-pill bg-danger" style="font-size:.6rem;">
+            {{ cart_count }}
+          </span>
+          {% endif %}
+        </a>
+
+        {% if user.is_authenticated %}
+        <div class="dropdown">
+          <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2 px-3"
+            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" class="rounded-circle"
+              width="22" height="22" style="object-fit:cover;">
+            {% else %}
+            <i class="fa fa-user-circle text-primary"></i>
+            {% endif %}
+            <span class="text-primary fw-600">{{ user.first_name }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-1">
+            <li>
+              <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                <i class="fa fa-user me-2 text-primary"></i>Meu Perfil
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'orders:order_list' %}">
+                <i class="fa fa-list me-2 text-primary"></i>Meus Pedidos
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'loyalty:dashboard' %}">
+                <i class="fa fa-gift me-2 text-primary"></i>Fidelidade
+              </a>
+            </li>
+            {% if user.is_staff %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item" href="{% url 'dashboard:home' %}">
+                <i class="fa fa-chart-bar me-2 text-warning"></i>Dashboard
+              </a>
+            </li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item text-danger" href="{% url 'account_logout' %}">
+                <i class="fa fa-sign-out-alt me-2"></i>Sair
+              </a>
+            </li>
+          </ul>
+        </div>
+        {% else %}
+        <a href="{% url 'account_login' %}" class="btn btn-light btn-sm px-3">Entrar</a>
+        <a href="{% url 'account_signup' %}" class="btn btn-warning btn-sm fw-600 px-3">
+          Cadastrar
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- MOBILE: usuário (dentro do menu colapsado) -->
+      <div class="d-lg-none border-top border-white border-opacity-25 mt-2 pt-2">
+        {% if user.is_authenticated %}
+        <div class="d-flex align-items-center gap-3 mb-2 px-1">
+          {% if user.avatar %}
+          <img src="{{ user.avatar.url }}" class="rounded-circle"
+            width="36" height="36" style="object-fit:cover;">
+          {% else %}
+          <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center
+            justify-content-center" style="width:36px;height:36px;">
+            <i class="fa fa-user text-white"></i>
+          </div>
+          {% endif %}
+          <div>
+            <div class="text-white fw-600">{{ user.get_full_name }}</div>
+            <div class="text-white-50 small">{{ user.email }}</div>
+          </div>
+        </div>
+        <a class="nav-link text-white py-2" href="{% url 'accounts:profile' %}">
+          <i class="fa fa-user me-2"></i>Meu Perfil
+        </a>
+        <a class="nav-link text-white py-2" href="{% url 'orders:order_list' %}">
+          <i class="fa fa-list me-2"></i>Meus Pedidos
+        </a>
+        <a class="nav-link text-white py-2" href="{% url 'loyalty:dashboard' %}">
+          <i class="fa fa-gift me-2"></i>Fidelidade
+        </a>
+        {% if user.is_staff %}
+        <a class="nav-link text-warning py-2" href="{% url 'dashboard:home' %}">
+          <i class="fa fa-chart-bar me-2"></i>Dashboard
+        </a>
+        {% endif %}
+        <a class="nav-link text-danger py-2" href="{% url 'account_logout' %}">
+          <i class="fa fa-sign-out-alt me-2"></i>Sair
+        </a>
+        {% else %}
+        <div class="d-flex gap-2 mt-1">
+          <a href="{% url 'account_login' %}"
+            class="btn btn-light btn-sm flex-grow-1">Entrar</a>
+          <a href="{% url 'account_signup' %}"
+            class="btn btn-warning btn-sm fw-600 flex-grow-1">Cadastrar</a>
+        </div>
+        {% endif %}
+      </div>
+
+    </div><!-- /collapse -->
+  </div>
+</nav>

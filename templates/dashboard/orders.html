@@ -1,0 +1,87 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Pedidos — Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h3 class="fw-800 mb-0">Gestão de Pedidos</h3>
+    <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary rounded-pill btn-sm">
+      <i class="fa fa-arrow-left me-1"></i>Dashboard
+    </a>
+  </div>
+
+  <!-- FILTRO STATUS -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    <a href="{% url 'dashboard:orders' %}" class="btn btn-sm {% if not selected_status %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill">
+      Todos
+    </a>
+    {% for val, lbl in status_choices %}
+    <a href="?status={{ val }}" class="btn btn-sm {% if selected_status == val %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill">
+      {{ lbl }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Pedido</th>
+              <th>Cliente</th>
+              <th>Data</th>
+              <th>Itens</th>
+              <th>Total</th>
+              <th>Entrega</th>
+              <th>Pagamento</th>
+              <th>Status</th>
+              <th class="text-center">Alterar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td class="ps-4 fw-700 text-primary">#{{ order.order_number }}</td>
+              <td>
+                <div class="fw-600 small">{{ order.user.get_full_name }}</div>
+                <div class="text-muted" style="font-size:.75rem;">{{ order.user.email }}</div>
+              </td>
+              <td class="text-muted small">{{ order.created_at|date:"d/m/Y H:i" }}</td>
+              <td class="text-center">{{ order.items.count }}</td>
+              <td class="fw-700 text-primary">R$ {{ order.total }}</td>
+              <td><span class="badge bg-light text-dark">{{ order.get_delivery_type_display }}</span></td>
+              <td class="text-muted small">{{ order.get_payment_method_display }}</td>
+              <td>
+                <span class="badge status-badge status-{{ order.status }}">
+                  {{ order.get_status_display }}
+                </span>
+              </td>
+              <td class="text-center">
+                <form method="post" action="{% url 'dashboard:update_order_status' order.pk %}">
+                  {% csrf_token %}
+                  <select name="status" class="form-select form-select-sm w-auto d-inline-block" onchange="this.form.submit()">
+                    {% for val, lbl in status_choices %}
+                    <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ lbl }}</option>
+                    {% endfor %}
+                  </select>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="text-center py-5 text-muted">
+                <i class="fa fa-box-open fa-3x mb-3 opacity-25"></i>
+                <p>Nenhum pedido encontrado.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

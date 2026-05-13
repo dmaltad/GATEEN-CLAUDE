@@ -1,0 +1,260 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Meu Perfil — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- SIDEBAR PERFIL -->
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm text-center p-4 mb-4">
+        {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" class="rounded-circle mx-auto mb-3"
+          style="width:80px;height:80px;object-fit:cover;">
+        {% else %}
+        <div class="avatar-placeholder mx-auto mb-3">
+          <i class="fa fa-user fa-2x text-primary"></i>
+        </div>
+        {% endif %}
+
+        <h5 class="fw-700 mb-0">{{ user.get_full_name }}</h5>
+        <p class="text-muted small mb-2">{{ user.email }}</p>
+
+        <!-- DATA DE NASCIMENTO / IDADE -->
+        {% if user.birth_date %}
+        <p class="text-muted small mb-2">
+          <i class="fa fa-birthday-cake me-1 text-primary"></i>
+          {{ user.birth_date|date:"d/m/Y" }}
+        </p>
+        {% endif %}
+
+        <!-- TELEFONE -->
+        {% if user.phone %}
+        <p class="text-muted small mb-2">
+          <i class="fa fa-phone me-1 text-primary"></i>
+          {{ user.phone }}
+        </p>
+        {% endif %}
+
+        <!-- CPF -->
+        {% if user.cpf %}
+        <p class="text-muted small mb-3">
+          <i class="fa fa-id-card me-1 text-primary"></i>
+          {{ user.cpf }}
+        </p>
+        {% endif %}
+
+        {% if loyalty %}
+        <span class="badge loyalty-badge-{{ loyalty.level }} px-3 py-2 rounded-pill mb-3">
+          <i class="fa fa-{% if loyalty.level == 'diamond' %}gem
+            {% elif loyalty.level == 'gold' %}crown
+            {% elif loyalty.level == 'silver' %}medal
+            {% else %}award{% endif %} me-1"></i>
+          {{ loyalty.level|capfirst }} — {{ loyalty.points }} pts
+        </span>
+        {% endif %}
+
+        <a href="{% url 'accounts:edit_profile' %}"
+          class="btn btn-outline-primary btn-sm rounded-pill mt-2 w-100">
+          <i class="fa fa-edit me-1"></i>Editar perfil
+        </a>
+      </div>
+
+      <!-- NAVEGAÇÃO -->
+      <div class="card border-0 shadow-sm">
+        <div class="list-group list-group-flush rounded">
+          <a href="#pedidos" class="list-group-item list-group-item-action border-0">
+            <i class="fa fa-box me-2 text-primary"></i>Meus pedidos
+          </a>
+          <a href="#pets" class="list-group-item list-group-item-action border-0">
+            <i class="fa fa-paw me-2 text-primary"></i>Meus pets
+          </a>
+          <a href="#enderecos" class="list-group-item list-group-item-action border-0">
+            <i class="fa fa-map-marker-alt me-2 text-primary"></i>Endereços
+          </a>
+          {% if user_plan %}
+          <a href="#plano" class="list-group-item list-group-item-action border-0">
+            <i class="fa fa-star me-2 text-primary"></i>Meu plano
+          </a>
+          {% endif %}
+          <a href="{% url 'loyalty:dashboard' %}" class="list-group-item list-group-item-action border-0">
+            <i class="fa fa-gift me-2 text-primary"></i>Fidelidade
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTEÚDO -->
+    <div class="col-lg-9">
+
+      <!-- PLANO ATIVO -->
+      {% if user_plan %}
+      <div class="card border-0 shadow-sm mb-4" id="plano" style="border-left: 4px solid var(--primary) !important;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-700 mb-0"><i class="fa fa-star me-2 text-primary"></i>Plano Ativo</h5>
+            <span class="badge bg-success">{{ user_plan.get_status_display }}</span>
+          </div>
+          <h4 class="fw-800 text-primary">{{ user_plan.plan.name }}</h4>
+          <div class="row g-3 mt-1">
+            {% if user_plan.plan.food_bags_per_month %}
+            <div class="col-md-4">
+              <div class="plan-usage-card p-3 bg-light rounded-3 text-center">
+                <div class="fw-800 fs-3 text-primary">{{ user_plan.food_bags_remaining }}</div>
+                <div class="text-muted small">sacos de ração restantes</div>
+                <div class="progress mt-2" style="height:4px;">
+                  <div class="progress-bar bg-primary"
+                    style="width: {% widthratio user_plan.food_bags_used user_plan.plan.food_bags_per_month 100 %}%"></div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            {% if user_plan.plan.grooming_sessions_per_month %}
+            <div class="col-md-4">
+              <div class="plan-usage-card p-3 bg-light rounded-3 text-center">
+                <div class="fw-800 fs-3 text-primary">{{ user_plan.grooming_sessions_remaining }}</div>
+                <div class="text-muted small">banhos/tosas restantes</div>
+                <div class="progress mt-2" style="height:4px;">
+                  <div class="progress-bar bg-primary"
+                    style="width: {% widthratio user_plan.grooming_sessions_used user_plan.plan.grooming_sessions_per_month 100 %}%"></div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            <div class="col-md-4">
+              <div class="plan-usage-card p-3 bg-light rounded-3 text-center">
+                <div class="fw-800 fs-5 text-primary">{{ user_plan.end_date|date:"d/m/Y" }}</div>
+                <div class="text-muted small">vencimento do plano</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="card border-0 shadow-sm mb-4 bg-light">
+        <div class="card-body p-4 d-flex align-items-center justify-content-between">
+          <div>
+            <h5 class="fw-700 mb-1">Você ainda não tem um plano</h5>
+            <p class="text-muted mb-0">Assine um plano e economize em ração, banho e tosa todo mês!</p>
+          </div>
+          <a href="{% url 'plans:plan_list' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="fa fa-star me-1"></i>Ver planos
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- PEDIDOS RECENTES -->
+      <div class="card border-0 shadow-sm mb-4" id="pedidos">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
+          <h5 class="fw-700 mb-0">Pedidos Recentes</h5>
+          <a href="{% url 'orders:order_list' %}" class="btn btn-outline-primary btn-sm rounded-pill">Ver todos</a>
+        </div>
+        <div class="card-body p-0">
+          {% if recent_orders %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Pedido</th>
+                  <th>Data</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                  <td class="ps-4 fw-600 text-primary">#{{ order.order_number }}</td>
+                  <td class="text-muted small">{{ order.created_at|date:"d/m/Y" }}</td>
+                  <td class="fw-600">R$ {{ order.total }}</td>
+                  <td><span class="badge status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                  <td><a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-outline-primary btn-sm rounded-pill">Ver</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="fa fa-box-open me-2"></i>Nenhum pedido ainda.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- PETS -->
+      <div class="card border-0 shadow-sm mb-4" id="pets">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
+          <h5 class="fw-700 mb-0"><i class="fa fa-paw me-2 text-primary"></i>Meus Pets</h5>
+          <a href="{% url 'accounts:add_pet' %}" class="btn btn-primary btn-sm rounded-pill">
+            <i class="fa fa-plus me-1"></i>Adicionar
+          </a>
+        </div>
+        <div class="card-body p-4">
+          {% if pets %}
+          <div class="row g-3">
+            {% for pet in pets %}
+            <div class="col-md-4">
+              <div class="pet-card card border-0 bg-light text-center p-3">
+                {% if pet.photo %}
+                <img src="{{ pet.photo.url }}" class="rounded-circle mx-auto mb-2" style="width:64px;height:64px;object-fit:cover;">
+                {% else %}
+                <div class="pet-icon mx-auto mb-2">
+                  <i class="fa fa-{% if pet.species == 'dog' %}dog{% elif pet.species == 'cat' %}cat{% elif pet.species == 'bird' %}feather{% elif pet.species == 'fish' %}fish{% else %}paw{% endif %} fa-2x text-primary"></i>
+                </div>
+                {% endif %}
+                <h6 class="fw-700 mb-0">{{ pet.name }}</h6>
+                <p class="text-muted small mb-0">{{ pet.breed|default:pet.get_species_display }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted text-center py-2">
+            <i class="fa fa-paw me-2"></i>Nenhum pet cadastrado ainda.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ENDEREÇOS -->
+      <div class="card border-0 shadow-sm" id="enderecos">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
+          <h5 class="fw-700 mb-0"><i class="fa fa-map-marker-alt me-2 text-primary"></i>Endereços</h5>
+          <a href="{% url 'accounts:add_address' %}" class="btn btn-primary btn-sm rounded-pill">
+            <i class="fa fa-plus me-1"></i>Adicionar
+          </a>
+        </div>
+        <div class="card-body p-4">
+          {% if addresses %}
+          <div class="row g-3">
+            {% for address in addresses %}
+            <div class="col-md-6">
+              <div class="card border {% if address.is_default %}border-primary{% endif %} rounded-3 p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <span class="fw-700">{{ address.label }}</span>
+                  {% if address.is_default %}<span class="badge bg-primary rounded-pill">Padrão</span>{% endif %}
+                </div>
+                <p class="text-muted small mb-0">
+                  {{ address.street }}, {{ address.number }}<br>
+                  {{ address.neighborhood }} — {{ address.city }}/{{ address.state }}<br>
+                  CEP: {{ address.cep }}
+                </p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted text-center py-2">Nenhum endereço cadastrado.</p>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
