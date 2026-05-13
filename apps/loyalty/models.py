@@ -52,15 +52,20 @@ class LoyaltyAccount(models.Model):
         return f'Fidelidade de {self.user.get_full_name()}'
 
     def update_level(self):
+        """Recalcula e salva o nível sem disparar signals adicionais."""
         if self.lifetime_points >= 5000:
-            self.level = 'diamond'
+            new_level = 'diamond'
         elif self.lifetime_points >= 2000:
-            self.level = 'gold'
+            new_level = 'gold'
         elif self.lifetime_points >= 500:
-            self.level = 'silver'
+            new_level = 'silver'
         else:
-            self.level = 'bronze'
-        self.save()
+            new_level = 'bronze'
+
+        if self.level != new_level:
+            self.level = new_level
+            # update_fields evita disparar outros signals desnecessários
+            self.save(update_fields=['level'])
 
 
 class LoyaltyTransaction(models.Model):

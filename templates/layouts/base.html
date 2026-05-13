@@ -15,29 +15,29 @@
 </head>
 
 <!-- ↓ MUDANÇA: classe page-wrapper para sticky footer -->
-<body class="page-wrapper">
+<body class="d-flex flex-column min-vh-100">
 
   {% include 'includes/navbar.html' %}
 
-  <!-- Mensagens do sistema -->
   {% if messages %}
-  <div class="messages-container" id="messagesContainer">
-    <div class="container">
+  <div class="position-fixed top-0 start-50 translate-middle-x w-100" 
+       style="z-index: 1055; max-width: 500px; margin-top: 90px; pointer-events: none;" 
+       id="messagesContainer">
+    <div class="px-3">
       {% for message in messages %}
-      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show gateen-alert"
-        role="alert">
-        <i class="fa fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"
-          aria-label="Fechar"></button>
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-lg border-0" 
+           style="pointer-events: auto; background-color: #fff; border-left: 5px solid {% if message.tags == 'success' %}#27ae60{% elif message.tags == 'error' %}#dc3545{% else %}#0d6efd{% endif %} !important;" 
+           role="alert">
+        <i class="fa fa-{% if message.tags == 'success' %}check-circle text-success{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle text-danger{% else %}info-circle text-primary{% endif %} me-2 fs-5 align-middle"></i>
+        <span class="fw-600 text-dark">{{ message }}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
       </div>
       {% endfor %}
     </div>
   </div>
   {% endif %}
 
-  <!-- ↓ MUDANÇA: main cresce para empurrar o footer para baixo -->
-  <main id="main-content" class="main-content">
+  <main id="main-content" class="flex-grow-1">
     {% block content %}{% endblock %}
   </main>
 
