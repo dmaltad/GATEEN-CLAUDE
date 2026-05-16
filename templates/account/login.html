@@ -1,46 +1,95 @@
 {% extends 'layouts/base.html' %}
-{% load static crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Entrar — Gateen{% endblock %}
 
 {% block content %}
-<div class="min-vh-75 d-flex align-items-center py-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #fff4f0 100%);">
+<div class="min-vh-75 d-flex align-items-center py-5"
+  style="background: linear-gradient(135deg, var(--primary-bg-soft) 0%, #fff 100%);">
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-lg-5 col-md-7">
+      <div class="col-lg-4 col-md-6">
+
         <div class="text-center mb-4">
-          <img src="{% static 'base/img/logo.svg' %}" alt="Gateen" height="64" class="mb-3">
+          <img src="{% static 'base/img/gateen_logo.svg' %}" alt="Gateen" height="56" class="mb-3">
           <h3 class="fw-800">Bem-vindo de volta!</h3>
           <p class="text-muted">Entre na sua conta Gateen</p>
         </div>
 
-        <div class="card border-0 shadow-lg">
-          <div class="card-body p-5">
+        <div class="card auth-card">
+          <div class="card-body p-4 p-md-5">
             <form method="post" action="{% url 'account_login' %}">
               {% csrf_token %}
-              {{ form|crispy }}
-              <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                  <label class="form-check-label text-muted small" for="remember">Lembrar de mim</label>
-                </div>
-                <a href="{% url 'account_reset_password' %}" class="text-primary small text-decoration-none">
-                  Esqueci minha senha
-                </a>
+
+              {% if form.non_field_errors %}
+              <div class="alert alert-danger rounded-3 mb-3 small">
+                <i class="fa fa-exclamation-circle me-2"></i>
+                {{ form.non_field_errors|join:", " }}
               </div>
+              {% endif %}
+
+              <div class="mb-3">
+                <label class="form-label fw-600 small">E-mail</label>
+                <input type="email" name="login" class="form-control"
+                  placeholder="seu@email.com" autocomplete="email" required
+                  value="{{ form.login.value|default:'' }}">
+                {% if form.login.errors %}
+                <div class="text-danger small mt-1">{{ form.login.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label fw-600 small">Senha</label>
+                <input type="password" name="password" class="form-control"
+                  placeholder="Sua senha" autocomplete="current-password" required>
+                {% if form.password.errors %}
+                <div class="text-danger small mt-1">{{ form.password.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                  <label class="form-check-label small text-muted" for="remember">
+                    Lembrar de mim
+                  </label>
+                </div>
+                <a href="{% url 'account_reset_password' %}" class="small text-decoration-none"
+                  style="color:var(--primary);">Esqueci a senha</a>
+              </div>
+
               <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill fw-700">
                 <i class="fa fa-sign-in-alt me-2"></i>Entrar
               </button>
             </form>
-            <hr class="my-4">
-            <p class="text-center text-muted mb-0">
+
+            <hr class="my-3">
+            <p class="text-center text-muted mb-0 small">
               Ainda não tem conta?
-              <a href="{% url 'account_signup' %}" class="text-primary fw-600 text-decoration-none">Cadastre-se grátis</a>
+              <a href="{% url 'account_signup' %}" class="fw-600 text-decoration-none"
+                style="color:var(--primary);">Cadastre-se grátis</a>
             </p>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control {
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  padding: .5rem .9rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: .9rem;
+}
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(138,75,159,.15);
+}
+</style>
 {% endblock %}
