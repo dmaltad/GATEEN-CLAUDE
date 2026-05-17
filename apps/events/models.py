@@ -81,3 +81,25 @@ class Promotion(models.Model):
     def is_valid(self):
         now = timezone.now()
         return self.is_active and self.start_date <= now <= self.end_date
+    
+class EventRegistration(models.Model):
+    """Inscrição de usuário em evento (sem duplicidade)."""
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE,
+        related_name='registrations', verbose_name='Evento'
+    )
+    user = models.ForeignKey(
+        'accounts.User', on_delete=models.CASCADE,
+        related_name='event_registrations', verbose_name='Usuário'
+    )
+    registered_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, verbose_name='Observações')
+
+    class Meta:
+        unique_together = ('event', 'user')
+        verbose_name = 'Inscrição em Evento'
+        verbose_name_plural = 'Inscrições em Eventos'
+        ordering = ['-registered_at']
+
+    def __str__(self):
+        return f'{self.user} → {self.event.title}'

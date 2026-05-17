@@ -1,0 +1,49 @@
+{# Recebe: stages (list of dicts), current (status string) #}
+<div class="order-tracker-wrap">
+  <div class="d-flex align-items-start justify-content-between position-relative">
+    
+    {# Linha de progresso de fundo #}
+    <div class="tracker-line-bg position-absolute"
+      style="top:20px;left:5%;right:5%;height:3px;
+             background:var(--border-color);z-index:0;"></div>
+
+    {# Linha de progresso colorida #}
+    <div class="tracker-line-fill position-absolute"
+      style="top:20px;left:5%;height:3px;
+             background:var(--primary);z-index:1;
+             width:{{ progress_pct }}%;
+             transition: width .5s ease;"></div>
+
+    {% for stage in stages %}
+    <div class="tracker-step text-center flex-fill position-relative" style="z-index:2;">
+      <div class="tracker-dot mx-auto mb-2 d-flex align-items-center justify-content-center"
+        style="width:40px;height:40px;border-radius:50%;
+          {% if stage.done %}
+            background:var(--primary);color:#fff;
+            box-shadow:0 0 0 4px rgba(138,75,159,.2);
+          {% elif stage.active %}
+            background:var(--primary);color:#fff;
+            box-shadow:0 0 0 6px rgba(138,75,159,.25);
+            animation: pulse-dot 1.5s infinite;
+          {% else %}
+            background:#fff;color:var(--muted-text);
+            border:2px solid var(--border-color);
+          {% endif %}">
+        <i class="fa {{ stage.icon }} fa-sm"></i>
+      </div>
+      <div class="small fw-600 {% if stage.done or stage.active %}text-primary{% else %}text-muted{% endif %}"
+        style="font-size:.72rem;">
+        {{ stage.label }}
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+<style>
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(138,75,159,.25); }
+  50%       { box-shadow: 0 0 0 8px rgba(138,75,159,.1); }
+}
+</style>

@@ -1,14 +1,28 @@
+from django.db.models import Sum
+
+
 def cart_processor(request):
-    from .models import Cart
+    from apps.orders.models import Cart
+
+    cart = None
     cart_count = 0
+
     try:
         if request.user.is_authenticated:
             cart = Cart.objects.filter(user=request.user).first()
         else:
-            session_key = request.session.session_key
-            cart = Cart.objects.filter(session_key=session_key).first()
+            key = request.session.session_key
+            if key:
+                cart = Cart.objects.filter(
+                    session_key=key,
+                    user__isnull=True,
+                ).first()
+
         if cart:
-            cart_count = cart.total_items
+            cart_count = (
+                cart.items.aggregate(total=Sum('quantity'))['total'] or 0
+            )
     except Exception:
         pass
-    return {'cart_count': cart_count}
+
+    return {'cart': cart, 'cart_count': cart_count}

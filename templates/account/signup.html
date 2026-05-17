@@ -80,7 +80,15 @@
               <!-- Senha -->
               <div class="mb-3">
                 <label class="form-label fw-600 small">Senha *</label>
-                {{ form.password1 }}
+                <div class="password-wrapper position-relative">
+                  <input type="password" name="password1" id="id_password1"
+                    class="form-control" placeholder="Sua senha"
+                    autocomplete="new-password" required>
+                  <button type="button" class="password-toggle"
+                    data-target="#id_password1" title="Mostrar/ocultar senha">
+                    <i class="fa fa-eye"></i>
+                  </button>
+                </div>
                 {% if form.password1.errors %}
                 <div class="invalid-feedback d-block">{{ form.password1.errors|join:", " }}</div>
                 {% endif %}
@@ -89,7 +97,15 @@
 
               <div class="mb-4">
                 <label class="form-label fw-600 small">Confirmar Senha *</label>
-                {{ form.password2 }}
+                <div class="password-wrapper position-relative">
+                  <input type="password" name="password2" id="id_password2"
+                    class="form-control" placeholder="Repita a senha"
+                    autocomplete="new-password" required>
+                  <button type="button" class="password-toggle"
+                    data-target="#id_password2" title="Mostrar/ocultar senha">
+                    <i class="fa fa-eye"></i>
+                  </button>
+                </div>
                 {% if form.password2.errors %}
                 <div class="invalid-feedback d-block">{{ form.password2.errors|join:", " }}</div>
                 {% endif %}

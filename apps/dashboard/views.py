@@ -28,6 +28,19 @@ def dashboard_home(request):
     new_users = User.objects.filter(date_joined__date__gte=week_ago).count()
     open_cash = CashRegister.objects.filter(status='open').first()
 
+    shortcuts = [
+        {'label': 'Produtos',    'icon': 'fa-box',          'color': '#8A4B9F', 'url': '/admin/catalog/product/'},
+        {'label': 'Estoque',     'icon': 'fa-cubes',        'color': '#3498DB', 'url': '/dashboard/estoque/'},
+        {'label': 'Pedidos',     'icon': 'fa-shopping-cart','color': '#E74C3C', 'url': '/dashboard/pedidos/'},
+        {'label': 'Caixa',       'icon': 'fa-cash-register','color': '#27AE60', 'url': '/dashboard/caixa/'},
+        {'label': 'Eventos',     'icon': 'fa-calendar',     'color': '#F4B942', 'url': '/admin/events/event/'},
+        {'label': 'Promoções',   'icon': 'fa-percent',      'color': '#E91E8C', 'url': '/admin/events/promotion/'},
+        {'label': 'Planos',      'icon': 'fa-star',         'color': '#FF9800', 'url': '/admin/plans/serviceplan/'},
+        {'label': 'Fidelidade',  'icon': 'fa-gift',         'color': '#9C27B0', 'url': '/admin/loyalty/loyaltyrule/'},
+        {'label': 'Categorias',  'icon': 'fa-th',           'color': '#607D8B', 'url': '/admin/catalog/category/'},
+        {'label': 'Usuários',    'icon': 'fa-users',        'color': '#2196F3', 'url': '/admin/accounts/user/'},
+    ]
+
     return render(request, 'dashboard/home.html', {
         'total_orders_today': total_orders_today,
         'revenue_today': revenue_today,
@@ -36,6 +49,7 @@ def dashboard_home(request):
         'recent_orders': recent_orders,
         'new_users': new_users,
         'open_cash': open_cash,
+        'shortcuts': shortcuts,
     })
 
 

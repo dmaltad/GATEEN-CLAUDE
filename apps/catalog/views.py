@@ -10,33 +10,38 @@ class ProductListView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        qs = Product.objects.filter(is_active=True).select_related('category', 'brand')
-        category_slug = self.kwargs.get('category_slug')
-        brand_slug = self.kwargs.get('brand_slug')
-        q = self.request.GET.get('q')
-        species = self.request.GET.get('species')
-        order = self.request.GET.get('order', '-created_at')
+        qs = Product.objects.filter(
+            is_active=True,
+        ).exclude(
+            # Exclui produtos sem estoque (stock não existe OU quantity <= 0)
+            Q(stock__isnull=True) | Q(stock__quantity__lte=0)
+        ).select_related('category', 'brand', 'stock')
 
-        if category_slug:
-            qs = qs.filter(category__slug=category_slug)
-        if brand_slug:
-            qs = qs.filter(brand__slug=brand_slug)
+        # Filtros opcionais
+        q = self.request.GET.get('q')
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(description__icontains=q))
-        if species and species != 'all':
-            qs = qs.filter(species__in=[species, 'all'])
 
-        valid_orders = ['-created_at', 'price', '-price', 'name']
-        if order in valid_orders:
+        category_slug = self.kwargs.get('category_slug') or self.request.GET.get('category')
+        if category_slug:
+            qs = qs.filter(category__slug=category_slug)
+
+        species = self.request.GET.get('species')
+        if species:
+            qs = qs.filter(species=species)
+
+        order = self.request.GET.get('order', '-created_at')
+        allowed_orders = ['price', '-price', 'name', '-name', '-created_at']
+        if order in allowed_orders:
             qs = qs.order_by(order)
+
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['categories'] = Category.objects.filter(is_active=True)
-        ctx['brands'] = Brand.objects.filter(is_active=True)
-        ctx['selected_category'] = self.kwargs.get('category_slug')
         ctx['query'] = self.request.GET.get('q', '')
+        ctx['species_choices'] = Product.SPECIES_CHOICES
         return ctx
 
 

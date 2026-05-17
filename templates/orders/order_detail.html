@@ -5,103 +5,106 @@
 
 {% block content %}
 <div class="container py-5">
-  <div class="d-flex align-items-center justify-content-between mb-4">
+
+  <!-- CABEÇALHO DO PEDIDO -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
     <div>
-      <h3 class="fw-800 mb-0">Pedido #{{ order.order_number }}</h3>
+      <h4 class="fw-800 mb-1">
+        <i class="fa fa-receipt me-2" style="color:var(--primary);"></i>
+        Pedido #{{ order.order_number }}
+      </h4>
       <p class="text-muted mb-0">{{ order.created_at|date:"d/m/Y H:i" }}</p>
     </div>
-    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary rounded-pill btn-sm">
-      <i class="fa fa-arrow-left me-1"></i>Meus pedidos
-    </a>
+    <span class="badge rounded-pill px-3 py-2 fw-600 status-badge status-{{ order.status }}"
+      style="font-size:.9rem;">
+      {{ order.get_status_display }}
+    </span>
   </div>
 
-  <!-- STATUS TRACKER -->
+  <!-- TRACKER DE STATUS -->
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4">
-      <div class="order-tracker d-flex justify-content-between">
-        {% for step_val, step_label in steps %}
-        <div class="tracker-step text-center {% if order.status == step_val %}active{% endif %} {% if step_passed %}passed{% endif %}">
-          <div class="tracker-dot mx-auto mb-2"></div>
-          <div class="small fw-600">{{ step_label }}</div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
 
-  <div class="row g-4">
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-transparent border-0 p-4 pb-0">
-          <h5 class="fw-700">Itens do pedido</h5>
-        </div>
-        <div class="card-body p-0">
-          {% for item in order.items.all %}
-          <div class="d-flex align-items-center p-4 {% if not forloop.last %}border-bottom{% endif %}">
-            {% if item.product.image %}
-            <img src="{{ item.product.image.url }}" class="rounded me-3" style="width:64px;height:64px;object-fit:cover;">
-            {% endif %}
-            <div class="flex-grow-1">
-              <h6 class="fw-600 mb-1">{{ item.product.name }}</h6>
-              <p class="text-muted small mb-0">{{ item.quantity }}x R$ {{ item.unit_price }}</p>
-            </div>
-            <div class="fw-700 text-primary">R$ {{ item.subtotal }}</div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <h5 class="fw-700 mb-3">Resumo</h5>
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted">Subtotal</span>
-            <span>R$ {{ order.subtotal }}</span>
-          </div>
-          {% if order.delivery_fee %}
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted">Frete</span>
-            <span>R$ {{ order.delivery_fee }}</span>
-          </div>
-          {% endif %}
-          {% if order.discount %}
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted">Desconto</span>
-            <span class="text-success">-R$ {{ order.discount }}</span>
-          </div>
-          {% endif %}
-          <hr>
-          <div class="d-flex justify-content-between mb-3">
-            <span class="fw-700">Total</span>
-            <span class="fw-800 text-primary fs-5">R$ {{ order.total }}</span>
-          </div>
-          <div class="mb-2">
-            <span class="text-muted small">Pagamento:</span>
-            <span class="fw-600 small ms-1">{{ order.get_payment_method_display }}</span>
-          </div>
-          <div>
-            <span class="text-muted small">Entrega:</span>
-            <span class="fw-600 small ms-1">{{ order.get_delivery_type_display }}</span>
-          </div>
-        </div>
-      </div>
-
-      {% if order.address %}
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-          <h6 class="fw-700 mb-2"><i class="fa fa-map-marker-alt me-2 text-primary"></i>Endereço de entrega</h6>
-          <p class="mb-0 small text-muted">
-            {{ order.address.street }}, {{ order.address.number }}<br>
-            {% if order.address.complement %}{{ order.address.complement }}<br>{% endif %}
-            {{ order.address.neighborhood }} — {{ order.address.city }}/{{ order.address.state }}<br>
-            CEP: {{ order.address.cep }}
-          </p>
-        </div>
-      </div>
+      {% if order.delivery_type == 'pickup' %}
+        {% comment %}Etapas para RETIRADA{% endcomment %}
+        {% with stages=order.PICKUP_STAGES %}
+        <h5 class="fw-700 mb-4">
+          <i class="fa fa-store me-2" style="color:var(--primary);"></i>
+          Acompanhe sua retirada
+        </h5>
+        {% include 'orders/_tracker.html' with stages=pickup_stages current=order.status %}
+        {% endwith %}
+      {% else %}
+        {% comment %}Etapas para ENTREGA{% endcomment %}
+        <h5 class="fw-700 mb-4">
+          <i class="fa fa-motorcycle me-2" style="color:var(--primary);"></i>
+          Acompanhe sua entrega
+        </h5>
+        {% include 'orders/_tracker.html' with stages=delivery_stages current=order.status %}
       {% endif %}
+
     </div>
   </div>
+
+  <!-- ITENS DO PEDIDO -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent border-0 p-4">
+      <h5 class="fw-700 mb-0">Itens do pedido</h5>
+    </div>
+    <div class="card-body p-4 pt-0">
+      {% for item in order.items.all %}
+      <div class="d-flex align-items-center gap-3 py-3
+        {% if not forloop.last %}border-bottom{% endif %}">
+        {% if item.product.image %}
+        <img src="{{ item.product.image.url }}" class="rounded-3"
+          style="width:60px;height:60px;object-fit:cover;">
+        {% else %}
+        <div class="rounded-3 d-flex align-items-center justify-content-center"
+          style="width:60px;height:60px;background:var(--primary-bg);">
+          <i class="fa fa-box" style="color:var(--primary-lighter);"></i>
+        </div>
+        {% endif %}
+        <div class="flex-grow-1">
+          <div class="fw-600">{{ item.product.name }}</div>
+          <div class="text-muted small">
+            {{ item.quantity }}x R$ {{ item.unit_price }}
+          </div>
+        </div>
+        <div class="fw-800" style="color:var(--primary);">
+          R$ {{ item.subtotal|floatformat:2 }}
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="d-flex justify-content-between fw-800 mt-3 pt-3 border-top fs-5">
+        <span>Total</span>
+        <span style="color:var(--primary);">R$ {{ order.total }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENDEREÇO (apenas entrega) -->
+  {% if order.delivery_type == 'delivery' and order.address %}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <h5 class="fw-700 mb-3">
+        <i class="fa fa-map-marker-alt me-2" style="color:var(--primary);"></i>
+        Endereço de entrega
+      </h5>
+      <p class="mb-0 text-muted">
+        {{ order.address.street }}, {{ order.address.number }}
+        {% if order.address.complement %} / {{ order.address.complement }}{% endif %}<br>
+        {{ order.address.neighborhood }} — {{ order.address.city }}/{{ order.address.state }}<br>
+        CEP: {{ order.address.cep }}
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  <a href="{% url 'orders:order_list' %}"
+    class="btn btn-outline-secondary rounded-pill">
+    <i class="fa fa-arrow-left me-2"></i>Meus pedidos
+  </a>
+
 </div>
 {% endblock %}

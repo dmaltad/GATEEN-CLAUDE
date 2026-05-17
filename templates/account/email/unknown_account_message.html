@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><style>
+  body { margin:0; padding:0; background:#f4f4f8; font-family:'Segoe UI',Arial,sans-serif; }
+  .wrapper { max-width:560px; margin:40px auto; }
+  .header { background:linear-gradient(135deg,#8A4B9F,#6B3A7D); border-radius:16px 16px 0 0; padding:36px 40px; text-align:center; }
+  .logo-text { color:#fff; font-size:28px; font-weight:800; margin:0; }
+  .body  { background:#fff; padding:36px 40px; }
+  .btn   { display:inline-block; background:linear-gradient(135deg,#8A4B9F,#6B3A7D); color:#fff!important; text-decoration:none; padding:14px 36px; border-radius:50px; font-size:15px; font-weight:700; }
+  .footer { background:#f4f4f8; border-radius:0 0 16px 16px; padding:20px 40px; text-align:center; color:#aaa; font-size:12px; }
+</style></head>
+<body>
+<div class="wrapper">
+  <div class="header"><p class="logo-text">🐾 Gateen Petshop</p></div>
+  <div class="body">
+    <h1 style="color:#1E1B2E;font-size:22px;font-weight:700;margin:0 0 12px;">
+      E-mail não encontrado
+    </h1>
+    <p style="color:#555;font-size:15px;line-height:1.7;">
+      Recebemos uma solicitação de redefinição de senha para
+      <strong>{{ email }}</strong>, mas não encontramos nenhuma conta
+      associada a este endereço na Gateen Petshop.
+    </p>
+    <p style="color:#555;font-size:15px;line-height:1.7;">
+      Se você ainda não tem uma conta, crie uma gratuitamente:
+    </p>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="{{ signup_url }}" class="btn">Criar conta grátis</a>
+    </div>
+  </div>
+  <div class="footer">© 2026 Gateen Petshop | contato@gateen.com.br</div>
+</div>
+</body>
+</html>

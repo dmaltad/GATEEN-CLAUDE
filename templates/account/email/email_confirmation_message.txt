@@ -1,0 +1,12 @@
+Olá!
+
+Obrigado por se cadastrar na Gateen Petshop.
+Para ativar sua conta, acesse o link abaixo:
+
+{{ activate_url }}
+
+Este link expira em 3 dias.
+Se você não criou uma conta conosco, ignore este e-mail.
+
+— Equipe Gateen Petshop
+contato@gateen.com.br | (86) 99999-9999

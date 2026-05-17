@@ -23,7 +23,6 @@
     </div>
   </div>
 
-  <!-- MÉTRICAS -->
   <div class="row g-3 mb-4">
     <div class="col-md-3">
       <div class="dashboard-card card border-0 shadow-sm bg-primary text-white">
@@ -87,8 +86,27 @@
     </div>
   </div>
 
+  <div class="row g-3 mb-4">
+    <div class="col-12">
+      <h5 class="fw-700 mb-3 text-muted">
+        <i class="fa fa-bolt me-2" style="color:var(--accent);"></i>Atalhos rápidos
+      </h5>
+    </div>
+    {% for shortcut in shortcuts %}
+    <div class="col-6 col-md-3 col-lg-2">
+      <a href="{{ shortcut.url }}" class="text-decoration-none">
+        <div class="shortcut-card card border-0 text-center p-3 h-100">
+          <div class="shortcut-icon mb-2" style="color: {{ shortcut.color }};">
+            <i class="fa {{ shortcut.icon }} fa-2x"></i>
+          </div>
+          <div class="fw-600 small text-dark">{{ shortcut.label }}</div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
   <div class="row g-4">
-    <!-- PEDIDOS RECENTES -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
@@ -141,9 +159,7 @@
       </div>
     </div>
 
-    <!-- ESTOQUE BAIXO + CAIXA -->
     <div class="col-lg-4">
-      <!-- Caixa -->
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
           <h5 class="fw-700 mb-3"><i class="fa fa-cash-register me-2 text-success"></i>Caixa</h5>
@@ -161,7 +177,6 @@
         </div>
       </div>
 
-      <!-- Estoque baixo -->
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4 pb-0">
           <h5 class="fw-700 mb-0"><i class="fa fa-exclamation-triangle me-2 text-warning"></i>Estoque baixo</h5>

@@ -1,0 +1,26 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Conta Inativa — Gateen{% endblock %}
+{% block content %}
+<div class="min-vh-75 d-flex align-items-center py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-4 col-md-6 text-center">
+        <div class="card auth-card p-5">
+          <div class="auth-header-icon mx-auto mb-3"
+            style="background:#fff8e1;color:var(--accent);">
+            <i class="fa fa-ban"></i>
+          </div>
+          <h4 class="fw-800 mb-2">Conta desativada</h4>
+          <p class="text-muted mb-4">
+            Sua conta está inativa. Entre em contato com o suporte da Gateen para reativá-la.
+          </p>
+          <a href="mailto:contato@gateen.com.br"
+            class="btn btn-primary rounded-pill fw-700">
+            <i class="fa fa-envelope me-2"></i>Contatar suporte
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

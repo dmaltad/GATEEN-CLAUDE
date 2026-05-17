@@ -23,7 +23,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
+    # 'allauth.socialaccount',
     'crispy_forms',
     'crispy_bootstrap5',
     'django_extensions',
@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'apps.dashboard.middleware.StaffRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'

@@ -3,107 +3,135 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.db.models import Sum, F
 from .models import Cart, CartItem, Order, OrderItem
 from apps.catalog.models import Product
 
 
-def get_or_create_cart(request):
+# ── Helpers ──────────────────────────────────────────────────────
+
+def _get_or_create_cart(request):
     if request.user.is_authenticated:
         cart, _ = Cart.objects.get_or_create(user=request.user)
     else:
         if not request.session.session_key:
             request.session.create()
         cart, _ = Cart.objects.get_or_create(
-            session_key=request.session.session_key
+            session_key=request.session.session_key,
+            user__isnull=True,
         )
     return cart
 
 
+def _cart_count(cart):
+    return cart.items.aggregate(total=Sum('quantity'))['total'] or 0
+
+
+# ── Cart Views ────────────────────────────────────────────────────
+
 def cart_view(request):
-    cart = get_or_create_cart(request)
+    cart = _get_or_create_cart(request)
     return render(request, 'orders/cart.html', {'cart': cart})
 
 
 @require_POST
 def add_to_cart(request, product_id):
-    product = get_object_or_404(Product, pk=product_id, is_active=True)
-    cart = get_or_create_cart(request)
-    quantity = int(request.POST.get('quantity', 1))
-
-    stock = getattr(product, 'stock', None)
-    if stock and stock.available_quantity < quantity:
-        messages.error(request, 'Quantidade indisponível em estoque.')
+    from django.db.models import Q
+    product = get_object_or_404(
+        Product, pk=product_id, is_active=True
+    )
+    # Bloqueia produto sem estoque
+    if hasattr(product, 'stock') and product.stock.quantity <= 0:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Produto fora de estoque.'})
+        messages.error(request, f'{product.name} está fora de estoque.')
         return redirect('catalog:product_detail', slug=product.slug)
 
-    item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+    quantity = max(1, int(request.POST.get('quantity', 1)))
+    cart = _get_or_create_cart(request)
+
+    item, created = CartItem.objects.get_or_create(
+        cart=cart, product=product,
+        defaults={'quantity': quantity},
+    )
     if not created:
-        item.quantity += quantity
-    else:
-        item.quantity = quantity
-    item.save()
+        item.quantity = F('quantity') + quantity
+        item.save(update_fields=['quantity'])
+
+    # Conta fresco do banco
+    count = _cart_count(cart)
+
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if is_ajax:
+        # AJAX: apenas JSON — NÃO chama messages.success (evita ghost message)
+        return JsonResponse({
+            'success': True,
+            'cart_count': count,
+            'product_name': product.name,
+        })
 
     messages.success(request, f'{product.name} adicionado ao carrinho!')
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'success': True, 'cart_count': cart.total_items})
     return redirect('orders:cart')
 
 
 @require_POST
 def remove_from_cart(request, item_id):
-    item = get_object_or_404(CartItem, pk=item_id)
-    cart = get_or_create_cart(request)
-    if item.cart == cart:
-        item.delete()
-        messages.success(request, 'Item removido do carrinho.')
+    cart = _get_or_create_cart(request)
+    item = get_object_or_404(CartItem, pk=item_id, cart=cart)
+    item.delete()
+    messages.success(request, 'Item removido do carrinho.')
     return redirect('orders:cart')
 
 
 @require_POST
 def update_cart(request, item_id):
-    item = get_object_or_404(CartItem, pk=item_id)
-    cart = get_or_create_cart(request)
+    cart = _get_or_create_cart(request)
+    item = get_object_or_404(CartItem, pk=item_id, cart=cart)
     quantity = int(request.POST.get('quantity', 1))
-    if item.cart == cart:
-        if quantity > 0:
-            item.quantity = quantity
-            item.save()
-        else:
-            item.delete()
+    if quantity > 0:
+        item.quantity = quantity
+        item.save(update_fields=['quantity'])
+    else:
+        item.delete()
     return redirect('orders:cart')
 
 
+# ── Checkout ──────────────────────────────────────────────────────
+
 PAYMENT_METHODS = [
-    ('credit_card', 'Crédito', 'fa-credit-card'),
-    ('debit_card', 'Débito', 'fa-credit-card'),
-    ('pix', 'PIX', 'fa-qrcode'),
-    ('cash', 'Dinheiro', 'fa-money-bill-wave'),
+    ('credit_card', 'Cartão de Crédito', 'fa-credit-card'),
+    ('debit_card',  'Cartão de Débito',  'fa-credit-card'),
+    ('pix',         'PIX',               'fa-qrcode'),
+    ('cash',        'Dinheiro',          'fa-money-bill-wave'),
 ]
 
 
 @login_required
 def checkout_view(request):
-    cart = get_or_create_cart(request)
+    cart = _get_or_create_cart(request)
     if not cart.items.exists():
         messages.warning(request, 'Seu carrinho está vazio.')
         return redirect('orders:cart')
 
-    addresses = request.user.addresses.all()
+    from apps.accounts.models import Address
+    addresses = Address.objects.filter(user=request.user)
 
     if request.method == 'POST':
-        delivery_type = request.POST.get('delivery_type')
-        payment_method = request.POST.get('payment_method')
-        address_id = request.POST.get('address_id')
-        notes = request.POST.get('notes', '')
+        delivery_type  = request.POST.get('delivery_type', 'pickup')
+        payment_method = request.POST.get('payment_method', 'pix')
+        address_id     = request.POST.get('address_id')
+        notes          = request.POST.get('notes', '').strip()
 
         address = None
         if delivery_type == 'delivery' and address_id:
-            address = get_object_or_404(
-                request.user.addresses, pk=address_id
-            )
+            try:
+                address = Address.objects.get(pk=address_id, user=request.user)
+            except Address.DoesNotExist:
+                pass
 
-        subtotal = cart.total
+        subtotal     = cart.total
         delivery_fee = 10 if delivery_type == 'delivery' else 0
-        total = subtotal + delivery_fee
+        total        = subtotal + delivery_fee
 
         order = Order.objects.create(
             user=request.user,
@@ -116,48 +144,77 @@ def checkout_view(request):
             notes=notes,
         )
 
-        for item in cart.items.all():
+        for item in cart.items.select_related('product__stock').all():
             OrderItem.objects.create(
                 order=order,
                 product=item.product,
                 quantity=item.quantity,
                 unit_price=item.product.current_price,
             )
-            if hasattr(item.product, 'stock'):
-                item.product.stock.quantity -= item.quantity
-                item.product.stock.save()
+            # Baixa estoque
+            try:
+                item.product.stock.quantity = F('quantity') - item.quantity
+                item.product.stock.save(update_fields=['quantity'])
+            except Exception:
+                pass
 
         cart.items.all().delete()
         messages.success(
             request,
-            f'Pedido #{order.order_number} realizado com sucesso!'
+            f'Pedido #{order.order_number} realizado com sucesso! 🎉'
         )
-        return redirect('orders:order_detail', pk=order.pk)
+        return redirect('orders:order_detail', order_number=order.order_number)
 
     return render(request, 'orders/checkout.html', {
         'cart': cart,
         'addresses': addresses,
         'payment_methods': PAYMENT_METHODS,
+        'has_addresses': addresses.exists(),
     })
 
 
+# ── Orders ────────────────────────────────────────────────────────
+
 @login_required
-def order_list_view(request):
+def order_list(request):
     orders = request.user.orders.all().order_by('-created_at')
     return render(request, 'orders/order_list.html', {'orders': orders})
 
 
 @login_required
-def order_detail_view(request, pk):
-    order = get_object_or_404(Order, pk=pk, user=request.user)
-    steps = [
-        ('pending',   'Pendente'),
-        ('confirmed', 'Confirmado'),
-        ('preparing', 'Em preparo'),
-        ('ready',     'Pronto'),
-        ('delivered', 'Entregue'),
+def order_detail(request, order_number):
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+
+    DELIVERY_STAGES = [
+        {'key': 'pending',   'label': 'Pedido',     'icon': 'fa-clock'},
+        {'key': 'confirmed', 'label': 'Confirmado', 'icon': 'fa-check'},
+        {'key': 'preparing', 'label': 'Preparando', 'icon': 'fa-box'},
+        {'key': 'shipped',   'label': 'Em entrega', 'icon': 'fa-motorcycle'},
+        {'key': 'delivered', 'label': 'Entregue',   'icon': 'fa-home'},
     ]
+    PICKUP_STAGES = [
+        {'key': 'pending',   'label': 'Pedido',    'icon': 'fa-clock'},
+        {'key': 'confirmed', 'label': 'Confirmado','icon': 'fa-check'},
+        {'key': 'preparing', 'label': 'Preparando','icon': 'fa-box'},
+        {'key': 'ready',     'label': 'Pronto',    'icon': 'fa-bell'},
+        {'key': 'delivered', 'label': 'Retirado',  'icon': 'fa-store'},
+    ]
+
+    if order.status == 'cancelled':
+        stages = [{'key': 'cancelled', 'label': 'Cancelado',
+                   'icon': 'fa-times', 'done': False, 'active': True}]
+        progress_pct = 0
+    else:
+        stages = PICKUP_STAGES if order.delivery_type == 'pickup' else DELIVERY_STAGES
+        keys = [s['key'] for s in stages]
+        current_idx = keys.index(order.status) if order.status in keys else 0
+        for i, stage in enumerate(stages):
+            stage['done']   = i < current_idx
+            stage['active'] = i == current_idx
+        progress_pct = int((current_idx / max(len(stages) - 1, 1)) * 100)
+
     return render(request, 'orders/order_detail.html', {
         'order': order,
-        'steps': steps,
+        'stages': stages,
+        'progress_pct': progress_pct,
     })

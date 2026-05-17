@@ -12,6 +12,7 @@
           <h4 class="fw-800 mb-4"><i class="fa fa-map-marker-alt me-2 text-primary"></i>Novo Endereço</h4>
           <form method="post">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
             {{ form|crispy }}
             <div class="d-flex gap-2 mt-4">
               <button type="submit" class="btn btn-primary rounded-pill px-4 fw-600">

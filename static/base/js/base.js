@@ -1,56 +1,32 @@
-// ==============================
-// GATEEN PETSHOP — JS BASE
-// ==============================
-
+/* ════════════════════════════════════════════════════════
+   GATEEN PETSHOP — JS Base
+   (cart.js é carregado separadamente em base.html)
+   ════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function () {
 
-  // Auto-dismiss alerts after 4s
-  document.querySelectorAll('.alert').forEach(function (alert) {
-    setTimeout(function () {
-      var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-      bsAlert.close();
-    }, 4000);
-  });
+  // Auto-dismiss alerts após 4s
+  initAlerts();
 
-  // Add to cart — AJAX
-  document.querySelectorAll('.add-cart-btn[data-product-id]').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      var productId = this.dataset.productId;
-      var csrfToken = getCookie('csrftoken');
-
-      fetch('/pedidos/adicionar/' + productId + '/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'quantity=1',
-      })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (data.success) {
-            updateCartBadge(data.cart_count);
-            showToast('Produto adicionado ao carrinho!', 'success');
-          }
-        })
-        .catch(function () {
-          showToast('Erro ao adicionar. Tente novamente.', 'danger');
-        });
+  // Scroll da navbar
+  var navbar = document.querySelector('.navbar-gateen');
+  if (navbar) {
+    window.addEventListener('scroll', function () {
+      navbar.classList.toggle('navbar-scrolled', window.scrollY > 50);
     });
-  });
+  }
 
-  // Quantity input — prevent negatives
-  document.querySelectorAll('input[type="number"]').forEach(function (input) {
-    input.addEventListener('change', function () {
-      if (parseInt(this.value) < 1) this.value = 1;
-    });
-  });
+  // Eye icon nas senhas
+  initPasswordToggles();
+
+  // Máscaras
+  initMasks();
+
+  // CEP
+  initCepLookup();
 
   // Smooth scroll
-  document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
-    anchor.addEventListener('click', function (e) {
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
       var target = document.querySelector(this.getAttribute('href'));
       if (target) {
         e.preventDefault();
@@ -58,102 +34,97 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   });
-
-  // Navbar scroll effect
-  var navbar = document.querySelector('.navbar-gateen');
-  if (navbar) {
-    window.addEventListener('scroll', function () {
-      if (window.scrollY > 50) {
-        navbar.classList.add('navbar-scrolled');
-      } else {
-        navbar.classList.remove('navbar-scrolled');
-      }
-    });
-  }
-
-  // CEP auto-fill
-  var cepInput = document.querySelector('input[name="cep"]');
-  if (cepInput) {
-    cepInput.addEventListener('blur', function () {
-      var cep = this.value.replace(/\D/g, '');
-      if (cep.length === 8) {
-        fetch('https://viacep.com.br/ws/' + cep + '/json/')
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            if (!data.erro) {
-              setFieldValue('street', data.logradouro);
-              setFieldValue('neighborhood', data.bairro);
-              setFieldValue('city', data.localidade);
-              setFieldValue('state', data.uf);
-            }
-          });
-      }
-    });
-  }
-
-  // CPF mask
-  var cpfInput = document.querySelector('input[name="cpf"]');
-  if (cpfInput) {
-    cpfInput.addEventListener('input', function () {
-      var v = this.value.replace(/\D/g, '').substring(0, 11);
-      v = v.replace(/(\d{3})(\d)/, '$1.$2');
-      v = v.replace(/(\d{3})(\d)/, '$1.$2');
-      v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-      this.value = v;
-    });
-  }
-
-  // Phone mask
-  var phoneInput = document.querySelector('input[name="phone"]');
-  if (phoneInput) {
-    phoneInput.addEventListener('input', function () {
-      var v = this.value.replace(/\D/g, '').substring(0, 11);
-      if (v.length > 6) {
-        v = '(' + v.substring(0, 2) + ') ' + v.substring(2, 7) + '-' + v.substring(7);
-      } else if (v.length > 2) {
-        v = '(' + v.substring(0, 2) + ') ' + v.substring(2);
-      }
-      this.value = v;
-    });
-  }
-
 });
 
-// ==============================
-// HELPERS
-// ==============================
-
-function getCookie(name) {
-  var value = '; ' + document.cookie;
-  var parts = value.split('; ' + name + '=');
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return '';
-}
-
-function updateCartBadge(count) {
-  var badges = document.querySelectorAll('.cart-badge, [data-cart-badge]');
-  badges.forEach(function (badge) {
-    badge.textContent = count;
-    badge.style.display = count > 0 ? 'inline' : 'none';
+/* ── Alerts ──────────────────────────────────────────── */
+function initAlerts() {
+  var container = document.getElementById('messagesContainer');
+  if (!container) return;
+  container.querySelectorAll('.gateen-alert').forEach(function (el) {
+    var timer = setTimeout(function () { dismissAlert(el, container); }, 4000);
+    var btn = el.querySelector('.btn-close');
+    if (btn) btn.addEventListener('click', function () {
+      clearTimeout(timer); dismissAlert(el, container);
+    });
   });
 }
 
-function showToast(message, type) {
-  type = type || 'success';
-  var toast = document.createElement('div');
-  toast.className = 'toast-notification toast-' + type;
-  toast.innerHTML =
-    '<i class="fa fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + ' me-2"></i>' +
-    message;
-  document.body.appendChild(toast);
-  setTimeout(function () { toast.classList.add('show'); }, 10);
+function dismissAlert(el, container) {
+  el.style.transition = 'opacity .3s ease, max-height .3s ease, margin .3s ease, padding .3s ease';
+  el.style.opacity = '0';
+  el.style.maxHeight = el.offsetHeight + 'px';
+  el.offsetHeight;
+  el.style.maxHeight = '0';
+  el.style.marginBottom = '0';
+  el.style.paddingTop = '0';
+  el.style.paddingBottom = '0';
+  el.style.overflow = 'hidden';
   setTimeout(function () {
-    toast.classList.remove('show');
-    setTimeout(function () { toast.remove(); }, 300);
-  }, 3000);
+    el.parentNode && el.parentNode.removeChild(el);
+    if (container && !container.querySelector('.gateen-alert')) {
+      container.style.opacity = '0';
+      setTimeout(function () {
+        container.parentNode && container.parentNode.removeChild(container);
+      }, 200);
+    }
+  }, 350);
 }
 
-function setFieldValue(name, value) {
-  var field = document.querySelector('[name="' + name + '"]');
-  if (field && value) field.value = value;
+/* ── FIX 5 — Eye icon nas senhas ─────────────────────── */
+function initPasswordToggles() {
+  document.querySelectorAll('.password-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var input = document.querySelector(this.dataset.target);
+      if (!input) return;
+      var isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      var icon = this.querySelector('i');
+      if (icon) icon.className = isText ? 'fa fa-eye' : 'fa fa-eye-slash';
+    });
+  });
+}
+
+/* ── Máscaras ─────────────────────────────────────────── */
+function initMasks() {
+  var cpf = document.querySelector('input[name="cpf"]');
+  if (cpf) cpf.addEventListener('input', function () {
+    var v = this.value.replace(/\D/g,'').substring(0,11);
+    v = v.replace(/(\d{3})(\d)/,'$1.$2');
+    v = v.replace(/(\d{3})(\d)/,'$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    this.value = v;
+  });
+
+  var tel = document.querySelector('input[name="phone"]');
+  if (tel) tel.addEventListener('input', function () {
+    var v = this.value.replace(/\D/g,'').substring(0,11);
+    if (v.length > 6) v = '('+v.substring(0,2)+') '+v.substring(2,7)+'-'+v.substring(7);
+    else if (v.length > 2) v = '('+v.substring(0,2)+') '+v.substring(2);
+    this.value = v;
+  });
+}
+
+/* ── CEP ─────────────────────────────────────────────── */
+function initCepLookup() {
+  var cep = document.querySelector('input[name="cep"]');
+  if (!cep) return;
+  cep.addEventListener('blur', function () {
+    var v = this.value.replace(/\D/g,'');
+    if (v.length !== 8) return;
+    fetch('https://viacep.com.br/ws/'+v+'/json/')
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if (!d.erro) {
+          setField('street', d.logradouro);
+          setField('neighborhood', d.bairro);
+          setField('city', d.localidade);
+          setField('state', d.uf);
+        }
+      }).catch(function(){});
+  });
+}
+
+function setField(name, val) {
+  var el = document.querySelector('[name="'+name+'"]');
+  if (el && val) el.value = val;
 }

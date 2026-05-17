@@ -722,3 +722,39 @@ footer, .footer-gateen { flex-shrink: 0; }
   color: var(--danger);
   margin-top: 4px;
 }
+
+/* ── Password Toggle ─────────────────────────────────── */
+.password-wrapper {
+  position: relative;
+}
+.password-wrapper input {
+  padding-right: 2.8rem;
+}
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted-text);
+  padding: 4px 6px;
+  z-index: 5;
+  transition: color .2s;
+}
+.password-toggle:hover { color: var(--primary); }
+
+/* ── Shortcut Cards ──────────────────────────────────── */
+.shortcut-card {
+  border-radius: 14px !important;
+  transition: var(--transition);
+  background: var(--primary-bg-soft);
+  border: 1.5px solid var(--border-color) !important;
+}
+.shortcut-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  background: #fff;
+}
+.shortcut-icon { font-size: 1.5rem; }
