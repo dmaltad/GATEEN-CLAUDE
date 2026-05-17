@@ -16,7 +16,7 @@
 
   {% include 'includes/navbar.html' %}
 
-  {# ── Mensagens Django → renderizadas como toasts via JS ── #}
+  {# ── Mensagens Django → toasts centro-topo via JS ── #}
   {% if messages %}
   <div id="djangoMessages" aria-hidden="true" style="display:none;">
     {% for message in messages %}
@@ -24,6 +24,9 @@
     {% endfor %}
   </div>
   {% endif %}
+
+  {# ── Container de toasts centro-topo ── #}
+  <div id="toastTopCenter" aria-live="polite" aria-atomic="true"></div>
 
   <main id="main-content" class="main-content">
     {% block content %}{% endblock %}

@@ -265,7 +265,8 @@
                   <td class="text-muted small">{{ order.created_at|date:"d/m/Y" }}</td>
                   <td class="fw-600">R$ {{ order.total }}</td>
                   <td><span class="badge status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
-                  <td><a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-outline-primary btn-sm rounded-pill">Ver</a></td>
+                  <td><a href="{% url 'orders:order_detail' order.order_number %}"
+                  class="btn btn-outline-primary btn-sm rounded-pill">Ver</a></td>
                 </tr>
                 {% endfor %}
               </tbody>

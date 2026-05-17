@@ -218,3 +218,10 @@ def order_detail(request, order_number):
         'stages': stages,
         'progress_pct': progress_pct,
     })
+
+@login_required
+def order_detail_by_pk(request, pk):
+    """Compatibilidade: redireciona links antigos /pedido/<pk>/ para /pedido/<order_number>/"""
+    from django.shortcuts import redirect
+    order = get_object_or_404(Order, pk=pk, user=request.user)
+    return redirect('orders:order_detail', order_number=order.order_number, permanent=True)

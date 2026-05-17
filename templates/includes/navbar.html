@@ -237,20 +237,13 @@
 
     <!-- MOBILE: carrinho + toggler -->
     <div class="d-flex align-items-center gap-2 d-lg-none ms-auto">
-      <a href="{% url 'orders:cart' %}"
-        class="btn btn-outline-light btn-sm d-flex align-items-center gap-1">
-        <span class="position-relative" style="display:inline-flex;">
-          <i class="fa fa-shopping-cart"></i>
-          <span class="cart-badge-num" style="
-            position:absolute;top:-8px;right:-10px;
-            background:#dc3545;color:#fff;border-radius:50%;
-            min-width:18px;height:18px;font-size:.62rem;font-weight:700;
-            display:{% if cart_count %}flex{% else %}none{% endif %};
-            align-items:center;justify-content:center;
-            padding:0 3px;line-height:1;border:2px solid rgba(255,255,255,.9);
-            pointer-events:none;">{{ cart_count }}</span>
+      <a href="{% url 'orders:cart' %}" class="cart-nav-btn"
+        title="Meu Carrinho">
+        <i class="fa fa-shopping-cart"></i>
+        <span class="cart-nav-badge cart-badge-num"
+          style="display:{% if cart_count %}flex{% else %}none{% endif %};">
+          {{ cart_count }}
         </span>
-        <span class="d-none d-sm-inline small fw-600">Carrinho</span>
       </a>
       <button class="navbar-toggler border-0 p-1" type="button"
         data-bs-toggle="collapse" data-bs-target="#navMain">
@@ -292,20 +285,13 @@
 
       <!-- DESKTOP: carrinho + usuário -->
       <div class="d-none d-lg-flex align-items-center gap-2">
-        <a href="{% url 'orders:cart' %}"
-          class="btn btn-outline-light btn-sm d-flex align-items-center gap-2 px-3">
-          <span class="position-relative" style="display:inline-flex;">
-            <i class="fa fa-shopping-cart"></i>
-            <span class="cart-badge-num" style="
-              position:absolute;top:-8px;right:-10px;
-              background:#dc3545;color:#fff;border-radius:50%;
-              min-width:18px;height:18px;font-size:.62rem;font-weight:700;
-              display:{% if cart_count %}flex{% else %}none{% endif %};
-              align-items:center;justify-content:center;
-              padding:0 3px;line-height:1;border:2px solid rgba(255,255,255,.9);
-              pointer-events:none;">{{ cart_count }}</span>
+        <a href="{% url 'orders:cart' %}" class="cart-nav-btn me-1"
+           title="Meu Carrinho">
+          <i class="fa fa-shopping-cart"></i>
+          <span class="cart-nav-badge cart-badge-num"
+            style="display:{% if cart_count %}flex{% else %}none{% endif %};">
+            {{ cart_count }}
           </span>
-          <span class="fw-600">Carrinho</span>
         </a>
 
         {% if user.is_authenticated %}

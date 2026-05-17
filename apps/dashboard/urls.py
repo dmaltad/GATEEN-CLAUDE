@@ -9,8 +9,8 @@ urlpatterns = [
     path('', views.dashboard_home, name='home'),
     path('estoque/', views.stock_view, name='stock'),
     path('caixa/', views.cash_register_view, name='cash_register'),
-    # path('pedidos/', views.orders_view, name='orders'),
-    # path('pedidos/<str:order_number>/', views.order_detail_staff_redirect, name='update_order'),
+    path('pedidos/', views.orders_view, name='orders'),
+    path('pedidos/<str:order_number>/', views.order_detail_staff_redirect, name='update_order'),
 
     # ── Gestão personalizada ──────────────────────────────
     # Produtos

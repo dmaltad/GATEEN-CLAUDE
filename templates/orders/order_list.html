@@ -5,7 +5,9 @@
 
 {% block content %}
 <div class="container py-5">
-  <h3 class="fw-800 mb-4"><i class="fa fa-list me-2 text-primary"></i>Meus Pedidos</h3>
+  <h3 class="fw-800 mb-4">
+    <i class="fa fa-list me-2" style="color:var(--primary);"></i>Meus Pedidos
+  </h3>
 
   {% if orders %}
   <div class="card border-0 shadow-sm">
@@ -26,18 +28,26 @@
           <tbody>
             {% for order in orders %}
             <tr>
-              <td class="ps-4 fw-700 text-primary">#{{ order.order_number }}</td>
+              <td class="ps-4 fw-700" style="color:var(--primary);">
+                #{{ order.order_number }}
+              </td>
               <td class="text-muted small">{{ order.created_at|date:"d/m/Y" }}</td>
               <td>{{ order.items.count }} item(s)</td>
               <td class="fw-700">R$ {{ order.total }}</td>
-              <td><span class="badge bg-light text-dark">{{ order.get_delivery_type_display }}</span></td>
+              <td>
+                <span class="badge bg-light text-dark">
+                  {{ order.get_delivery_type_display }}
+                </span>
+              </td>
               <td>
                 <span class="badge status-badge status-{{ order.status }}">
                   {{ order.get_status_display }}
                 </span>
               </td>
               <td>
-                <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-outline-primary btn-sm rounded-pill">
+                <!-- USA order_number, não pk -->
+                <a href="{% url 'orders:order_detail' order.order_number %}"
+                  class="btn btn-outline-primary btn-sm rounded-pill">
                   Ver <i class="fa fa-arrow-right ms-1"></i>
                 </a>
               </td>
@@ -50,9 +60,11 @@
   </div>
   {% else %}
   <div class="text-center py-5">
-    <i class="fa fa-box-open fa-4x text-muted mb-4 opacity-25"></i>
+    <i class="fa fa-box-open fa-4x mb-4 opacity-25"
+      style="color:var(--primary);"></i>
     <h4 class="text-muted">Você ainda não fez nenhum pedido</h4>
-    <a href="{% url 'catalog:product_list' %}" class="btn btn-primary rounded-pill px-4 mt-3">
+    <a href="{% url 'catalog:product_list' %}"
+      class="btn btn-primary rounded-pill px-4 mt-3">
       <i class="fa fa-shopping-bag me-2"></i>Explorar produtos
     </a>
   </div>

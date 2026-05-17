@@ -1,0 +1,207 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Produtos — Gateen{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h4 class="fw-800 mb-0">
+        <i class="fa fa-box me-2" style="color:var(--primary);"></i>Produtos
+      </h4>
+      <p class="text-muted mb-0">{{ page_obj.paginator.count }} produto(s)</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'dashboard:product_create' %}"
+        class="btn btn-primary rounded-pill fw-600">
+        <i class="fa fa-plus me-1"></i>Novo produto
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <input type="text" name="q" value="{{ q }}"
+            class="form-control form-control-sm"
+            placeholder="Buscar por nome ou marca...">
+        </div>
+        <div class="col-md-3">
+          <select name="category" class="form-select form-select-sm">
+            <option value="">Todas as categorias</option>
+            {% for cat in categories %}
+            <option value="{{ cat.slug }}"
+              {% if cat.slug == cat %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="stock" class="form-select form-select-sm">
+            <option value="">Estoque: todos</option>
+            <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>
+              Estoque baixo
+            </option>
+            <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>
+              Sem estoque
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill">
+            <i class="fa fa-search me-1"></i>Filtrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4" style="width:60px;"></th>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th>Preço</th>
+              <th>Estoque</th>
+              <th>Status</th>
+              <th class="text-end pe-4">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in page_obj %}
+            <tr>
+              <td class="ps-4">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="rounded-2"
+                  style="width:40px;height:40px;object-fit:cover;">
+                {% else %}
+                <div class="rounded-2 d-flex align-items-center justify-content-center"
+                  style="width:40px;height:40px;background:var(--primary-bg);">
+                  <i class="fa fa-image" style="color:var(--primary-lighter);font-size:.8rem;"></i>
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-600">{{ product.name|truncatechars:40 }}</div>
+                <div class="text-muted small">
+                  {{ product.brand.name|default:"Sem marca" }}
+                </div>
+              </td>
+              <td class="text-muted small">{{ product.category.name }}</td>
+              <td>
+                <div class="fw-700" style="color:var(--primary);">
+                  R$ {{ product.current_price }}
+                </div>
+                {% if product.has_discount %}
+                <div class="text-muted text-decoration-line-through small">
+                  R$ {{ product.price }}
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                {% if product.stock %}
+                  {% if product.stock.quantity <= 0 %}
+                  <span class="badge bg-danger">Sem estoque</span>
+                  {% elif product.stock.quantity <= 5 %}
+                  <span class="badge bg-warning text-dark">
+                    Baixo ({{ product.stock.quantity }})
+                  </span>
+                  {% else %}
+                  <span class="badge bg-success-subtle text-success border border-success"
+                    style="font-size:.72rem;">
+                    {{ product.stock.quantity }} un.
+                  </span>
+                  {% endif %}
+                {% else %}
+                <span class="badge bg-secondary">N/A</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if product.is_active %}
+                <span class="badge bg-success-subtle text-success" style="font-size:.72rem;">
+                  Ativo
+                </span>
+                {% else %}
+                <span class="badge bg-danger-subtle text-danger" style="font-size:.72rem;">
+                  Inativo
+                </span>
+                {% endif %}
+                {% if product.is_featured %}
+                <span class="badge ms-1" style="background:var(--accent);color:#000;font-size:.65rem;">
+                  ★ Destaque
+                </span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                <div class="d-flex gap-1 justify-content-end">
+                  <a href="{% url 'catalog:product_detail' product.slug %}"
+                    class="btn btn-outline-secondary btn-sm rounded-pill"
+                    title="Ver no site" target="_blank">
+                    <i class="fa fa-eye"></i>
+                  </a>
+                  <a href="{% url 'dashboard:product_edit' product.pk %}"
+                    class="btn btn-outline-primary btn-sm rounded-pill"
+                    title="Editar">
+                    <i class="fa fa-edit"></i>
+                  </a>
+                  <a href="{% url 'dashboard:product_delete' product.pk %}"
+                    class="btn btn-outline-danger btn-sm rounded-pill"
+                    title="Excluir"
+                    onclick="return confirm('Excluir este produto?')">
+                    <i class="fa fa-trash"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="fa fa-box-open fa-3x mb-3 d-block opacity-25"></i>
+                Nenhum produto encontrado.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginação -->
+  {% if page_obj.has_other_pages %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link rounded-pill me-1" href="?page={{ page_obj.previous_page_number }}&q={{ q }}">
+          <i class="fa fa-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}&q={{ q }}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link rounded-pill ms-1" href="?page={{ page_obj.next_page_number }}&q={{ q }}">
+          <i class="fa fa-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}
