@@ -2,12 +2,13 @@
 Views de gestão personalizadas por cargo.
 Substituem o Django Admin para o fluxo de funcionários.
 """
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
+from django.utils import timezone
+from datetime import timedelta
 
 
 def group_required(*group_names):
@@ -26,6 +27,78 @@ def group_required(*group_names):
             return redirect('dashboard:home')
         return _wrapped
     return decorator
+
+
+# ══════════════════════════════════════════════════════
+# DASHBOARD HOME
+# ══════════════════════════════════════════════════════
+
+@login_required
+def dashboard_home(request):
+    from apps.orders.models import Order
+    from apps.catalog.models import Stock
+    from apps.accounts.models import User
+    from apps.events.models import Event
+
+    if not request.user.is_staff:
+        messages.error(request, 'Acesso restrito a funcionários.')
+        return redirect('home')
+
+    today     = timezone.now().date()
+    month_ago = today - timedelta(days=30)
+    week_ago  = today - timedelta(days=7)
+
+    paid_statuses = ['confirmed', 'preparing', 'ready', 'shipped', 'delivered']
+
+    total_orders_today = Order.objects.filter(created_at__date=today).count()
+    revenue_today = (
+        Order.objects.filter(created_at__date=today, status__in=paid_statuses)
+        .aggregate(total=Sum('total'))['total'] or 0
+    )
+    revenue_month = (
+        Order.objects.filter(created_at__date__gte=month_ago, status__in=paid_statuses)
+        .aggregate(total=Sum('total'))['total'] or 0
+    )
+    new_users = User.objects.filter(date_joined__date__gte=week_ago).count()
+
+    low_stock = (
+        Stock.objects.filter(quantity__lte=5)
+        .select_related('product')[:10]
+    )
+    recent_orders = (
+        Order.objects.select_related('user')
+        .order_by('-created_at')[:10]
+    )
+
+    # Eventos ativos (em andamento ou futuros)
+    now = timezone.now()
+    active_events = Event.objects.filter(
+        is_active=True,
+        start_date__gte=now - timedelta(days=1),
+    ).order_by('start_date')[:5]
+
+    shortcuts = [
+        {'label': 'Produtos',      'icon': 'fa-box',           'color': '#8A4B9F', 'url': '/dashboard/gestao/produtos/'},
+        {'label': 'Pedidos',       'icon': 'fa-shopping-cart', 'color': '#E74C3C', 'url': '/dashboard/gestao/pedidos/'},
+        {'label': 'Eventos',       'icon': 'fa-calendar',      'color': '#F4B942', 'url': '/dashboard/gestao/eventos/'},
+        {'label': 'Planos',        'icon': 'fa-star',          'color': '#FF9800', 'url': '/dashboard/gestao/planos/'},
+        {'label': 'Fidelidade',    'icon': 'fa-gift',          'color': '#9C27B0', 'url': '/dashboard/gestao/fidelidade/'},
+        {'label': 'Usuários',      'icon': 'fa-users',         'color': '#2196F3', 'url': '/dashboard/gestao/usuarios/'},
+        {'label': 'Cargos',        'icon': 'fa-user-tag',      'color': '#607D8B', 'url': '/dashboard/gestao/cargos/'},
+        {'label': 'Planos ativos', 'icon': 'fa-id-card',       'color': '#009688', 'url': '/dashboard/gestao/planos/ativos/'},
+        {'label': 'Categorias',    'icon': 'fa-th',            'color': '#795548', 'url': '/dashboard/gestao/categorias/'},
+    ]
+
+    return render(request, 'dashboard/home.html', {
+        'total_orders_today': total_orders_today,
+        'revenue_today':      revenue_today,
+        'revenue_month':      revenue_month,
+        'low_stock':          low_stock,
+        'recent_orders':      recent_orders,
+        'new_users':          new_users,
+        'shortcuts':          shortcuts,
+        'active_events':      active_events,
+    })
 
 
 # ══════════════════════════════════════════════════════
@@ -55,23 +128,22 @@ def product_list(request):
     page_obj = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'dashboard/management/product_list.html', {
-        'page_obj': page_obj,
-        'categories': Category.objects.filter(is_active=True),
-        'q': q,
-        'cat': cat,
+        'page_obj':    page_obj,
+        'categories':  Category.objects.filter(is_active=True),
+        'q':           q,
+        'cat':         cat,
         'stock_filter': stock_filter,
     })
 
 
 @group_required('Gerente', 'Estoquista')
 def product_create(request):
-    from apps.catalog.models import Product
     from apps.catalog.forms import ProductForm
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save()
-            messages.success(request, f'✅ Produto "{product.name}" criado!')
+            messages.success(request, f'Produto "{product.name}" criado!')
             return redirect('dashboard:product_list')
     else:
         form = ProductForm()
@@ -89,7 +161,7 @@ def product_edit(request, pk):
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
-            messages.success(request, f'✅ "{product.name}" atualizado!')
+            messages.success(request, f'"{product.name}" atualizado!')
             return redirect('dashboard:product_list')
     else:
         form = ProductForm(instance=product)
@@ -105,10 +177,106 @@ def product_delete(request, pk):
     if request.method == 'POST':
         name = product.name
         product.delete()
-        messages.success(request, f'🗑 "{name}" removido.')
+        messages.success(request, f'"{name}" removido.')
         return redirect('dashboard:product_list')
     return render(request, 'dashboard/management/confirm_delete.html', {
         'object': product, 'type': 'produto'
+    })
+
+
+# ══════════════════════════════════════════════════════
+# CATEGORIAS
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente', 'Estoquista')
+def category_list(request):
+    from apps.catalog.models import Category
+    qs = Category.objects.all().order_by('order', 'name')
+    q = request.GET.get('q', '')
+    if q:
+        qs = qs.filter(name__icontains=q)
+    paginator = Paginator(qs, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    return render(request, 'dashboard/management/category_list.html', {
+        'page_obj': page_obj, 'q': q,
+    })
+
+
+@group_required('Gerente', 'Estoquista')
+def category_create(request):
+    from apps.catalog.models import Category
+    from django import forms as dj_forms
+
+    class CategoryForm(dj_forms.ModelForm):
+        class Meta:
+            model = Category
+            fields = ['name', 'icon', 'description', 'image', 'is_active', 'order']
+            widgets = {
+                'name':        dj_forms.TextInput(attrs={'class': 'form-control'}),
+                'icon':        dj_forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'fa-paw'}),
+                'description': dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'order':       dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'is_active':   dj_forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            }
+
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f'Categoria "{category.name}" criada!')
+            return redirect('dashboard:category_list')
+    else:
+        form = CategoryForm()
+    return render(request, 'dashboard/management/category_form.html', {
+        'form': form, 'action': 'Criar categoria'
+    })
+
+
+@group_required('Gerente', 'Estoquista')
+def category_edit(request, pk):
+    from apps.catalog.models import Category
+    from django import forms as dj_forms
+
+    class CategoryForm(dj_forms.ModelForm):
+        class Meta:
+            model = Category
+            fields = ['name', 'icon', 'description', 'image', 'is_active', 'order']
+            widgets = {
+                'name':        dj_forms.TextInput(attrs={'class': 'form-control'}),
+                'icon':        dj_forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'fa-paw'}),
+                'description': dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'order':       dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'is_active':   dj_forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            }
+
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, request.FILES, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'"{category.name}" atualizada!')
+            return redirect('dashboard:category_list')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'dashboard/management/category_form.html', {
+        'form': form, 'category': category, 'action': 'Editar categoria'
+    })
+
+
+@group_required('Gerente')
+def category_delete(request, pk):
+    from apps.catalog.models import Category
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        name = category.name
+        try:
+            category.delete()
+            messages.success(request, f'"{name}" removida.')
+        except Exception:
+            messages.error(request, f'Não é possível remover "{name}": há produtos vinculados.')
+        return redirect('dashboard:category_list')
+    return render(request, 'dashboard/management/confirm_delete.html', {
+        'object': category, 'type': 'categoria'
     })
 
 
@@ -137,9 +305,9 @@ def order_list_staff(request):
     page_obj = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'dashboard/management/order_list.html', {
-        'page_obj': page_obj,
-        'status': status,
-        'q': q,
+        'page_obj':       page_obj,
+        'status':         status,
+        'q':              q,
         'status_choices': Order.STATUS_CHOICES,
     })
 
@@ -152,13 +320,18 @@ def order_detail_staff(request, order_number):
     if request.method == 'POST':
         new_status = request.POST.get('status')
         if new_status in dict(Order.STATUS_CHOICES):
+            old_label = order.get_status_display()
             order.status = new_status
             order.save(update_fields=['status'])
-            messages.success(request, f'Status atualizado para "{order.get_status_display()}".')
+            new_label = order.get_status_display()
+            messages.success(
+                request,
+                f'Pedido #{order_number} atualizado: {old_label} → {new_label}'
+            )
             return redirect('dashboard:order_detail_staff', order_number=order_number)
 
     return render(request, 'dashboard/management/order_detail.html', {
-        'order': order,
+        'order':          order,
         'status_choices': Order.STATUS_CHOICES,
     })
 
@@ -180,13 +353,12 @@ def event_list(request):
 
 @group_required('Gerente', 'Marketing')
 def event_create(request):
-    from apps.events.models import Event
     from apps.events.forms import EventForm
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save()
-            messages.success(request, f'✅ Evento "{event.title}" criado!')
+            messages.success(request, f'Evento "{event.title}" criado!')
             return redirect('dashboard:event_list')
     else:
         form = EventForm()
@@ -204,7 +376,7 @@ def event_edit(request, pk):
         form = EventForm(request.POST, request.FILES, instance=event)
         if form.is_valid():
             form.save()
-            messages.success(request, f'✅ Evento atualizado!')
+            messages.success(request, 'Evento atualizado!')
             return redirect('dashboard:event_list')
     else:
         form = EventForm(instance=event)
@@ -265,7 +437,7 @@ def loyalty_list(request):
 
 
 # ══════════════════════════════════════════════════════
-# USUÁRIOS (Gerente only)
+# USUÁRIOS
 # ══════════════════════════════════════════════════════
 
 @group_required('Gerente')
@@ -297,7 +469,7 @@ def user_edit(request, pk):
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=user)
-        groups = request.POST.getlist('groups')
+        groups    = request.POST.getlist('groups')
         is_active = request.POST.get('is_active') == 'on'
         is_staff  = request.POST.get('is_staff') == 'on'
         if form.is_valid():
@@ -306,15 +478,15 @@ def user_edit(request, pk):
             u.is_staff  = is_staff
             u.save()
             u.groups.set(Group.objects.filter(pk__in=groups))
-            messages.success(request, f'✅ Usuário atualizado!')
+            messages.success(request, 'Usuário atualizado!')
             return redirect('dashboard:user_list')
     else:
         form = ProfileForm(instance=user)
 
     return render(request, 'dashboard/management/user_edit.html', {
-        'form': form,
+        'form':        form,
         'target_user': user,
-        'all_groups': Group.objects.all(),
+        'all_groups':  Group.objects.all(),
         'user_groups': user.groups.values_list('pk', flat=True),
     })
 
@@ -324,4 +496,3 @@ def group_list(request):
     from django.contrib.auth.models import Group
     groups = Group.objects.prefetch_related('permissions').all()
     return render(request, 'dashboard/management/group_list.html', {'groups': groups})
-

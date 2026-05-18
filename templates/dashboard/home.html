@@ -5,152 +5,168 @@
 
 {% block content %}
 <div class="container-fluid py-4 px-4">
-  <div class="d-flex align-items-center justify-content-between mb-4">
+
+  <!-- Cabeçalho -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <div>
-      <h3 class="fw-800 mb-0">Dashboard</h3>
-      <p class="text-muted mb-0">Bem-vindo, {{ request.user.first_name }}!</p>
+      <h4 class="fw-800 mb-0">Dashboard</h4>
+      <p class="text-muted mb-0 small">Bem-vindo, {{ request.user.first_name }}!</p>
     </div>
-    <div class="d-flex gap-2">
-      <a href="{% url 'dashboard:stock' %}" class="btn btn-outline-primary btn-sm rounded-pill">
-        <i class="fa fa-boxes me-1"></i>Estoque
-      </a>
-      <a href="{% url 'dashboard:cash_register' %}" class="btn btn-outline-success btn-sm rounded-pill">
-        <i class="fa fa-cash-register me-1"></i>Caixa
-      </a>
-      <a href="{% url 'dashboard:orders' %}" class="btn btn-primary btn-sm rounded-pill">
-        <i class="fa fa-list me-1"></i>Pedidos
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'dashboard:order_list_staff' %}" class="btn btn-outline-primary btn-sm rounded-pill">
+        <i class="fa fa-shopping-cart me-1"></i>Pedidos
       </a>
     </div>
   </div>
 
+  <!-- Métricas -->
   <div class="row g-3 mb-4">
-    <div class="col-md-3">
-      <div class="dashboard-card card border-0 shadow-sm bg-primary text-white">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <p class="mb-1 opacity-75 small">Pedidos hoje</p>
-              <h2 class="fw-800 mb-0">{{ total_orders_today }}</h2>
-            </div>
-            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
-              <i class="fa fa-shopping-bag fa-xl text-white"></i>
-            </div>
+    <div class="col-6 col-lg-3">
+      <div class="card dashboard-card border-0 shadow-sm h-100"
+        style="background:linear-gradient(135deg,#8A4B9F,#6B3A7D);">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
+            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
+            <i class="fa fa-shopping-bag text-white"></i>
+          </div>
+          <div>
+            <div class="text-white fw-800 fs-4 lh-1">{{ total_orders_today }}</div>
+            <div class="text-white-75 small">Pedidos hoje</div>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="dashboard-card card border-0 shadow-sm bg-success text-white">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <p class="mb-1 opacity-75 small">Receita hoje</p>
-              <h2 class="fw-800 mb-0">R$ {{ revenue_today|floatformat:2 }}</h2>
-            </div>
-            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
-              <i class="fa fa-dollar-sign fa-xl text-white"></i>
-            </div>
+    <div class="col-6 col-lg-3">
+      <div class="card dashboard-card border-0 shadow-sm h-100"
+        style="background:linear-gradient(135deg,#27ae60,#1e8449);">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
+            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
+            <i class="fa fa-dollar-sign text-white"></i>
+          </div>
+          <div>
+            <div class="text-white fw-800 fs-5 lh-1">R$ {{ revenue_today|floatformat:2 }}</div>
+            <div class="text-white-75 small">Receita hoje</div>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="dashboard-card card border-0 shadow-sm bg-warning text-white">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <p class="mb-1 opacity-75 small">Receita do mês</p>
-              <h2 class="fw-800 mb-0">R$ {{ revenue_month|floatformat:2 }}</h2>
-            </div>
-            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
-              <i class="fa fa-chart-line fa-xl text-white"></i>
-            </div>
+    <div class="col-6 col-lg-3">
+      <div class="card dashboard-card border-0 shadow-sm h-100"
+        style="background:linear-gradient(135deg,#f39c12,#d68910);">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
+            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
+            <i class="fa fa-chart-line text-white"></i>
+          </div>
+          <div>
+            <div class="text-white fw-800 fs-5 lh-1">R$ {{ revenue_month|floatformat:2 }}</div>
+            <div class="text-white-75 small">Receita do mês</div>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="dashboard-card card border-0 shadow-sm bg-info text-white">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <p class="mb-1 opacity-75 small">Novos usuários (7d)</p>
-              <h2 class="fw-800 mb-0">{{ new_users }}</h2>
-            </div>
-            <div class="metric-icon bg-white bg-opacity-25 rounded-3 p-3">
-              <i class="fa fa-users fa-xl text-white"></i>
-            </div>
+    <div class="col-6 col-lg-3">
+      <div class="card dashboard-card border-0 shadow-sm h-100"
+        style="background:linear-gradient(135deg,#0288d1,#01579b);">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
+            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
+            <i class="fa fa-users text-white"></i>
+          </div>
+          <div>
+            <div class="text-white fw-800 fs-4 lh-1">{{ new_users }}</div>
+            <div class="text-white-75 small">Novos usuários (7d)</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <h5 class="fw-700 mb-3 text-muted">
-        <i class="fa fa-bolt me-2" style="color:var(--accent);"></i>Atalhos rápidos
-      </h5>
-    </div>
-    {% for shortcut in shortcuts %}
-    <div class="col-6 col-md-3 col-lg-2">
-      <a href="{{ shortcut.url }}" class="text-decoration-none">
-        <div class="shortcut-card card border-0 text-center p-3 h-100">
-          <div class="shortcut-icon mb-2" style="color: {{ shortcut.color }};">
-            <i class="fa {{ shortcut.icon }} fa-2x"></i>
+  <!-- Atalhos Rápidos -->
+  <div class="mb-4">
+    <h6 class="fw-700 mb-3">
+      <i class="fa fa-bolt text-warning me-2"></i>Atalhos rápidos
+    </h6>
+    <div class="row g-2">
+      {% for s in shortcuts %}
+      <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+        <a href="{{ s.url }}" class="card shortcut-card border-0 text-decoration-none d-block">
+          <div class="card-body text-center py-3 px-2">
+            <i class="fa {{ s.icon }} shortcut-icon mb-2 d-block" style="color:{{ s.color }};"></i>
+            <div class="fw-600 small text-dark">{{ s.label }}</div>
           </div>
-          <div class="fw-600 small text-dark">{{ shortcut.label }}</div>
-        </div>
-      </a>
+        </a>
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
   </div>
 
   <div class="row g-4">
+
+    <!-- Coluna principal: Pedidos Recentes -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
-          <h5 class="fw-700 mb-0">Pedidos Recentes</h5>
-          <a href="{% url 'dashboard:orders' %}" class="btn btn-sm btn-outline-primary rounded-pill">Ver todos</a>
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3 px-4">
+          <h6 class="fw-700 mb-0">Pedidos Recentes</h6>
+          <a href="{% url 'dashboard:order_list_staff' %}"
+            class="btn btn-outline-primary btn-sm rounded-pill">
+            Ver todos
+          </a>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
-                  <th class="ps-4">Pedido</th>
-                  <th>Cliente</th>
-                  <th>Valor</th>
-                  <th>Tipo</th>
-                  <th>Status</th>
-                  <th></th>
+                  <th class="px-4 py-3 small fw-700 text-muted">Pedido</th>
+                  <th class="py-3 small fw-700 text-muted">Cliente</th>
+                  <th class="py-3 small fw-700 text-muted">Valor</th>
+                  <th class="py-3 small fw-700 text-muted">Tipo</th>
+                  <th class="py-3 small fw-700 text-muted">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {% for order in recent_orders %}
-                <tr>
-                  <td class="ps-4 fw-600">#{{ order.order_number }}</td>
-                  <td>{{ order.user.get_full_name }}</td>
-                  <td class="fw-600 text-primary">R$ {{ order.total }}</td>
-                  <td><span class="badge bg-light text-dark">{{ order.get_delivery_type_display }}</span></td>
-                  <td>
-                    <span class="badge status-badge status-{{ order.status }}">
+                <tr class="cursor-pointer"
+                  onclick="window.location='{% url 'dashboard:order_detail_staff' order.order_number %}'">
+                  <td class="px-4 py-3">
+                    <span class="fw-600 text-primary">#{{ order.order_number }}</span>
+                  </td>
+                  <td class="py-3">
+                    <div class="fw-600 small">{{ order.user.get_full_name }}</div>
+                  </td>
+                  <td class="py-3">
+                    <span class="fw-700" style="color:var(--primary);">
+                      R$ {{ order.total|floatformat:2 }}
+                    </span>
+                  </td>
+                  <td class="py-3">
+                    {% if order.delivery_type == 'delivery' %}
+                    <span class="badge rounded-pill"
+                      style="background:#e3f2fd;color:#1565c0;font-size:.7rem;">
+                      Entrega em domicílio
+                    </span>
+                    {% else %}
+                    <span class="badge rounded-pill"
+                      style="background:#f3e5f5;color:#6a1b9a;font-size:.7rem;">
+                      Retirada na loja
+                    </span>
+                    {% endif %}
+                  </td>
+                  <td class="py-3">
+                    <span class="badge status-badge status-{{ order.status }} rounded-pill px-3">
                       {{ order.get_status_display }}
                     </span>
                   </td>
-                  <td>
-                    <form method="post" action="{% url 'dashboard:update_order_status' order.pk %}" class="d-flex gap-1">
-                      {% csrf_token %}
-                      <select name="status" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                        {% for val, lbl in order.STATUS_CHOICES %}
-                        <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ lbl }}</option>
-                        {% endfor %}
-                      </select>
-                    </form>
-                  </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" class="text-center text-muted py-4">Nenhum pedido ainda.</td></tr>
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-5">
+                    <i class="fa fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                    Nenhum pedido ainda.
+                  </td>
+                </tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -159,53 +175,107 @@
       </div>
     </div>
 
+    <!-- Coluna lateral -->
     <div class="col-lg-4">
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <h5 class="fw-700 mb-3"><i class="fa fa-cash-register me-2 text-success"></i>Caixa</h5>
-          {% if open_cash %}
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-success">Aberto</span>
-            <span class="text-muted small">desde {{ open_cash.opened_at|date:"H:i" }}</span>
-          </div>
-          <p class="mb-1 small text-muted">Saldo inicial: <strong>R$ {{ open_cash.opening_balance }}</strong></p>
-          <a href="{% url 'dashboard:cash_register' %}" class="btn btn-outline-success btn-sm w-100 rounded-pill mt-2">Gerenciar caixa</a>
-          {% else %}
-          <p class="text-muted small mb-3">Nenhum caixa aberto.</p>
-          <a href="{% url 'dashboard:cash_register' %}" class="btn btn-success btn-sm w-100 rounded-pill">Abrir caixa</a>
-          {% endif %}
-        </div>
-      </div>
 
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4 pb-0">
-          <h5 class="fw-700 mb-0"><i class="fa fa-exclamation-triangle me-2 text-warning"></i>Estoque baixo</h5>
-          <a href="{% url 'dashboard:stock' %}" class="btn btn-sm btn-outline-warning rounded-pill">Ver tudo</a>
+      <!-- Eventos Ativos -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3 px-4">
+          <h6 class="fw-700 mb-0">
+            <i class="fa fa-calendar me-2" style="color:#F4B942;"></i>Eventos Ativos
+          </h6>
+          <a href="{% url 'dashboard:event_list' %}"
+            class="btn btn-outline-warning btn-sm rounded-pill"
+            style="font-size:.75rem;">
+            Ver todos
+          </a>
         </div>
-        <div class="card-body p-4">
-          {% for stock in low_stock %}
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div class="flex-grow-1 me-3">
-              <p class="fw-600 mb-0 small">{{ stock.product.name|truncatechars:25 }}</p>
-              <div class="progress mt-1" style="height: 4px;">
-                {% with pct=stock.quantity|floatformat:0 %}
-                <div class="progress-bar {% if stock.is_out %}bg-danger{% else %}bg-warning{% endif %}"
-                  style="width: {{ pct }}%"></div>
-                {% endwith %}
+        <div class="card-body px-4 py-2">
+          {% for event in active_events %}
+          <div class="d-flex align-items-start gap-3 py-3
+            {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-3"
+              style="width:40px;height:40px;background:#fff8e1;">
+              <i class="fa fa-calendar-alt" style="color:#F4B942;"></i>
+            </div>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-600 small text-truncate">{{ event.title }}</div>
+              <div class="text-muted" style="font-size:.72rem;">
+                <i class="fa fa-clock me-1"></i>
+                {{ event.start_date|date:"d/m/Y H:i" }}
               </div>
+              {% if event.location %}
+              <div class="text-muted" style="font-size:.72rem;">
+                <i class="fa fa-map-marker-alt me-1"></i>{{ event.location|truncatechars:30 }}
+              </div>
+              {% endif %}
             </div>
-            <div class="text-end">
-              <span class="badge {% if stock.is_out %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-                {{ stock.quantity }} un.
-              </span>
-            </div>
+            <a href="{% url 'dashboard:event_edit' event.pk %}"
+              class="btn btn-sm btn-outline-secondary rounded-pill flex-shrink-0"
+              style="font-size:.7rem;padding:2px 10px;">
+              Editar
+            </a>
           </div>
           {% empty %}
-          <p class="text-muted small text-center py-2">Estoque em dia! 🎉</p>
+          <div class="text-center text-muted py-4">
+            <i class="fa fa-calendar-times fa-2x mb-2 d-block opacity-50"></i>
+            <div class="small">Nenhum evento ativo.</div>
+            <a href="{% url 'dashboard:event_create' %}"
+              class="btn btn-sm btn-warning rounded-pill mt-2 fw-600">
+              <i class="fa fa-plus me-1"></i>Criar evento
+            </a>
+          </div>
           {% endfor %}
         </div>
       </div>
+
+      <!-- Estoque Baixo -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3 px-4">
+          <h6 class="fw-700 mb-0">
+            <i class="fa fa-exclamation-triangle me-2 text-warning"></i>Estoque Baixo
+          </h6>
+          <a href="{% url 'dashboard:product_list' %}?stock=low"
+            class="btn btn-outline-secondary btn-sm rounded-pill"
+            style="font-size:.75rem;">
+            Ver tudo
+          </a>
+        </div>
+        <div class="card-body px-4 py-2">
+          {% for stock in low_stock %}
+          <div class="d-flex align-items-center justify-content-between py-2
+            {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="fw-600 small text-truncate me-2" style="max-width:160px;">
+              {{ stock.product.name|truncatechars:28 }}
+            </div>
+            {% if stock.is_out %}
+            <span class="badge bg-danger rounded-pill" style="font-size:.7rem;">
+              0 un.
+            </span>
+            {% else %}
+            <span class="badge bg-warning text-dark rounded-pill" style="font-size:.7rem;">
+              {{ stock.quantity }} un.
+            </span>
+            {% endif %}
+          </div>
+          {% empty %}
+          <div class="text-center text-muted py-4 small">
+            <i class="fa fa-check-circle fa-2x mb-2 d-block text-success opacity-75"></i>
+            Estoque normalizado.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
     </div>
   </div>
+
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cursor-pointer { cursor: pointer; }
+  .cursor-pointer:hover td { background-color: var(--primary-bg-soft); }
+</style>
 {% endblock %}
