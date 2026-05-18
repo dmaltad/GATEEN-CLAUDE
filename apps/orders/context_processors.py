@@ -4,7 +4,7 @@ from django.db.models import Sum
 def cart_processor(request):
     from apps.orders.models import Cart
 
-    cart = None
+    cart       = None
     cart_count = 0
 
     try:

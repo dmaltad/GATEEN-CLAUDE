@@ -1,65 +1,34 @@
 """
-Signal que processa o programa de fidelidade após a criação
-ou atualização de status de um pedido.
-
-Regras suportadas:
-  - amount_spent     → pontos por valor gasto (ex: a cada R$1 = X pontos)
-  - brand_purchase   → pontos ao comprar N itens de uma marca
-  - product_purchase → pontos ao comprar um produto específico
-  - category_purchase→ pontos ao comprar em uma categoria
+Signal de fidelidade: credita pontos após criação/entrega de um pedido.
 """
-
 import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import transaction as db_transaction
+from django.db.models import Q
 
 from .models import Order
 
 logger = logging.getLogger(__name__)
 
 
-# ──────────────────────────────────────────────────────────────
-# CONSTANTE: quantos R$ valem 1 ponto base (fallback)
-# A regra amount_spent usa reward_points como pontos fixos
-# ou como multiplicador, dependendo de trigger_amount.
-# Ex: trigger_amount=1.00, reward_points=1 → 1 ponto por R$1
-# ──────────────────────────────────────────────────────────────
-POINTS_PER_REAL = 1  # fallback se não houver regra amount_spent
-
-
 @receiver(post_save, sender=Order)
-def process_loyalty_points(sender, instance, created, **kwargs):
-    """
-    Dispara quando um Order é salvo.
-    - Se created=True  → processa pontos imediatamente na criação.
-    - Se status mudou para 'delivered' → processa se ainda não creditou.
-    """
-    # Evita processamento em atualizações irrelevantes
-    if not created:
-        # Só reprocessa se o status mudou para 'delivered'
-        # (proteção: não credita duas vezes)
-        if instance.status != 'delivered':
-            return
-        # Verifica se já existe transação para este pedido
+def process_loyalty_on_order_save(sender, instance, created, **kwargs):
+    if created:
+        db_transaction.on_commit(lambda: _credit_points(instance))
+        return
+
+    # Também credita quando o status muda para 'delivered' (se ainda não creditou)
+    if instance.status == 'delivered':
         from apps.loyalty.models import LoyaltyTransaction
-        already_processed = LoyaltyTransaction.objects.filter(
-            order=instance
-        ).exists()
-        if already_processed:
-            return
-
-    # Usa transaction.on_commit para garantir que o Order já
-    # foi salvo no banco antes de processar
-    db_transaction.on_commit(
-        lambda: _credit_loyalty_points(instance)
-    )
+        already = LoyaltyTransaction.objects.filter(order=instance).exists()
+        if not already:
+            db_transaction.on_commit(lambda: _credit_points(instance))
 
 
-def _credit_loyalty_points(order):
+def _credit_points(order):
     from apps.loyalty.models import LoyaltyAccount, LoyaltyRule, LoyaltyTransaction
     from django.utils import timezone
-    from django.db.models import Q
 
     account, _ = LoyaltyAccount.objects.get_or_create(
         user=order.user,
@@ -68,7 +37,7 @@ def _credit_loyalty_points(order):
 
     today = timezone.now().date()
 
-    # ── Q objects diretos — sem o _build_date_filter quebrado ──
+    # ── Q objects diretos — sem helper quebrado ──────────────────
     rules = LoyaltyRule.objects.filter(
         is_active=True,
         reward_type='loyalty_points',
@@ -79,7 +48,7 @@ def _credit_loyalty_points(order):
     ).select_related('trigger_brand', 'trigger_product')
 
     total_earned = 0
-    rule_log = []
+    rule_log     = []
 
     for rule in rules:
         pts = _apply_rule(rule, order)
@@ -87,6 +56,7 @@ def _credit_loyalty_points(order):
             total_earned += pts
             rule_log.append(f'{rule.name}: +{pts}')
 
+    # Fallback: 1 ponto por R$1 se nenhuma regra disparou
     if total_earned == 0 and order.total:
         total_earned = max(1, int(order.total))
         rule_log.append(f'Base R${order.total}: +{total_earned}')
@@ -94,7 +64,7 @@ def _credit_loyalty_points(order):
     if total_earned <= 0:
         return
 
-    account.points += total_earned
+    account.points          += total_earned
     account.lifetime_points += total_earned
     account.save(update_fields=['points', 'lifetime_points'])
     account.update_level()
@@ -103,113 +73,68 @@ def _credit_loyalty_points(order):
         account=account,
         transaction_type='earn',
         points=total_earned,
-        description=(f'Pedido #{order.order_number} | ' + ' | '.join(rule_log))[:300],
+        description=(
+            f'Pedido #{order.order_number} | ' + ' | '.join(rule_log)
+        )[:300],
         order=order,
     )
 
-# ──────────────────────────────────────────────────────────────
-# AVALIADORES DE REGRA
-# ──────────────────────────────────────────────────────────────
-
-def _evaluate_rule(rule, order):
-    """Retorna os pontos a creditar para a regra dada, ou 0."""
-    evaluators = {
-        'amount_spent':      _eval_amount_spent,
-        'brand_purchase':    _eval_brand_purchase,
-        'product_purchase':  _eval_product_purchase,
-        'category_purchase': _eval_category_purchase,
-    }
-    evaluator = evaluators.get(rule.rule_type)
-    if not evaluator:
-        return 0
-    return evaluator(rule, order)
+    logger.info(
+        '[Fidelidade] %s | +%d pts | %s | saldo: %d',
+        order.order_number, total_earned, order.user.email, account.points
+    )
 
 
-def _eval_amount_spent(rule, order):
-    """
-    Exemplo de regra:
-      trigger_amount = 1.00  → a cada R$1 gasto
-      reward_points  = 2     → 2 pontos por R$1
-    Resultado: (total do pedido / trigger_amount) * reward_points
-    """
+# ── Avaliadores ───────────────────────────────────────────────────
+
+def _apply_rule(rule, order):
+    fn = {
+        'amount_spent':      _rule_amount_spent,
+        'brand_purchase':    _rule_brand_purchase,
+        'product_purchase':  _rule_product_purchase,
+        'category_purchase': _rule_category_purchase,
+    }.get(rule.rule_type)
+    return fn(rule, order) if fn else 0
+
+
+def _rule_amount_spent(rule, order):
     if not rule.trigger_amount or rule.trigger_amount <= 0:
         return 0
     if order.total < rule.trigger_amount:
         return 0
-
-    multiplier = int(order.total / rule.trigger_amount)
-    return multiplier * rule.reward_points
+    return int(order.total / rule.trigger_amount) * rule.reward_points
 
 
-def _eval_brand_purchase(rule, order):
-    """
-    Pontua se o pedido contém >= trigger_quantity itens
-    de produtos da marca especificada.
-    """
-    if not rule.trigger_brand:
+def _rule_brand_purchase(rule, order):
+    if not rule.trigger_brand_id:
         return 0
-
-    qty_brand = sum(
+    qty = sum(
         item.quantity
-        for item in order.items.select_related('product__brand').all()
+        for item in order.items.select_related('product').all()
         if item.product.brand_id == rule.trigger_brand_id
     )
-
-    if qty_brand >= rule.trigger_quantity:
-        return rule.reward_points
-    return 0
+    return rule.reward_points if qty >= rule.trigger_quantity else 0
 
 
-def _eval_product_purchase(rule, order):
-    """
-    Pontua se o pedido contém >= trigger_quantity unidades
-    do produto específico.
-    """
-    if not rule.trigger_product:
+def _rule_product_purchase(rule, order):
+    if not rule.trigger_product_id:
         return 0
-
-    qty_product = sum(
+    qty = sum(
         item.quantity
         for item in order.items.all()
         if item.product_id == rule.trigger_product_id
     )
-
-    if qty_product >= rule.trigger_quantity:
-        return rule.reward_points
-    return 0
+    return rule.reward_points if qty >= rule.trigger_quantity else 0
 
 
-def _eval_category_purchase(rule, order):
-    """
-    Pontua se o pedido contém produtos da categoria
-    definida na regra (via trigger_product.category).
-    Usa trigger_amount como valor mínimo de compra na categoria.
-    """
-    # Sem product de referência, usa a categoria dos itens
-    items = order.items.select_related('product__category').all()
-
-    category_total = sum(
-        item.unit_price * item.quantity
-        for item in items
-        if rule.trigger_product
-        and item.product.category_id == rule.trigger_product.category_id
-    )
-
-    min_amount = rule.trigger_amount or 0
-    if category_total >= min_amount:
-        return rule.reward_points
-    return 0
-
-
-# ──────────────────────────────────────────────────────────────
-# HELPERS
-# ──────────────────────────────────────────────────────────────
-
-def _base_points_from_total(total):
-    """
-    Fallback: 1 ponto a cada R$1.
-    Usado quando nenhuma regra específica foi acionada.
-    """
-    if not total:
+def _rule_category_purchase(rule, order):
+    if not rule.trigger_product_id:
         return 0
-    return max(1, int(total) * POINTS_PER_REAL)
+    cat_id = rule.trigger_product.category_id
+    cat_total = sum(
+        item.unit_price * item.quantity
+        for item in order.items.select_related('product').all()
+        if item.product.category_id == cat_id
+    )
+    min_val = rule.trigger_amount or 0
+    return rule.reward_points if cat_total >= min_val else 0

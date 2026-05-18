@@ -4,26 +4,38 @@ import uuid
 
 
 class Cart(models.Model):
-    user = models.OneToOneField('accounts.User', on_delete=models.CASCADE, null=True, blank=True, related_name='cart')
+    user        = models.OneToOneField(
+        'accounts.User', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='cart'
+    )
     session_key = models.CharField(max_length=40, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Carrinho'
-        verbose_name_plural = 'Carrinhos'
+        verbose_name          = 'Carrinho'
+        verbose_name_plural   = 'Carrinhos'
 
     def __str__(self):
         return f'Carrinho de {self.user or self.session_key}'
 
     @property
     def total(self):
-        return sum(item.subtotal for item in self.items.all())
+        """
+        Calcula o total do carrinho evitando N+1.
+        Usa select_related('product') quando possível;
+        o subtotal de cada item acessa product.current_price (já em memória).
+        """
+        return sum(
+            item.subtotal
+            for item in self.items.select_related('product').all()
+        )
 
     @property
     def total_items(self):
-        return sum(item.quantity for item in self.items.all())
-
+        return (
+            self.items.aggregate(total=Sum('quantity'))['total'] or 0
+        )
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
