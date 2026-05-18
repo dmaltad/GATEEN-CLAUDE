@@ -57,84 +57,55 @@ def process_loyalty_points(sender, instance, created, **kwargs):
 
 
 def _credit_loyalty_points(order):
-    """
-    Função principal que avalia todas as regras ativas
-    e credita os pontos correspondentes.
-    """
     from apps.loyalty.models import LoyaltyAccount, LoyaltyRule, LoyaltyTransaction
     from django.utils import timezone
+    from django.db.models import Q
 
-    # ── Obtém ou cria a conta fidelidade do usuário ──────────
     account, _ = LoyaltyAccount.objects.get_or_create(
         user=order.user,
         defaults={'points': 0, 'lifetime_points': 0, 'level': 'bronze'}
     )
 
-    # ── Busca todas as regras ativas e válidas ────────────────
     today = timezone.now().date()
+
+    # ── Q objects diretos — sem o _build_date_filter quebrado ──
     rules = LoyaltyRule.objects.filter(
         is_active=True,
         reward_type='loyalty_points',
     ).filter(
-        # valid_from nulo ou no passado
-        **_build_date_filter('valid_from', today, lte=True)
+        Q(valid_from__isnull=True) | Q(valid_from__lte=today)
     ).filter(
-        # valid_until nulo ou no futuro
-        **_build_date_filter('valid_until', today, gte=True)
+        Q(valid_until__isnull=True) | Q(valid_until__gte=today)
     ).select_related('trigger_brand', 'trigger_product')
 
-    total_points_earned = 0
-    earned_descriptions = []
+    total_earned = 0
+    rule_log = []
 
     for rule in rules:
-        points = _evaluate_rule(rule, order)
-        if points > 0:
-            total_points_earned += points
-            earned_descriptions.append(
-                f'{rule.name}: +{points} pts'
-            )
-            logger.info(
-                f'[Fidelidade] Pedido #{order.order_number} | '
-                f'Regra "{rule.name}" | +{points} pts | '
-                f'User: {order.user.email}'
-            )
+        pts = _apply_rule(rule, order)
+        if pts > 0:
+            total_earned += pts
+            rule_log.append(f'{rule.name}: +{pts}')
 
-    # ── Fallback: se nenhuma regra cobriu, usa pontos base ────
-    if total_points_earned == 0:
-        total_points_earned = _base_points_from_total(order.total)
-        earned_descriptions.append(
-            f'Compra de R$ {order.total}: +{total_points_earned} pts'
-        )
+    if total_earned == 0 and order.total:
+        total_earned = max(1, int(order.total))
+        rule_log.append(f'Base R${order.total}: +{total_earned}')
 
-    if total_points_earned <= 0:
+    if total_earned <= 0:
         return
 
-    # ── Credita na conta ──────────────────────────────────────
-    account.points += total_points_earned
-    account.lifetime_points += total_points_earned
+    account.points += total_earned
+    account.lifetime_points += total_earned
     account.save(update_fields=['points', 'lifetime_points'])
-
-    # ── Atualiza nível ────────────────────────────────────────
     account.update_level()
-
-    # ── Registra transação ────────────────────────────────────
-    description = f'Pedido #{order.order_number}'
-    if earned_descriptions:
-        description += ' | ' + ', '.join(earned_descriptions)
 
     LoyaltyTransaction.objects.create(
         account=account,
         transaction_type='earn',
-        points=total_points_earned,
-        description=description,
+        points=total_earned,
+        description=(f'Pedido #{order.order_number} | ' + ' | '.join(rule_log))[:300],
         order=order,
     )
-
-    logger.info(
-        f'[Fidelidade] Total creditado: +{total_points_earned} pts | '
-        f'User: {order.user.email} | Saldo: {account.points} pts'
-    )
-
 
 # ──────────────────────────────────────────────────────────────
 # AVALIADORES DE REGRA
@@ -242,24 +213,3 @@ def _base_points_from_total(total):
     if not total:
         return 0
     return max(1, int(total) * POINTS_PER_REAL)
-
-
-def _build_date_filter(field, today, lte=False, gte=False):
-    """
-    Gera filtro que aceita campo nulo OU data válida.
-    Ex: valid_from nulo (sem limite) ou valid_from <= hoje
-    """
-    q_null = {f'{field}__isnull': True}
-    if lte:
-        q_valid = {f'{field}__lte': today}
-    else:
-        q_valid = {f'{field}__gte': today}
-
-    # Combina OR manualmente via Q
-    from django.db.models import Q
-    return {'pk__in': []}  # placeholder; veja uso correto abaixo
-
-
-def _loyalty_rules_queryset():
-    """Não usar _build_date_filter acima. Reimplementado aqui com Q."""
-    pass

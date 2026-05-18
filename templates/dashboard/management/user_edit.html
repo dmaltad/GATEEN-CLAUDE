@@ -1,0 +1,149 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Editar {{ target_user.get_full_name }} — Gestão{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'dashboard:user_list' %}"
+          class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="fa fa-arrow-left"></i>
+        </a>
+        <div class="d-flex align-items-center gap-3">
+          {% if target_user.avatar %}
+          <img src="{{ target_user.avatar.url }}" class="rounded-circle"
+            style="width:48px;height:48px;object-fit:cover;">
+          {% else %}
+          <div class="rounded-circle bg-light d-flex align-items-center
+            justify-content-center" style="width:48px;height:48px;">
+            <i class="fa fa-user fa-lg text-muted"></i>
+          </div>
+          {% endif %}
+          <div>
+            <h4 class="fw-800 mb-0">{{ target_user.get_full_name }}</h4>
+            <div class="text-muted small">{{ target_user.email }}</div>
+          </div>
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Dados pessoais -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h6 class="fw-700 mb-3 text-muted text-uppercase"
+              style="font-size:.72rem;letter-spacing:1px;">Dados pessoais</h6>
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-3 mb-3 small">
+              {{ form.non_field_errors|join:", " }}
+            </div>
+            {% endif %}
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Nome</label>
+                {{ form.first_name }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Sobrenome</label>
+                {{ form.last_name }}
+              </div>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Telefone</label>
+                {{ form.phone }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Data de nascimento</label>
+                {{ form.birth_date }}
+              </div>
+            </div>
+            <div class="mb-0">
+              <label class="form-label fw-600 small">CPF</label>
+              {{ form.cpf }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Permissões -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h6 class="fw-700 mb-3 text-muted text-uppercase"
+              style="font-size:.72rem;letter-spacing:1px;">Permissões e Cargos</h6>
+
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" name="is_active"
+                id="is_active" {% if target_user.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-600" for="is_active">
+                Conta ativa
+              </label>
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" name="is_staff"
+                id="is_staff" {% if target_user.is_staff %}checked{% endif %}>
+              <label class="form-check-label fw-600" for="is_staff">
+                Acesso de funcionário (staff)
+              </label>
+            </div>
+
+            <h6 class="fw-600 small text-muted mb-2">Cargos</h6>
+            <div class="row g-2">
+              {% for group in all_groups %}
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input"
+                    name="groups" value="{{ group.pk }}"
+                    id="group_{{ group.pk }}"
+                    {% if group.pk in user_groups %}checked{% endif %}>
+                  <label class="form-check-label" for="group_{{ group.pk }}">
+                    <span class="fw-600">{{ group.name }}</span>
+                  </label>
+                </div>
+              </div>
+              {% empty %}
+              <div class="col-12">
+                <p class="text-muted small mb-0">
+                  Nenhum cargo configurado.
+                  <a href="{% url 'dashboard:group_list' %}">Criar cargos</a>
+                </p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary rounded-pill fw-700 px-4">
+            <i class="fa fa-save me-2"></i>Salvar alterações
+          </button>
+          <a href="{% url 'dashboard:user_list' %}"
+            class="btn btn-outline-secondary rounded-pill px-4">
+            Cancelar
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card-body input[type="text"],
+.card-body input[type="date"],
+.card-body input[type="tel"] {
+  border:1.5px solid var(--border-color);border-radius:10px;
+  padding:.45rem .9rem;font-family:'Poppins',sans-serif;font-size:.9rem;
+  width:100%;transition:border-color .2s,box-shadow .2s;
+}
+.card-body input:focus {
+  border-color:var(--primary);box-shadow:0 0 0 3px rgba(138,75,159,.15);outline:none;
+}
+</style>
+{% endblock %}

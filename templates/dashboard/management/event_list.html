@@ -1,0 +1,119 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Eventos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-800 mb-0">
+        <i class="fa fa-calendar me-2" style="color:var(--primary);"></i>Eventos
+      </h4>
+      <p class="text-muted mb-0">{{ page_obj.paginator.count }} evento(s)</p>
+    </div>
+    <a href="{% url 'dashboard:event_create' %}"
+      class="btn btn-primary rounded-pill fw-600">
+      <i class="fa fa-plus me-1"></i>Novo evento
+    </a>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4" style="width:70px;"></th>
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Data</th>
+              <th>Local</th>
+              <th>Status</th>
+              <th class="pe-4 text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in page_obj %}
+            <tr>
+              <td class="ps-4">
+                {% if event.image %}
+                <img src="{{ event.image.url }}" class="rounded-2"
+                  style="width:48px;height:36px;object-fit:cover;">
+                {% else %}
+                <div class="rounded-2 d-flex align-items-center justify-content-center"
+                  style="width:48px;height:36px;background:var(--primary-bg);">
+                  <i class="fa fa-calendar" style="color:var(--primary-lighter);font-size:.8rem;"></i>
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-600">{{ event.title|truncatechars:45 }}</div>
+                <div class="text-muted small">{{ event.short_description|truncatechars:50 }}</div>
+              </td>
+              <td class="text-muted small">{{ event.get_event_type_display }}</td>
+              <td class="text-muted small">{{ event.start_date|date:"d/m/Y H:i" }}</td>
+              <td class="text-muted small">{{ event.location|truncatechars:30|default:"Online" }}</td>
+              <td>
+                {% if event.is_active %}
+                <span class="badge bg-success-subtle text-success" style="font-size:.72rem;">
+                  Ativo
+                </span>
+                {% else %}
+                <span class="badge bg-secondary" style="font-size:.72rem;">Inativo</span>
+                {% endif %}
+                {% if event.is_featured %}
+                <span class="badge ms-1" style="background:var(--accent);color:#000;font-size:.65rem;">
+                  ★ Destaque
+                </span>
+                {% endif %}
+              </td>
+              <td class="pe-4 text-end">
+                <a href="{% url 'dashboard:event_edit' event.pk %}"
+                  class="btn btn-outline-primary btn-sm rounded-pill">
+                  <i class="fa fa-edit"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="fa fa-calendar fa-3x mb-3 d-block opacity-25"></i>
+                Nenhum evento cadastrado.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+          <i class="fa fa-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+          <i class="fa fa-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

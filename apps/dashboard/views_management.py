@@ -324,3 +324,4 @@ def group_list(request):
     from django.contrib.auth.models import Group
     groups = Group.objects.prefetch_related('permissions').all()
     return render(request, 'dashboard/management/group_list.html', {'groups': groups})
+

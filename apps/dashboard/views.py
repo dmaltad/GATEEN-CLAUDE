@@ -158,3 +158,46 @@ def update_order_status(request, pk):
         order.status = request.POST.get('status')
         order.save()
     return redirect('dashboard:orders')
+
+# ── ADICIONAR ao apps/dashboard/views.py ─────────────────────
+
+@staff_member_required
+def orders_view(request):
+    """Lista de pedidos para o dashboard de staff."""
+    status_filter = request.GET.get('status', '')
+    q = request.GET.get('q', '')
+
+    orders = Order.objects.select_related('user').order_by('-created_at')
+
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+    if q:
+        from django.db.models import Q as DQ
+        orders = orders.filter(
+            DQ(order_number__icontains=q) |
+            DQ(user__email__icontains=q) |
+            DQ(user__first_name__icontains=q)
+        )
+
+    return render(request, 'dashboard/orders.html', {
+        'orders': orders,
+        'status_choices': Order.STATUS_CHOICES,
+        'selected_status': status_filter,
+        'q': q,
+    })
+
+
+@staff_member_required
+def order_detail_staff_redirect(request, order_number):
+    """Atualiza status do pedido via POST e redireciona de volta."""
+    order = get_object_or_404(Order, order_number=order_number)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in dict(Order.STATUS_CHOICES):
+            order.status = new_status
+            order.save(update_fields=['status'])
+            messages.success(
+                request,
+                f'Pedido #{order_number} → "{order.get_status_display()}"'
+            )
+    return redirect('dashboard:orders')

@@ -1,0 +1,93 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Gestão de Planos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h4 class="fw-800 mb-0">
+      <i class="fa fa-star me-2" style="color:var(--primary);"></i>Planos de Serviço
+    </h4>
+    <a href="{% url 'dashboard:userplan_list' %}"
+      class="btn btn-outline-primary btn-sm rounded-pill">
+      <i class="fa fa-id-card me-1"></i>Ver planos ativos
+    </a>
+  </div>
+
+  <div class="row g-4">
+    {% for plan in plans %}
+    <div class="col-lg-4 col-md-6">
+      <div class="card border-0 shadow-sm h-100" style="border-top:4px solid {{ plan.color }}!important;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+              style="width:48px;height:48px;background:{{ plan.color }}20;">
+              <i class="fa fa-paw fa-lg" style="color:{{ plan.color }};"></i>
+            </div>
+            <div>
+              <div class="fw-800">{{ plan.name }}</div>
+              <div class="text-muted small">{{ plan.get_period_display }}</div>
+            </div>
+            <div class="ms-auto fw-800 fs-5" style="color:{{ plan.color }};">
+              R$ {{ plan.price }}
+            </div>
+          </div>
+
+          <ul class="list-unstyled small mb-3">
+            {% if plan.food_bags_per_month %}
+            <li class="mb-1">
+              <i class="fa fa-check text-success me-2"></i>
+              {{ plan.food_bags_per_month }} saco(s) de ração/mês
+            </li>
+            {% endif %}
+            {% if plan.grooming_sessions_per_month %}
+            <li class="mb-1">
+              <i class="fa fa-check text-success me-2"></i>
+              {{ plan.grooming_sessions_per_month }} banho(s)/tosa por mês
+            </li>
+            {% endif %}
+            {% if plan.includes_health_plan %}
+            <li class="mb-1">
+              <i class="fa fa-check text-success me-2"></i>
+              Plano de saúde incluído
+            </li>
+            {% endif %}
+            {% for feature in plan.features.all %}
+            <li class="mb-1">
+              <i class="fa fa-{% if feature.is_included %}check text-success{% else %}times text-danger{% endif %} me-2"></i>
+              {{ feature.description }}
+            </li>
+            {% endfor %}
+          </ul>
+
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              {% if plan.is_active %}
+              <span class="badge bg-success-subtle text-success me-1" style="font-size:.7rem;">Ativo</span>
+              {% else %}
+              <span class="badge bg-secondary me-1" style="font-size:.7rem;">Inativo</span>
+              {% endif %}
+              {% if plan.is_featured %}
+              <span class="badge" style="background:var(--accent);color:#000;font-size:.7rem;">Destaque</span>
+              {% endif %}
+            </div>
+            <small class="text-muted">
+              {{ plan.userplan_set.filter.count|default:"0" }} assinantes
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="fa fa-star fa-3x mb-3 d-block opacity-25"></i>
+          Nenhum plano cadastrado.
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
