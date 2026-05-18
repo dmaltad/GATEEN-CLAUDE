@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages  # ← FALTAVA ESTE IMPORT
 from django.utils import timezone
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, F
 from apps.orders.models import Order, CashRegister, CashTransaction
 from apps.catalog.models import Product, Stock, StockMovement
 from apps.accounts.models import User
@@ -16,29 +17,33 @@ def dashboard_home(request):
 
     total_orders_today = Order.objects.filter(created_at__date=today).count()
     revenue_today = Order.objects.filter(
-        created_at__date=today, status__in=['confirmed', 'preparing', 'ready', 'shipped', 'delivered']
+        created_at__date=today,
+        status__in=['confirmed', 'preparing', 'ready', 'shipped', 'delivered']
     ).aggregate(total=Sum('total'))['total'] or 0
 
     revenue_month = Order.objects.filter(
-        created_at__date__gte=month_ago, status__in=['confirmed', 'preparing', 'ready', 'shipped', 'delivered']
+        created_at__date__gte=month_ago,
+        status__in=['confirmed', 'preparing', 'ready', 'shipped', 'delivered']
     ).aggregate(total=Sum('total'))['total'] or 0
 
-    low_stock = Stock.objects.filter(quantity__lte=models_min_qty()).select_related('product')[:10]
+    low_stock = Stock.objects.filter(
+        quantity__lte=F('min_quantity')
+    ).select_related('product')[:10]
+
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:10]
     new_users = User.objects.filter(date_joined__date__gte=week_ago).count()
     open_cash = CashRegister.objects.filter(status='open').first()
 
     shortcuts = [
-        {'label': 'Produtos',    'icon': 'fa-box',          'color': '#8A4B9F', 'url': '/admin/catalog/product/'},
-        {'label': 'Estoque',     'icon': 'fa-cubes',        'color': '#3498DB', 'url': '/dashboard/estoque/'},
-        {'label': 'Pedidos',     'icon': 'fa-shopping-cart','color': '#E74C3C', 'url': '/dashboard/pedidos/'},
-        {'label': 'Caixa',       'icon': 'fa-cash-register','color': '#27AE60', 'url': '/dashboard/caixa/'},
-        {'label': 'Eventos',     'icon': 'fa-calendar',     'color': '#F4B942', 'url': '/admin/events/event/'},
-        {'label': 'Promoções',   'icon': 'fa-percent',      'color': '#E91E8C', 'url': '/admin/events/promotion/'},
-        {'label': 'Planos',      'icon': 'fa-star',         'color': '#FF9800', 'url': '/admin/plans/serviceplan/'},
-        {'label': 'Fidelidade',  'icon': 'fa-gift',         'color': '#9C27B0', 'url': '/admin/loyalty/loyaltyrule/'},
-        {'label': 'Categorias',  'icon': 'fa-th',           'color': '#607D8B', 'url': '/admin/catalog/category/'},
-        {'label': 'Usuários',    'icon': 'fa-users',        'color': '#2196F3', 'url': '/admin/accounts/user/'},
+        {'label': 'Produtos',   'icon': 'fa-box',           'color': '#8A4B9F', 'url': '/dashboard/gestao/produtos/'},
+        {'label': 'Estoque',    'icon': 'fa-cubes',         'color': '#3498DB', 'url': '/dashboard/estoque/'},
+        {'label': 'Pedidos',    'icon': 'fa-shopping-cart', 'color': '#E74C3C', 'url': '/dashboard/pedidos/'},
+        {'label': 'Caixa',      'icon': 'fa-cash-register', 'color': '#27AE60', 'url': '/dashboard/caixa/'},
+        {'label': 'Eventos',    'icon': 'fa-calendar',      'color': '#F4B942', 'url': '/dashboard/gestao/eventos/'},
+        {'label': 'Planos',     'icon': 'fa-star',          'color': '#FF9800', 'url': '/dashboard/gestao/planos/'},
+        {'label': 'Fidelidade', 'icon': 'fa-gift',          'color': '#9C27B0', 'url': '/dashboard/gestao/fidelidade/'},
+        {'label': 'Categorias', 'icon': 'fa-th',            'color': '#607D8B', 'url': '/admin/catalog/category/'},
+        {'label': 'Usuários',   'icon': 'fa-users',         'color': '#2196F3', 'url': '/dashboard/gestao/usuarios/'},
     ]
 
     return render(request, 'dashboard/home.html', {
@@ -53,14 +58,8 @@ def dashboard_home(request):
     })
 
 
-def models_min_qty():
-    from django.db.models import F
-    return F('min_quantity')
-
-
 @staff_member_required
 def stock_view(request):
-    from apps.catalog.models import Stock
     status_filter = request.GET.get('status', 'all')
 
     stocks = Stock.objects.select_related(
@@ -68,7 +67,6 @@ def stock_view(request):
     ).order_by('quantity')
 
     if status_filter == 'low':
-        # Estoque baixo mas não zerado
         stocks = [s for s in stocks if s.is_low and not s.is_out]
     elif status_filter == 'out':
         stocks = [s for s in stocks if s.is_out]
@@ -81,7 +79,6 @@ def stock_view(request):
 
 @staff_member_required
 def stock_movement_create(request, product_id):
-    from apps.catalog.models import Product
     product = get_object_or_404(Product, pk=product_id)
     if request.method == 'POST':
         movement_type = request.POST.get('movement_type')
@@ -139,31 +136,7 @@ def cash_register_view(request):
 
 
 @staff_member_required
-def order_management_view(request):
-    status_filter = request.GET.get('status', '')
-    orders = Order.objects.select_related('user').order_by('-created_at')
-    if status_filter:
-        orders = orders.filter(status=status_filter)
-    return render(request, 'dashboard/orders.html', {
-        'orders': orders,
-        'status_choices': Order.STATUS_CHOICES,
-        'selected_status': status_filter,
-    })
-
-
-@staff_member_required
-def update_order_status(request, pk):
-    order = get_object_or_404(Order, pk=pk)
-    if request.method == 'POST':
-        order.status = request.POST.get('status')
-        order.save()
-    return redirect('dashboard:orders')
-
-# ── ADICIONAR ao apps/dashboard/views.py ─────────────────────
-
-@staff_member_required
 def orders_view(request):
-    """Lista de pedidos para o dashboard de staff."""
     status_filter = request.GET.get('status', '')
     q = request.GET.get('q', '')
 
@@ -172,11 +145,10 @@ def orders_view(request):
     if status_filter:
         orders = orders.filter(status=status_filter)
     if q:
-        from django.db.models import Q as DQ
         orders = orders.filter(
-            DQ(order_number__icontains=q) |
-            DQ(user__email__icontains=q) |
-            DQ(user__first_name__icontains=q)
+            Q(order_number__icontains=q) |
+            Q(user__email__icontains=q) |
+            Q(user__first_name__icontains=q)
         )
 
     return render(request, 'dashboard/orders.html', {
@@ -201,3 +173,7 @@ def order_detail_staff_redirect(request, order_number):
                 f'Pedido #{order_number} → "{order.get_status_display()}"'
             )
     return redirect('dashboard:orders')
+
+
+# Alias mantido para compatibilidade com templates antigos
+update_order_status = order_detail_staff_redirect
