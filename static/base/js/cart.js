@@ -104,7 +104,7 @@ function updateCartBadges(count) {
 document.addEventListener('DOMContentLoaded', function () {
 
   document.body.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-ajax-cart]');
+    var btn = e.target.closest('.ajax-add-cart');
     if (!btn) return;
 
     e.preventDefault();

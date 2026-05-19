@@ -19,11 +19,20 @@
 
   {# ── Mensagens Django → toasts centro-topo via JS ── #}
   {% if messages %}
-  <div id="djangoMessages" aria-hidden="true" style="display:none;">
-    {% for message in messages %}
-    <span data-tags="{{ message.tags }}" data-text="{{ message|escapejs }}"></span>
-    {% endfor %}
-  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      {% for message in messages %}
+        // O Django usa a tag 'error', mas o nosso CSS usa 'danger'
+        var msgType = "{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}";
+        var msgText = "{{ message|escapejs }}";
+        
+        // Verifica se a notificação global já foi carregada
+        if (window.GateenNotify) {
+            GateenNotify.show(msgText, msgType);
+        }
+      {% endfor %}
+    });
+  </script>
   {% endif %}
 
   {# ── Container de toasts centro-topo ── #}
@@ -34,7 +43,10 @@
   </main>
 
   {% include 'includes/footer.html' %}
-
+<script>
+  window.CSRF_TOKEN = '{{ csrf_token }}';
+  window.ADD_CART_BASE_URL = '{% url "orders:add_to_cart" 0 %}'.replace('/0/', '/');
+</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{% static 'base/js/cart.js' %}"></script>
   <script src="{% static 'base/js/base.js' %}"></script>
