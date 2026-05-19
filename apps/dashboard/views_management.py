@@ -78,15 +78,16 @@ def dashboard_home(request):
     ).order_by('start_date')[:5]
 
     shortcuts = [
-        {'label': 'Produtos',      'icon': 'fa-box',           'color': '#8A4B9F', 'url': '/dashboard/gestao/produtos/'},
-        {'label': 'Pedidos',       'icon': 'fa-shopping-cart', 'color': '#E74C3C', 'url': '/dashboard/gestao/pedidos/'},
-        {'label': 'Eventos',       'icon': 'fa-calendar',      'color': '#F4B942', 'url': '/dashboard/gestao/eventos/'},
-        {'label': 'Planos',        'icon': 'fa-star',          'color': '#FF9800', 'url': '/dashboard/gestao/planos/'},
-        {'label': 'Fidelidade',    'icon': 'fa-gift',          'color': '#9C27B0', 'url': '/dashboard/gestao/fidelidade/'},
-        {'label': 'Usuários',      'icon': 'fa-users',         'color': '#2196F3', 'url': '/dashboard/gestao/usuarios/'},
-        {'label': 'Cargos',        'icon': 'fa-user-tag',      'color': '#607D8B', 'url': '/dashboard/gestao/cargos/'},
-        {'label': 'Planos ativos', 'icon': 'fa-id-card',       'color': '#009688', 'url': '/dashboard/gestao/planos/ativos/'},
-        {'label': 'Categorias',    'icon': 'fa-th',            'color': '#795548', 'url': '/dashboard/gestao/categorias/'},
+        {'label': 'Produtos',        'icon': 'fa-box',           'color': '#8A4B9F', 'url': '/dashboard/gestao/produtos/'},
+        {'label': 'Categorias',      'icon': 'fa-th',            'color': '#795548', 'url': '/dashboard/gestao/categorias/'},
+        {'label': 'Pedidos',         'icon': 'fa-shopping-cart', 'color': '#E74C3C', 'url': '/dashboard/gestao/pedidos/'},
+        {'label': 'Eventos',         'icon': 'fa-calendar',      'color': '#F4B942', 'url': '/dashboard/gestao/eventos/'},
+        {'label': 'Planos',          'icon': 'fa-star',          'color': '#FF9800', 'url': '/dashboard/gestao/planos/'},
+        {'label': 'Planos ativos',   'icon': 'fa-id-card',       'color': '#009688', 'url': '/dashboard/gestao/planos/ativos/'},
+        {'label': 'Fidelidade',      'icon': 'fa-gift',          'color': '#9C27B0', 'url': '/dashboard/gestao/fidelidade/'},
+        {'label': 'Regras fidelide', 'icon': 'fa-award',         'color': '#7B1FA2', 'url': '/dashboard/gestao/fidelidade/regras/'},
+        {'label': 'Usuários',        'icon': 'fa-users',         'color': '#2196F3', 'url': '/dashboard/gestao/usuarios/'},
+        {'label': 'Cargos',          'icon': 'fa-user-tag',      'color': '#607D8B', 'url': '/dashboard/gestao/cargos/'},
     ]
 
     return render(request, 'dashboard/home.html', {
@@ -619,4 +620,135 @@ def loyalty_rule_delete(request, pk):
         return redirect('dashboard:loyalty_rule_list')
     return render(request, 'dashboard/management/confirm_delete.html', {
         'object': rule, 'type': 'regra de fidelidade'
+    })
+
+# ══════════════════════════════════════════════════════
+# PLANOS DE SERVIÇO — CRUD
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente')
+def plan_create(request):
+    from apps.plans.models import ServicePlan, PlanFeature
+    from django import forms as dj_forms
+
+    class ServicePlanForm(dj_forms.ModelForm):
+        class Meta:
+            model = ServicePlan
+            fields = [
+                'name', 'description', 'price', 'period',
+                'food_bags_per_month', 'grooming_sessions_per_month',
+                'includes_health_plan', 'health_plan_details',
+                'color', 'order', 'is_active', 'is_featured',
+            ]
+            widgets = {
+                'name':                         dj_forms.TextInput(attrs={'class': 'form-control'}),
+                'description':                  dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'price':                        dj_forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+                'period':                       dj_forms.Select(attrs={'class': 'form-select'}),
+                'food_bags_per_month':          dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'grooming_sessions_per_month':  dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'health_plan_details':          dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+                'color':                        dj_forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+                'order':                        dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'includes_health_plan':         dj_forms.CheckboxInput(),
+                'is_active':                    dj_forms.CheckboxInput(),
+                'is_featured':                  dj_forms.CheckboxInput(),
+            }
+
+    if request.method == 'POST':
+        form = ServicePlanForm(request.POST)
+        features_raw = request.POST.get('features_text', '').strip()
+        if form.is_valid():
+            from django.utils.text import slugify
+            plan = form.save(commit=False)
+            base = slugify(plan.name)
+            plan.slug = base
+            n = 1
+            while ServicePlan.objects.filter(slug=plan.slug).exists():
+                plan.slug = f'{base}-{n}'
+                n += 1
+            plan.save()
+            if features_raw:
+                for line in features_raw.splitlines():
+                    line = line.strip()
+                    if line:
+                        PlanFeature.objects.create(plan=plan, description=line)
+            messages.success(request, f'Plano "{plan.name}" criado!')
+            return redirect('dashboard:plan_list')
+    else:
+        form = ServicePlanForm()
+    return render(request, 'dashboard/management/plan_form.html', {
+        'form': form, 'action': 'Criar plano'
+    })
+
+
+@group_required('Gerente')
+def plan_edit(request, pk):
+    from apps.plans.models import ServicePlan, PlanFeature
+    from django import forms as dj_forms
+
+    class ServicePlanForm(dj_forms.ModelForm):
+        class Meta:
+            model = ServicePlan
+            fields = [
+                'name', 'description', 'price', 'period',
+                'food_bags_per_month', 'grooming_sessions_per_month',
+                'includes_health_plan', 'health_plan_details',
+                'color', 'order', 'is_active', 'is_featured',
+            ]
+            widgets = {
+                'name':                         dj_forms.TextInput(attrs={'class': 'form-control'}),
+                'description':                  dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'price':                        dj_forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+                'period':                       dj_forms.Select(attrs={'class': 'form-select'}),
+                'food_bags_per_month':          dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'grooming_sessions_per_month':  dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'health_plan_details':          dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+                'color':                        dj_forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+                'order':                        dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'includes_health_plan':         dj_forms.CheckboxInput(),
+                'is_active':                    dj_forms.CheckboxInput(),
+                'is_featured':                  dj_forms.CheckboxInput(),
+            }
+
+    plan = get_object_or_404(ServicePlan, pk=pk)
+    if request.method == 'POST':
+        form = ServicePlanForm(request.POST, instance=plan)
+        features_raw = request.POST.get('features_text', '').strip()
+        if form.is_valid():
+            form.save()
+            # Recria os benefícios se o campo foi enviado
+            if features_raw:
+                plan.features.all().delete()
+                for line in features_raw.splitlines():
+                    line = line.strip()
+                    if line:
+                        PlanFeature.objects.create(plan=plan, description=line)
+            messages.success(request, f'Plano "{plan.name}" atualizado!')
+            return redirect('dashboard:plan_list')
+    else:
+        form = ServicePlanForm(instance=plan)
+
+    features_text = '\n'.join(plan.features.values_list('description', flat=True))
+    return render(request, 'dashboard/management/plan_form.html', {
+        'form': form, 'plan': plan,
+        'features_text': features_text,
+        'action': 'Editar plano',
+    })
+
+
+@group_required('Gerente')
+def plan_delete(request, pk):
+    from apps.plans.models import ServicePlan
+    plan = get_object_or_404(ServicePlan, pk=pk)
+    if request.method == 'POST':
+        name = plan.name
+        try:
+            plan.delete()
+            messages.success(request, f'Plano "{name}" removido.')
+        except Exception:
+            messages.error(request, f'Não é possível remover "{name}": há assinantes ativos.')
+        return redirect('dashboard:plan_list')
+    return render(request, 'dashboard/management/confirm_delete.html', {
+        'object': plan, 'type': 'plano'
     })

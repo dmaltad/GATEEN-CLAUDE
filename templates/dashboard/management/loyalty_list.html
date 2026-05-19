@@ -11,6 +11,10 @@
       </h4>
       <p class="text-muted mb-0">{{ page_obj.paginator.count }} conta(s)</p>
     </div>
+    <a href="{% url 'dashboard:loyalty_rule_list' %}"
+      class="btn btn-primary rounded-pill fw-600">
+      <i class="fa fa-award me-1"></i>Gerenciar regras
+    </a>
   </div>
 
   <!-- Busca -->
@@ -48,31 +52,21 @@
             <tr>
               <td class="ps-4">
                 <div class="fw-600 small">{{ account.user.get_full_name }}</div>
-                <div class="text-muted" style="font-size:.72rem;">
-                  {{ account.user.email }}
-                </div>
+                <div class="text-muted" style="font-size:.72rem;">{{ account.user.email }}</div>
               </td>
               <td>
                 {% if account.level == 'bronze' %}
                 <span class="badge rounded-pill"
-                  style="background:#cd7f32;color:#fff;font-size:.72rem;">
-                  🥉 Bronze
-                </span>
+                  style="background:#cd7f32;color:#fff;font-size:.72rem;">🥉 Bronze</span>
                 {% elif account.level == 'silver' %}
                 <span class="badge rounded-pill"
-                  style="background:#9e9e9e;color:#fff;font-size:.72rem;">
-                  🥈 Prata
-                </span>
+                  style="background:#9e9e9e;color:#fff;font-size:.72rem;">🥈 Prata</span>
                 {% elif account.level == 'gold' %}
                 <span class="badge rounded-pill"
-                  style="background:#f39c12;color:#fff;font-size:.72rem;">
-                  🥇 Ouro
-                </span>
+                  style="background:#f39c12;color:#fff;font-size:.72rem;">🥇 Ouro</span>
                 {% elif account.level == 'diamond' %}
                 <span class="badge rounded-pill"
-                  style="background:#0288d1;color:#fff;font-size:.72rem;">
-                  💎 Diamante
-                </span>
+                  style="background:#0288d1;color:#fff;font-size:.72rem;">💎 Diamante</span>
                 {% endif %}
               </td>
               <td>

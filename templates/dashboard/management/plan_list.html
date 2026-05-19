@@ -5,33 +5,48 @@
 {% block content %}
 <div class="container-fluid py-4 px-4">
   <div class="d-flex align-items-center justify-content-between mb-4">
-    <h4 class="fw-800 mb-0">
-      <i class="fa fa-star me-2" style="color:var(--primary);"></i>Planos de Serviço
-    </h4>
-    <a href="{% url 'dashboard:userplan_list' %}"
-      class="btn btn-outline-primary btn-sm rounded-pill">
-      <i class="fa fa-id-card me-1"></i>Ver planos ativos
-    </a>
+    <div>
+      <h4 class="fw-800 mb-0">
+        <i class="fa fa-star me-2" style="color:var(--primary);"></i>Planos de Serviço
+      </h4>
+      <p class="text-muted mb-0">{{ plans|length }} plano(s)</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'dashboard:userplan_list' %}"
+        class="btn btn-outline-primary btn-sm rounded-pill">
+        <i class="fa fa-id-card me-1"></i>Ver planos ativos
+      </a>
+      <a href="{% url 'dashboard:plan_create' %}"
+        class="btn btn-primary rounded-pill fw-600">
+        <i class="fa fa-plus me-1"></i>Novo plano
+      </a>
+    </div>
   </div>
 
   <div class="row g-4">
     {% for plan in plans %}
     <div class="col-lg-4 col-md-6">
-      <div class="card border-0 shadow-sm h-100" style="border-top:4px solid {{ plan.color }}!important;">
+      <div class="card border-0 shadow-sm h-100"
+        style="border-top: 4px solid {{ plan.color }} !important;">
         <div class="card-body p-4">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="rounded-circle d-flex align-items-center justify-content-center"
-              style="width:48px;height:48px;background:{{ plan.color }}20;">
-              <i class="fa fa-paw fa-lg" style="color:{{ plan.color }};"></i>
+
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle d-flex align-items-center justify-content-center"
+                style="width:48px;height:48px;background:{{ plan.color }}20;flex-shrink:0;">
+                <i class="fa fa-paw fa-lg" style="color:{{ plan.color }};"></i>
+              </div>
+              <div>
+                <div class="fw-800">{{ plan.name }}</div>
+                <div class="text-muted small">{{ plan.get_period_display }}</div>
+              </div>
             </div>
-            <div>
-              <div class="fw-800">{{ plan.name }}</div>
-              <div class="text-muted small">{{ plan.get_period_display }}</div>
-            </div>
-            <div class="ms-auto fw-800 fs-5" style="color:{{ plan.color }};">
+            <div class="fw-800 fs-5" style="color:{{ plan.color }};">
               R$ {{ plan.price }}
             </div>
           </div>
+
+          <p class="text-muted small mb-3">{{ plan.description|truncatechars:80 }}</p>
 
           <ul class="list-unstyled small mb-3">
             {% if plan.food_bags_per_month %}
@@ -54,26 +69,34 @@
             {% endif %}
             {% for feature in plan.features.all %}
             <li class="mb-1">
-              <i class="fa fa-{% if feature.is_included %}check text-success{% else %}times text-danger{% endif %} me-2"></i>
+              <i class="fa fa-{% if feature.is_included %}check text-success{% else %}times text-muted{% endif %} me-2"></i>
               {{ feature.description }}
             </li>
             {% endfor %}
           </ul>
 
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
+          <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+            <div class="d-flex gap-1">
               {% if plan.is_active %}
-              <span class="badge bg-success-subtle text-success me-1" style="font-size:.7rem;">Ativo</span>
+              <span class="badge bg-success-subtle text-success" style="font-size:.7rem;">Ativo</span>
               {% else %}
-              <span class="badge bg-secondary me-1" style="font-size:.7rem;">Inativo</span>
+              <span class="badge bg-secondary" style="font-size:.7rem;">Inativo</span>
               {% endif %}
               {% if plan.is_featured %}
-              <span class="badge" style="background:var(--accent);color:#000;font-size:.7rem;">Destaque</span>
+              <span class="badge" style="background:var(--accent);color:#000;font-size:.7rem;">★ Destaque</span>
               {% endif %}
             </div>
-            <small class="text-muted">
-              {{ plan.userplan_set.filter.count|default:"0" }} assinantes
-            </small>
+            <div class="d-flex gap-1">
+              <a href="{% url 'dashboard:plan_edit' plan.pk %}"
+                class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="fa fa-edit me-1"></i>Editar
+              </a>
+              <a href="{% url 'dashboard:plan_delete' plan.pk %}"
+                class="btn btn-outline-danger btn-sm rounded-pill"
+                onclick="return confirm('Excluir o plano {{ plan.name }}?')">
+                <i class="fa fa-trash"></i>
+              </a>
+            </div>
           </div>
         </div>
       </div>

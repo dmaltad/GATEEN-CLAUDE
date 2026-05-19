@@ -2,14 +2,13 @@
 {% load user_tags %}
 
 {% if user.is_authenticated and user.is_staff %}
-{# ══════════ NAVBAR STAFF ══════════ #}
 <nav class="navbar navbar-expand-xl sticky-top"
   style="background:linear-gradient(135deg,#2d1b69,#4a2080);">
   <div class="container-fluid px-3">
 
     <a class="navbar-brand d-flex align-items-center gap-2 me-3"
       href="{% url 'dashboard:home' %}">
-      <img src="{% static 'base/img/bimage.png' %}" height="30" alt="Gateen">
+      <img src="{% static 'base/img/gateen_logo.svg' %}" height="30" alt="Gateen">
       <span class="text-white fw-700 d-none d-sm-inline">
         Gestão <span class="badge ms-1 rounded-pill"
           style="background:var(--accent);color:#000;font-size:.6rem;">STAFF</span>
@@ -64,6 +63,8 @@
       </form>
 
       <ul class="navbar-nav me-auto flex-row flex-wrap gap-0">
+
+        <!-- Dashboard -->
         <li class="nav-item">
           <a class="nav-link text-white px-2 py-2 d-flex align-items-center gap-1"
             href="{% url 'dashboard:home' %}">
@@ -72,13 +73,14 @@
           </a>
         </li>
 
+        <!-- Produtos (com Categorias) -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Estoquista' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
             href="#" data-bs-toggle="dropdown">
             <i class="fa fa-box fa-sm"></i><span>Produtos</span>
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:product_list' %}">
                 <i class="fa fa-list me-2" style="color:var(--primary);"></i>Listar produtos
@@ -90,35 +92,45 @@
               </a>
             </li>
             <li><hr class="dropdown-divider"></li>
-          
+            <li>
+              <a class="dropdown-item" href="{% url 'dashboard:category_list' %}">
+                <i class="fa fa-th me-2" style="color:var(--primary);"></i>Categorias
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'dashboard:category_create' %}">
+                <i class="fa fa-plus me-2" style="color:var(--success);"></i>Nova categoria
+              </a>
+            </li>
           </ul>
         </li>
         {% endif %}
 
+        <!-- Pedidos -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Atendimento' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
             href="#" data-bs-toggle="dropdown">
             <i class="fa fa-shopping-cart fa-sm"></i><span>Pedidos</span>
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:order_list_staff' %}">
                 <i class="fa fa-list me-2" style="color:var(--primary);"></i>Todos os pedidos
               </a>
             </li>
-
           </ul>
         </li>
         {% endif %}
 
+        <!-- Eventos -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Marketing' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
             href="#" data-bs-toggle="dropdown">
             <i class="fa fa-calendar fa-sm"></i><span>Eventos</span>
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:event_list' %}">
                 <i class="fa fa-calendar me-2" style="color:var(--primary);"></i>Listar eventos
@@ -133,16 +145,17 @@
         </li>
         {% endif %}
 
+        <!-- Planos -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Atendimento' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
             href="#" data-bs-toggle="dropdown">
             <i class="fa fa-star fa-sm"></i><span>Planos</span>
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:plan_list' %}">
-                <i class="fa fa-star me-2" style="color:var(--primary);"></i>Planos
+                <i class="fa fa-star me-2" style="color:var(--primary);"></i>Planos de serviço
               </a>
             </li>
             <li>
@@ -150,25 +163,50 @@
                 <i class="fa fa-id-card me-2" style="color:var(--primary);"></i>Planos ativos
               </a>
             </li>
-            <li>
-              <a class="dropdown-item" href="{% url 'dashboard:loyalty_list' %}">
-                <i class="fa fa-gift me-2" style="color:var(--primary);"></i>Fidelidade
-              </a>
-            </li>
           </ul>
         </li>
         {% endif %}
 
+        <!-- Fidelidade -->
+        {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Marketing' or user|has_group:'Atendimento' %}
+        <li class="nav-item dropdown">
+          <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
+            href="#" data-bs-toggle="dropdown">
+            <i class="fa fa-gift fa-sm"></i><span>Fidelidade</span>
+          </a>
+          <ul class="dropdown-menu shadow border-0">
+            <li>
+              <a class="dropdown-item" href="{% url 'dashboard:loyalty_list' %}">
+                <i class="fa fa-users me-2" style="color:var(--primary);"></i>Contas
+              </a>
+            </li>
+            {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Marketing' %}
+            <li>
+              <a class="dropdown-item" href="{% url 'dashboard:loyalty_rule_list' %}">
+                <i class="fa fa-award me-2" style="color:var(--primary);"></i>Regras
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'dashboard:loyalty_rule_create' %}">
+                <i class="fa fa-plus me-2" style="color:var(--success);"></i>Nova regra
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </li>
+        {% endif %}
+
+        <!-- Usuários -->
         {% if user.is_superuser or user|has_group:'Gerente' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
             href="#" data-bs-toggle="dropdown">
             <i class="fa fa-users fa-sm"></i><span>Usuários</span>
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:user_list' %}">
-                <i class="fa fa-users me-2" style="color:var(--primary);"></i>Usuários
+                <i class="fa fa-users me-2" style="color:var(--primary);"></i>Listar usuários
               </a>
             </li>
             <li>
@@ -179,6 +217,7 @@
           </ul>
         </li>
         {% endif %}
+
       </ul>
 
       <!-- DESKTOP: Perfil -->
@@ -224,14 +263,11 @@
   <div class="container">
 
     <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
-      <img src="{% static 'base/img/bimage.png' %}" alt="Gateen" height="38">
-      <span class="fw-800 text-white fs-5">Gateen Petshop</span>
+      <img src="{% static 'base/img/gateen_logo.svg' %}" alt="Gateen" height="38">
     </a>
 
-    <!-- MOBILE: carrinho + toggler -->
     <div class="d-flex align-items-center gap-2 d-lg-none ms-auto">
-      <a href="{% url 'orders:cart' %}" class="cart-nav-btn"
-        title="Meu Carrinho">
+      <a href="{% url 'orders:cart' %}" class="cart-nav-btn" title="Meu Carrinho">
         <i class="fa fa-shopping-cart"></i>
         <span class="cart-nav-badge cart-badge-num"
           style="display:{% if cart_count %}flex{% else %}none{% endif %};">
@@ -246,7 +282,6 @@
 
     <div class="collapse navbar-collapse" id="navMain">
 
-      <!-- Busca ANTES dos links -->
       <form class="navbar-search-form d-flex me-3 my-2 my-lg-0"
         action="{% url 'catalog:product_list' %}" method="get">
         <input class="form-control" type="search" name="q"
@@ -257,7 +292,6 @@
         </button>
       </form>
 
-      <!-- Links -->
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
         <li class="nav-item">
           <a class="nav-link text-white fw-500" href="{% url 'catalog:product_list' %}">
@@ -276,10 +310,8 @@
         </li>
       </ul>
 
-      <!-- DESKTOP: carrinho + usuário -->
       <div class="d-none d-lg-flex align-items-center gap-2">
-        <a href="{% url 'orders:cart' %}" class="cart-nav-btn me-1"
-           title="Meu Carrinho">
+        <a href="{% url 'orders:cart' %}" class="cart-nav-btn me-1" title="Meu Carrinho">
           <i class="fa fa-shopping-cart"></i>
           <span class="cart-nav-badge cart-badge-num"
             style="display:{% if cart_count %}flex{% else %}none{% endif %};">
@@ -334,7 +366,6 @@
         {% endif %}
       </div>
 
-      <!-- MOBILE: usuário dentro do collapse -->
       <div class="d-lg-none border-top border-white border-opacity-25 mt-2 pt-2">
         {% if user.is_authenticated %}
         <div class="d-flex align-items-center gap-3 mb-2 px-1">
