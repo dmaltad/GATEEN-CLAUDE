@@ -1,0 +1,168 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ action }} — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'dashboard:loyalty_rule_list' %}"
+          class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="fa fa-arrow-left"></i>
+        </a>
+        <h4 class="fw-800 mb-0">{{ action }}</h4>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h6 class="fw-700 mb-3 text-muted text-uppercase"
+              style="font-size:.72rem;letter-spacing:1px;">Identificação</h6>
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Nome da regra *</label>
+              {{ form.name }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Descrição</label>
+              {{ form.description }}
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Tipo de regra</label>
+                {{ form.rule_type }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Tipo de recompensa</label>
+                {{ form.reward_type }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h6 class="fw-700 mb-3 text-muted text-uppercase"
+              style="font-size:.72rem;letter-spacing:1px;">Gatilho (condição)</h6>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Marca gatilho</label>
+                {{ form.trigger_brand }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Produto gatilho</label>
+                {{ form.trigger_product }}
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Quantidade necessária</label>
+                {{ form.trigger_quantity }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Valor mínimo (R$)</label>
+                {{ form.trigger_amount }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h6 class="fw-700 mb-3 text-muted text-uppercase"
+              style="font-size:.72rem;letter-spacing:1px;">Recompensa</h6>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Pontos de recompensa</label>
+                {{ form.reward_points }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Desconto % (se aplicável)</label>
+                {{ form.reward_discount }}
+              </div>
+            </div>
+            <div class="mb-0">
+              <label class="form-label fw-600 small">Produto brinde (se aplicável)</label>
+              {{ form.reward_product }}
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <h6 class="fw-700 mb-3 text-muted text-uppercase"
+              style="font-size:.72rem;letter-spacing:1px;">Vigência</h6>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Válido de</label>
+                {{ form.valid_from }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-600 small">Válido até</label>
+                {{ form.valid_until }}
+              </div>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox"
+                name="{{ form.is_active.html_name }}"
+                id="{{ form.is_active.id_for_label }}"
+                {% if form.is_active.value %}checked{% endif %}>
+              <label class="form-check-label fw-600" for="{{ form.is_active.id_for_label }}">
+                Regra ativa
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary rounded-pill fw-700 px-4">
+            <i class="fa fa-save me-2"></i>{{ action }}
+          </button>
+          <a href="{% url 'dashboard:loyalty_rule_list' %}"
+            class="btn btn-outline-secondary rounded-pill px-4">
+            Cancelar
+          </a>
+          {% if rule %}
+          <a href="{% url 'dashboard:loyalty_rule_delete' rule.pk %}"
+            class="btn btn-outline-danger rounded-pill px-3 ms-auto"
+            onclick="return confirm('Excluir esta regra?')">
+            <i class="fa fa-trash"></i>
+          </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card-body input[type="text"],
+.card-body input[type="number"],
+.card-body input[type="date"],
+.card-body select,
+.card-body textarea {
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  padding: .45rem .9rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: .9rem;
+  width: 100%;
+  transition: border-color .2s, box-shadow .2s;
+}
+.card-body input[type="text"]:focus,
+.card-body input[type="number"]:focus,
+.card-body input[type="date"]:focus,
+.card-body select:focus,
+.card-body textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(138,75,159,.15);
+  outline: none;
+}
+.card-body input[type="checkbox"] { width: auto !important; }
+</style>
+{% endblock %}

@@ -666,6 +666,7 @@ footer, .footer-gateen { flex-shrink: 0; }
    ══════════════════════════════════════════════════════════ */
 .loyalty-header {
   background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+  
 }
 .level-item-active {
   background: var(--primary-bg) !important;
@@ -917,3 +918,9 @@ footer, .footer-gateen { flex-shrink: 0; }
   border: 2px solid var(--primary-dark, #6B3A7D);
   pointer-events: none;
 }
+
+.loyalty-header-end {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+  
+}
+

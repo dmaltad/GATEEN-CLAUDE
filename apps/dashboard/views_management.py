@@ -496,3 +496,127 @@ def group_list(request):
     from django.contrib.auth.models import Group
     groups = Group.objects.prefetch_related('permissions').all()
     return render(request, 'dashboard/management/group_list.html', {'groups': groups})
+
+# ══════════════════════════════════════════════════════
+# REGRAS DE FIDELIDADE
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente', 'Marketing')
+def loyalty_rule_list(request):
+    from apps.loyalty.models import LoyaltyRule
+    qs = LoyaltyRule.objects.select_related(
+        'trigger_brand', 'trigger_product', 'reward_product'
+    ).order_by('-is_active', 'name')
+
+    q = request.GET.get('q', '')
+    if q:
+        qs = qs.filter(name__icontains=q)
+
+    paginator = Paginator(qs, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    return render(request, 'dashboard/management/loyalty_rule_list.html', {
+        'page_obj': page_obj, 'q': q,
+    })
+
+
+@group_required('Gerente', 'Marketing')
+def loyalty_rule_create(request):
+    from apps.loyalty.models import LoyaltyRule
+    from django import forms as dj_forms
+
+    class LoyaltyRuleForm(dj_forms.ModelForm):
+        class Meta:
+            model = LoyaltyRule
+            fields = [
+                'name', 'description', 'rule_type', 'reward_type',
+                'trigger_brand', 'trigger_product', 'trigger_quantity', 'trigger_amount',
+                'reward_product', 'reward_discount', 'reward_points',
+                'is_active', 'valid_from', 'valid_until',
+            ]
+            widgets = {
+                'name':             dj_forms.TextInput(attrs={'class': 'form-control'}),
+                'description':      dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'rule_type':        dj_forms.Select(attrs={'class': 'form-select'}),
+                'reward_type':      dj_forms.Select(attrs={'class': 'form-select'}),
+                'trigger_brand':    dj_forms.Select(attrs={'class': 'form-select'}),
+                'trigger_product':  dj_forms.Select(attrs={'class': 'form-select'}),
+                'trigger_quantity': dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'trigger_amount':   dj_forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+                'reward_product':   dj_forms.Select(attrs={'class': 'form-select'}),
+                'reward_discount':  dj_forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+                'reward_points':    dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'valid_from':       dj_forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+                'valid_until':      dj_forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+                'is_active':        dj_forms.CheckboxInput(),
+            }
+
+    if request.method == 'POST':
+        form = LoyaltyRuleForm(request.POST)
+        if form.is_valid():
+            rule = form.save()
+            messages.success(request, f'Regra "{rule.name}" criada!')
+            return redirect('dashboard:loyalty_rule_list')
+    else:
+        form = LoyaltyRuleForm()
+    return render(request, 'dashboard/management/loyalty_rule_form.html', {
+        'form': form, 'action': 'Criar regra'
+    })
+
+
+@group_required('Gerente', 'Marketing')
+def loyalty_rule_edit(request, pk):
+    from apps.loyalty.models import LoyaltyRule
+    from django import forms as dj_forms
+
+    class LoyaltyRuleForm(dj_forms.ModelForm):
+        class Meta:
+            model = LoyaltyRule
+            fields = [
+                'name', 'description', 'rule_type', 'reward_type',
+                'trigger_brand', 'trigger_product', 'trigger_quantity', 'trigger_amount',
+                'reward_product', 'reward_discount', 'reward_points',
+                'is_active', 'valid_from', 'valid_until',
+            ]
+            widgets = {
+                'name':             dj_forms.TextInput(attrs={'class': 'form-control'}),
+                'description':      dj_forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'rule_type':        dj_forms.Select(attrs={'class': 'form-select'}),
+                'reward_type':      dj_forms.Select(attrs={'class': 'form-select'}),
+                'trigger_brand':    dj_forms.Select(attrs={'class': 'form-select'}),
+                'trigger_product':  dj_forms.Select(attrs={'class': 'form-select'}),
+                'trigger_quantity': dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'trigger_amount':   dj_forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+                'reward_product':   dj_forms.Select(attrs={'class': 'form-select'}),
+                'reward_discount':  dj_forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+                'reward_points':    dj_forms.NumberInput(attrs={'class': 'form-control'}),
+                'valid_from':       dj_forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+                'valid_until':      dj_forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+                'is_active':        dj_forms.CheckboxInput(),
+            }
+
+    rule = get_object_or_404(LoyaltyRule, pk=pk)
+    if request.method == 'POST':
+        form = LoyaltyRuleForm(request.POST, instance=rule)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Regra "{rule.name}" atualizada!')
+            return redirect('dashboard:loyalty_rule_list')
+    else:
+        form = LoyaltyRuleForm(instance=rule)
+    return render(request, 'dashboard/management/loyalty_rule_form.html', {
+        'form': form, 'rule': rule, 'action': 'Editar regra'
+    })
+
+
+@group_required('Gerente')
+def loyalty_rule_delete(request, pk):
+    from apps.loyalty.models import LoyaltyRule
+    rule = get_object_or_404(LoyaltyRule, pk=pk)
+    if request.method == 'POST':
+        name = rule.name
+        rule.delete()
+        messages.success(request, f'Regra "{name}" removida.')
+        return redirect('dashboard:loyalty_rule_list')
+    return render(request, 'dashboard/management/confirm_delete.html', {
+        'object': rule, 'type': 'regra de fidelidade'
+    })

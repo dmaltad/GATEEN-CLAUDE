@@ -25,12 +25,15 @@ class EventForm(forms.ModelForm):
             'short_description': forms.Textarea(attrs={
                 'class': 'form-control', 'rows': 2,
             }),
-            'start_date': forms.DateTimeInput(attrs={
-                'class': 'form-control', 'type': 'datetime-local',
-            }),
-            'end_date': forms.DateTimeInput(attrs={
-                'class': 'form-control', 'type': 'datetime-local',
-            }),
+            # format corrigido: sem segundos, compatível com datetime-local
+            'start_date': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
+            ),
+            'end_date': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
+            ),
             'location': forms.TextInput(attrs={
                 'class': 'form-control', 'placeholder': 'Local',
             }),
@@ -38,10 +41,17 @@ class EventForm(forms.ModelForm):
                 'class': 'form-control', 'placeholder': 'https://',
             }),
             'event_type': forms.Select(attrs={'class': 'form-select'}),
-            'is_online':   forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_active':   forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            # Checkboxes: SEM class form-control para evitar o bug do CSS
+            'is_online':   forms.CheckboxInput(),
+            'is_active':   forms.CheckboxInput(),
+            'is_featured': forms.CheckboxInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Garante que o input datetime-local receba o valor formatado corretamente
+        self.fields['start_date'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']
+        self.fields['end_date'].input_formats   = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']
 
     def save(self, commit=True):
         event = super().save(commit=False)

@@ -14,7 +14,6 @@
     </div>
   </div>
 
-  <!-- Filtros -->
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-3">
       <form method="get" class="row g-2 align-items-end">
@@ -27,9 +26,7 @@
           <select name="status" class="form-select form-select-sm">
             <option value="">Todos os status</option>
             {% for val, lbl in status_choices %}
-            <option value="{{ val }}" {% if status == val %}selected{% endif %}>
-              {{ lbl }}
-            </option>
+            <option value="{{ val }}" {% if status == val %}selected{% endif %}>{{ lbl }}</option>
             {% endfor %}
           </select>
         </div>
@@ -48,7 +45,6 @@
     </div>
   </div>
 
-  <!-- Tabela -->
   <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -62,12 +58,12 @@
               <th>Pagamento</th>
               <th>Data</th>
               <th>Status</th>
-              <th class="pe-4 text-end">Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for order in page_obj %}
-            <tr>
+            <tr style="cursor:pointer;"
+              onclick="window.location.href='{% url 'dashboard:order_detail_staff' order.order_number %}'">
               <td class="ps-4 fw-700" style="color:var(--primary);">
                 #{{ order.order_number }}
               </td>
@@ -77,39 +73,29 @@
               </td>
               <td class="fw-700">R$ {{ order.total }}</td>
               <td>
-                <span class="badge bg-light text-dark small">
-                  {{ order.get_delivery_type_display }}
+                {% if order.delivery_type == 'delivery' %}
+                <span class="badge rounded-pill"
+                  style="background:#e3f2fd;color:#1565c0;font-size:.7rem;">
+                  Entrega em domicílio
                 </span>
+                {% else %}
+                <span class="badge rounded-pill"
+                  style="background:#f3e5f5;color:#6a1b9a;font-size:.7rem;">
+                  Retirada na loja
+                </span>
+                {% endif %}
               </td>
               <td class="text-muted small">{{ order.get_payment_method_display }}</td>
               <td class="text-muted small">{{ order.created_at|date:"d/m/Y H:i" }}</td>
               <td>
-                <!-- Status inline editável -->
-                <form method="post"
-                  action="{% url 'dashboard:order_detail_staff' order.order_number %}">
-                  {% csrf_token %}
-                  <select name="status" class="form-select form-select-sm"
-                    style="min-width:130px;"
-                    onchange="this.form.submit()">
-                    {% for val, lbl in status_choices %}
-                    <option value="{{ val }}"
-                      {% if order.status == val %}selected{% endif %}>
-                      {{ lbl }}
-                    </option>
-                    {% endfor %}
-                  </select>
-                </form>
-              </td>
-              <td class="pe-4 text-end">
-                <a href="{% url 'dashboard:order_detail_staff' order.order_number %}"
-                  class="btn btn-outline-primary btn-sm rounded-pill">
-                  <i class="fa fa-eye"></i>
-                </a>
+                <span class="badge status-badge status-{{ order.status }} rounded-pill px-3">
+                  {{ order.get_status_display }}
+                </span>
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="8" class="text-center py-5 text-muted">
+              <td colspan="7" class="text-center py-5 text-muted">
                 <i class="fa fa-inbox fa-3x mb-3 d-block opacity-25"></i>
                 Nenhum pedido encontrado.
               </td>
@@ -121,7 +107,6 @@
     </div>
   </div>
 
-  <!-- Paginação -->
   {% if page_obj.has_other_pages %}
   <nav class="mt-4">
     <ul class="pagination justify-content-center">
@@ -149,4 +134,10 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  tbody tr:hover td { background-color: var(--primary-bg-soft) !important; }
+</style>
 {% endblock %}

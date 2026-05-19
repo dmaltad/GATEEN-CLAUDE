@@ -1,0 +1,122 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ action }} — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'dashboard:category_list' %}"
+          class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="fa fa-arrow-left"></i>
+        </a>
+        <h4 class="fw-800 mb-0">{{ action }}</h4>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body p-4">
+
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Nome *</label>
+              {{ form.name }}
+              {% if form.name.errors %}
+              <div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-600 small">
+                Ícone FontAwesome
+                <span class="text-muted fw-400">(ex: fa-paw, fa-box)</span>
+              </label>
+              {{ form.icon }}
+              {% if category and category.icon %}
+              <div class="mt-2 text-muted small">
+                Preview: <i class="fa {{ category.icon }} ms-1" style="color:var(--primary);"></i>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Descrição</label>
+              {{ form.description }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Imagem</label>
+              {% if category and category.image %}
+              <div class="mb-2">
+                <img src="{{ category.image.url }}" class="rounded-3"
+                  style="height:80px;width:80px;object-fit:cover;">
+              </div>
+              {% endif %}
+              {{ form.image }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Ordem de exibição</label>
+              {{ form.order }}
+              <div class="form-text">Menor número = exibido primeiro.</div>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox"
+                name="{{ form.is_active.html_name }}"
+                id="{{ form.is_active.id_for_label }}"
+                {% if form.is_active.value %}checked{% endif %}>
+              <label class="form-check-label fw-600" for="{{ form.is_active.id_for_label }}">
+                Categoria ativa (visível no site)
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary rounded-pill fw-700 px-4">
+            <i class="fa fa-save me-2"></i>{{ action }}
+          </button>
+          <a href="{% url 'dashboard:category_list' %}"
+            class="btn btn-outline-secondary rounded-pill px-4">
+            Cancelar
+          </a>
+          {% if category %}
+          <a href="{% url 'dashboard:category_delete' category.pk %}"
+            class="btn btn-outline-danger rounded-pill px-3 ms-auto"
+            onclick="return confirm('Excluir esta categoria?')">
+            <i class="fa fa-trash"></i>
+          </a>
+          {% endif %}
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+input[type="text"], input[type="number"], select, textarea {
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  padding: .45rem .9rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: .9rem;
+  width: 100%;
+  transition: border-color .2s, box-shadow .2s;
+}
+input[type="text"]:focus, input[type="number"]:focus,
+select:focus, textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(138,75,159,.15);
+  outline: none;
+}
+input[type="checkbox"] { width: auto !important; }
+</style>
+{% endblock %}
