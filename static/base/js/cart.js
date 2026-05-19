@@ -1,185 +1,156 @@
-/* ═══════════════════════════════════════════════════════════
-   GATEEN — cart.js
-   Sistema unificado: notificações centro-topo + AJAX carrinho
-   ═══════════════════════════════════════════════════════════ */
-(function () {
+/* ════════════════════════════════════════════════════════
+   GATEEN PETSHOP — cart.js
+   Sistema global de notificações + AJAX cart
+   ════════════════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────────────────
+   window.GateenNotify — sistema global de toasts
+   ────────────────────────────────────────────────────── */
+;(function (global) {
   'use strict';
 
-  /* ── Configuração ────────────────────────────────────────── */
-  var NOTIF_DURATION   = 4000;   // ms antes de sumir
-  var CART_API_BASE    = '/pedidos/adicionar/';
-  var activeTimers     = [];
-
-  /* ─────────────────────────────────────────────────────────
-     SISTEMA DE NOTIFICAÇÃO — topo centralizado
-     ───────────────────────────────────────────────────────── */
-
-  function showNotification(text, type, duration) {
-    type     = type     || 'success';
-    duration = duration || NOTIF_DURATION;
-
-    var container = document.getElementById('toastTopCenter');
-    if (!container) return;
-
-    /* Remove notificações antigas se houver muitas */
-    var existing = container.querySelectorAll('.gateen-notification');
-    if (existing.length >= 3) {
-      dismissNotification(existing[0]);
+  // Garante o container no DOM
+  function getContainer() {
+    var el = document.getElementById('toastTopCenter');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toastTopCenter';
+      document.body.appendChild(el);
     }
+    return el;
+  }
 
-    var icons = {
-      success: 'fa-check',
-      danger:  'fa-exclamation-circle',
-      warning: 'fa-exclamation-triangle',
-      info:    'fa-info-circle',
-    };
+  var ICONS = {
+    success: 'fa-check-circle',
+    danger:  'fa-exclamation-circle',
+    warning: 'fa-exclamation-triangle',
+    info:    'fa-info-circle',
+  };
 
-    var notif = document.createElement('div');
-    notif.className = 'gateen-notification';
-    notif.innerHTML =
-      '<div class="notif-icon ' + type + '">' +
-        '<i class="fa ' + (icons[type] || 'fa-info-circle') + '"></i>' +
-      '</div>' +
-      '<div class="notif-text">' + text + '</div>' +
-      '<button class="notif-close" type="button" aria-label="Fechar">' +
+  /**
+   * GateenNotify.show(message, type, duration)
+   * type: 'success' | 'danger' | 'warning' | 'info'
+   * duration: ms (default 3500)
+   */
+  function show(message, type, duration) {
+    type     = type     || 'info';
+    duration = duration || 3500;
+
+    var container = getContainer();
+    var icon      = ICONS[type] || 'fa-info-circle';
+
+    var card = document.createElement('div');
+    card.className = 'gateen-notification';
+    card.innerHTML =
+      '<span class="notif-icon ' + type + '">' +
+        '<i class="fa ' + icon + '"></i>' +
+      '</span>' +
+      '<span class="notif-text">' + message + '</span>' +
+      '<button class="notif-close" aria-label="Fechar">' +
         '<i class="fa fa-times"></i>' +
       '</button>';
 
-    container.appendChild(notif);
+    container.appendChild(card);
 
-    /* Anima entrada */
+    // Anima entrada
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        notif.classList.add('show');
-      });
+      requestAnimationFrame(function () { card.classList.add('show'); });
     });
 
-    /* Auto-dismiss */
-    var timer = setTimeout(function () {
-      dismissNotification(notif);
-    }, duration);
-    activeTimers.push(timer);
-
-    /* Fechar manual */
-    notif.querySelector('.notif-close').addEventListener('click', function () {
-      clearTimeout(timer);
-      dismissNotification(notif);
+    // Fechar manualmente
+    card.querySelector('.notif-close').addEventListener('click', function () {
+      dismiss(card);
     });
 
-    return notif;
+    // Auto-dismiss
+    var timer = setTimeout(function () { dismiss(card); }, duration);
+    card._timer = timer;
   }
 
-  function dismissNotification(notif) {
-    if (!notif || !notif.parentNode) return;
-    notif.classList.remove('show');
-    notif.classList.add('hide');
+  function dismiss(card) {
+    clearTimeout(card._timer);
+    card.classList.remove('show');
+    card.classList.add('hide');
     setTimeout(function () {
-      if (notif.parentNode) notif.parentNode.removeChild(notif);
-    }, 320);
+      card.parentNode && card.parentNode.removeChild(card);
+    }, 350);
   }
 
-  /* ── Expõe globalmente ───────────────────────────────────── */
-  window.GateenNotify = { show: showNotification };
+  global.GateenNotify = { show: show };
 
-  /* Alias para compatibilidade com código antigo */
-  window.GateenCart = {
-    showToast: showNotification,
-    updateCartBadges: updateCartBadges,
-  };
+})(window);
 
-  /* ─────────────────────────────────────────────────────────
-     PROCESSA MENSAGENS DJANGO → centro-topo
-     ───────────────────────────────────────────────────────── */
-  document.addEventListener('DOMContentLoaded', function () {
-    var container = document.getElementById('djangoMessages');
-    if (!container) return;
 
-    container.querySelectorAll('[data-text]').forEach(function (el, idx) {
-      var tags = el.dataset.tags || '';
-      var text = el.dataset.text;
-      var type = 'info';
-      if (tags.includes('success')) type = 'success';
-      else if (tags.includes('error') || tags.includes('danger')) type = 'danger';
-      else if (tags.includes('warning')) type = 'warning';
-
-      /* Pequeno atraso entre múltiplas mensagens */
-      setTimeout(function () {
-        showNotification(text, type, 5000);
-      }, idx * 150);
-    });
-  });
-
-  /* ─────────────────────────────────────────────────────────
-     BADGE DO CARRINHO
-     ───────────────────────────────────────────────────────── */
-  function updateCartBadges(count) {
-    /* Atualiza todos os badges (suporta .cart-badge-num e .cart-nav-badge) */
-    document.querySelectorAll(
-      '.cart-badge-num, .cart-nav-badge'
-    ).forEach(function (el) {
+/* ──────────────────────────────────────────────────────
+   Atualiza todos os badges de carrinho na página
+   ────────────────────────────────────────────────────── */
+function updateCartBadges(count) {
+  document.querySelectorAll('.cart-badge-num, .cart-nav-badge').forEach(function (el) {
+    if (count > 0) {
       el.textContent = count;
-      el.style.display = count > 0 ? 'flex' : 'none';
-    });
-  }
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+}
 
-  /* ─────────────────────────────────────────────────────────
-     AJAX ADD TO CART — event delegation global
-     ───────────────────────────────────────────────────────── */
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.ajax-add-cart');
+
+/* ──────────────────────────────────────────────────────
+   AJAX Add-to-cart — delegação global
+   Qualquer form com data-ajax-cart="1" ou
+   botão com data-product-id funciona automaticamente.
+   ────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+
+  document.body.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-ajax-cart]');
     if (!btn) return;
+
     e.preventDefault();
     e.stopPropagation();
-    if (btn.dataset.loading === 'true') return;
 
     var productId   = btn.dataset.productId;
     var productName = btn.dataset.productName || 'Produto';
-    var qty         = parseInt(btn.dataset.qty || '1', 10);
+    var quantity    = btn.dataset.quantity    || 1;
 
-    btn.dataset.loading = 'true';
-    var icon = btn.querySelector('i, .fa');
+    if (!productId || !window.ADD_CART_BASE_URL) return;
+
+    var url  = window.ADD_CART_BASE_URL + productId + '/';
+    var icon = btn.querySelector('i');
     if (icon) icon.className = 'fa fa-spinner fa-spin';
+    btn.disabled = true;
 
-    fetch(CART_API_BASE + productId + '/', {
-      method:  'POST',
+    fetch(url, {
+      method: 'POST',
       headers: {
-        'X-CSRFToken':      _getCookie('csrftoken'),
+        'X-CSRFToken':      window.CSRF_TOKEN || '',
         'X-Requested-With': 'XMLHttpRequest',
         'Content-Type':     'application/x-www-form-urlencoded',
       },
-      body: 'quantity=' + qty,
+      body: 'quantity=' + quantity,
     })
-      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
       .then(function (data) {
         if (data.success) {
           updateCartBadges(data.cart_count);
-          showNotification(
-            '<strong>' + _trunc(data.product_name || productName, 30) +
-            '</strong> adicionado ao carrinho!',
-            'success'
-          );
+          var name = productName.length > 30
+            ? productName.slice(0, 30) + '…'
+            : productName;
+          GateenNotify.show(name + ' adicionado ao carrinho!', 'success');
         } else {
-          showNotification(
-            data.error || 'Não foi possível adicionar o produto.',
-            'danger'
-          );
+          GateenNotify.show(data.error || 'Erro ao adicionar.', 'danger');
         }
       })
       .catch(function () {
-        showNotification('Erro de conexão. Tente novamente.', 'danger');
+        GateenNotify.show('Erro de conexão. Tente novamente.', 'danger');
       })
       .finally(function () {
-        btn.dataset.loading = 'false';
         if (icon) icon.className = 'fa fa-cart-plus';
+        btn.disabled = false;
       });
   });
-
-  /* ── Helpers ─────────────────────────────────────────────── */
-  function _getCookie(name) {
-    var v = '; ' + document.cookie;
-    var p = v.split('; ' + name + '=');
-    return p.length === 2 ? p.pop().split(';').shift() : '';
-  }
-  function _trunc(s, n) { return s.length > n ? s.slice(0, n) + '…' : s; }
-
-})();
+});

@@ -767,7 +767,7 @@ footer, .footer-gateen { flex-shrink: 0; }
 /* Container fixo no centro-topo */
 #toastTopCenter {
   position: fixed;
-  top: 16px;
+  top: 80px;          /* ← era 16px; agora não cobre a navbar fixa */
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
