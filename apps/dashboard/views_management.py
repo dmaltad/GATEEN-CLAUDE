@@ -45,11 +45,13 @@ def dashboard_home(request):
         return redirect('home')
 
     today     = timezone.now().date()
+    now       = timezone.now()
     month_ago = today - timedelta(days=30)
     week_ago  = today - timedelta(days=7)
 
     paid_statuses = ['confirmed', 'preparing', 'ready', 'shipped', 'delivered']
 
+    # ── Pedidos ───────────────────────────────────────────────
     total_orders_today = Order.objects.filter(created_at__date=today).count()
     revenue_today = (
         Order.objects.filter(created_at__date=today, status__in=paid_statuses)
@@ -59,48 +61,105 @@ def dashboard_home(request):
         Order.objects.filter(created_at__date__gte=month_ago, status__in=paid_statuses)
         .aggregate(total=Sum('total'))['total'] or 0
     )
-    new_users = User.objects.filter(date_joined__date__gte=week_ago).count()
+    pending_orders = Order.objects.filter(status='pending').count()
 
+    # ── Usuários ──────────────────────────────────────────────
+    new_users       = User.objects.filter(date_joined__date__gte=week_ago).count()
+    total_customers = User.objects.filter(is_staff=False).count()
+
+    # ── Estoque ───────────────────────────────────────────────
     low_stock = (
         Stock.objects.filter(quantity__lte=5)
-        .select_related('product')[:10]
+        .select_related('product')[:8]
     )
-    recent_orders = (
-        Order.objects.select_related('user')
-        .order_by('-created_at')[:10]
-    )
+    low_stock_count = Stock.objects.filter(quantity__lte=5).count()
+    out_stock_count = Stock.objects.filter(quantity__lte=0).count()
 
-    # Eventos ativos (em andamento ou futuros)
-    now = timezone.now()
+    # ── Agendamentos ──────────────────────────────────────────
+    appt_today      = 0
+    appt_week       = 0
+    appt_pending    = 0
+    upcoming_appts  = []
+    week_start = today
+    week_end   = today + timedelta(days=7)
+
+    try:
+        from apps.appointments.models import Appointment
+        appt_today   = Appointment.objects.filter(
+            scheduled_at__date=today,
+            status__in=['pending', 'confirmed']
+        ).count()
+        appt_week    = Appointment.objects.filter(
+            scheduled_at__date__gte=today,
+            scheduled_at__date__lte=week_end,
+            status__in=['pending', 'confirmed']
+        ).count()
+        appt_pending = Appointment.objects.filter(status='pending').count()
+        upcoming_appts = (
+            Appointment.objects
+            .filter(
+                scheduled_at__date__gte=today,
+                scheduled_at__date__lte=week_end,
+                status__in=['pending', 'confirmed'],
+            )
+            .select_related('pet', 'user', 'user_plan__plan')
+            .order_by('scheduled_at')[:8]
+        )
+    except Exception:
+        pass
+
+    # ── Eventos ───────────────────────────────────────────────
     active_events = Event.objects.filter(
         is_active=True,
         start_date__gte=now - timedelta(days=1),
     ).order_by('start_date')[:5]
 
+    # ── Pedidos recentes ──────────────────────────────────────
+    recent_orders = (
+        Order.objects.select_related('user')
+        .order_by('-created_at')[:8]
+    )
+
+    # ── Atalhos ───────────────────────────────────────────────
     shortcuts = [
         {'label': 'Produtos',        'icon': 'fa-box',           'color': '#8A4B9F', 'url': '/dashboard/gestao/produtos/'},
         {'label': 'Categorias',      'icon': 'fa-th',            'color': '#795548', 'url': '/dashboard/gestao/categorias/'},
         {'label': 'Pedidos',         'icon': 'fa-shopping-cart', 'color': '#E74C3C', 'url': '/dashboard/gestao/pedidos/'},
+        {'label': 'Agendamentos',    'icon': 'fa-cut',           'color': '#00897B', 'url': '/dashboard/gestao/agendamentos/'},
         {'label': 'Eventos',         'icon': 'fa-calendar',      'color': '#F4B942', 'url': '/dashboard/gestao/eventos/'},
         {'label': 'Planos',          'icon': 'fa-star',          'color': '#FF9800', 'url': '/dashboard/gestao/planos/'},
         {'label': 'Planos ativos',   'icon': 'fa-id-card',       'color': '#009688', 'url': '/dashboard/gestao/planos/ativos/'},
         {'label': 'Fidelidade',      'icon': 'fa-gift',          'color': '#9C27B0', 'url': '/dashboard/gestao/fidelidade/'},
-        {'label': 'Regras fidelide', 'icon': 'fa-award',         'color': '#7B1FA2', 'url': '/dashboard/gestao/fidelidade/regras/'},
+        {'label': 'Regras fidel.',   'icon': 'fa-award',         'color': '#7B1FA2', 'url': '/dashboard/gestao/fidelidade/regras/'},
         {'label': 'Usuários',        'icon': 'fa-users',         'color': '#2196F3', 'url': '/dashboard/gestao/usuarios/'},
         {'label': 'Cargos',          'icon': 'fa-user-tag',      'color': '#607D8B', 'url': '/dashboard/gestao/cargos/'},
     ]
 
     return render(request, 'dashboard/home.html', {
+        # Pedidos
         'total_orders_today': total_orders_today,
+        'pending_orders':     pending_orders,
         'revenue_today':      revenue_today,
         'revenue_month':      revenue_month,
-        'low_stock':          low_stock,
-        'recent_orders':      recent_orders,
+        # Usuários
         'new_users':          new_users,
-        'shortcuts':          shortcuts,
+        'total_customers':    total_customers,
+        # Estoque
+        'low_stock':          low_stock,
+        'low_stock_count':    low_stock_count,
+        'out_stock_count':    out_stock_count,
+        # Agendamentos
+        'appt_today':         appt_today,
+        'appt_week':          appt_week,
+        'appt_pending':       appt_pending,
+        'upcoming_appts':     upcoming_appts,
+        # Eventos
         'active_events':      active_events,
+        # Pedidos
+        'recent_orders':      recent_orders,
+        # Atalhos
+        'shortcuts':          shortcuts,
     })
-
 
 # ══════════════════════════════════════════════════════
 # PRODUTOS
@@ -752,3 +811,84 @@ def plan_delete(request, pk):
     return render(request, 'dashboard/management/confirm_delete.html', {
         'object': plan, 'type': 'plano'
     })
+
+# ══════════════════════════════════════════════════════
+# AGENDAMENTOS — GESTÃO STAFF
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente', 'Atendimento')
+def appointment_list_staff(request):
+    from apps.appointments.models import Appointment
+
+    qs = (
+        Appointment.objects
+        .select_related('user', 'pet', 'user_plan__plan')
+        .order_by('scheduled_at')
+    )
+
+    # Filtros
+    status = request.GET.get('status', '')
+    if status:
+        qs = qs.filter(status=status)
+
+    date_str = request.GET.get('date', '')
+    if date_str:
+        qs = qs.filter(scheduled_at__date=date_str)
+
+    q = request.GET.get('q', '')
+    if q:
+        qs = qs.filter(
+            Q(user__email__icontains=q)    |
+            Q(user__first_name__icontains=q) |
+            Q(pet__name__icontains=q)
+        )
+
+    # Padrão: só futuros/hoje; se filtrar por status, mostra todos
+    if not status and not date_str:
+        qs = qs.filter(scheduled_at__date__gte=timezone.now().date())
+
+    paginator = Paginator(qs, 25)
+    page_obj  = paginator.get_page(request.GET.get('page'))
+
+    return render(request, 'dashboard/management/appointment_list.html', {
+        'page_obj':       page_obj,
+        'status':         status,
+        'date_filter':    date_str,
+        'q':              q,
+        'status_choices': [
+            ('pending',   'Pendente'),
+            ('confirmed', 'Confirmado'),
+            ('done',      'Concluído'),
+            ('cancelled', 'Cancelado'),
+        ],
+    })
+
+
+@group_required('Gerente', 'Atendimento')
+def appointment_update_status(request, pk):
+    from apps.appointments.models import Appointment
+    from apps.appointments.services import cancel_appointment as svc_cancel
+
+    appt       = get_object_or_404(Appointment, pk=pk)
+    new_status = request.POST.get('status', '')
+    allowed    = {'pending', 'confirmed', 'done', 'cancelled'}
+
+    if request.method == 'POST' and new_status in allowed:
+        old_label = appt.get_status_display()
+
+        if new_status == 'cancelled':
+            svc_cancel(appt)          # devolve sessão ao plano se necessário
+        else:
+            appt.status = new_status
+            appt.save(update_fields=['status'])
+
+        new_label = appt.get_status_display()
+        messages.success(
+            request,
+            f'Agendamento #{appt.pk} ({appt.pet.name}): '
+            f'{old_label} → {new_label}'
+        )
+    else:
+        messages.error(request, 'Status inválido.')
+
+    return redirect('dashboard:appointment_list_staff')

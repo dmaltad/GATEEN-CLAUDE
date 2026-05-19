@@ -1,281 +1,516 @@
 {% extends 'layouts/base.html' %}
 {% load static humanize %}
 
-{% block title %}Dashboard — Gateen{% endblock %}
+{% block title %}Dashboard — Gateen Gestão{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4 px-4">
 
-  <!-- Cabeçalho -->
-  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <!-- ══ Cabeçalho ════════════════════════════════════════════ -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
-      <h4 class="fw-800 mb-0">Dashboard</h4>
-      <p class="text-muted mb-0 small">Bem-vindo, {{ request.user.first_name }}!</p>
+      <h2 class="fw-800 mb-1">
+        Olá, {{ request.user.first_name }}! 👋
+      </h2>
+      <p class="text-muted mb-0" style="font-size:.9rem;">
+        <i class="fa fa-calendar me-1"></i>
+        {% now "l, d \d\e F \d\e Y" %}
+      </p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-      <a href="{% url 'dashboard:order_list_staff' %}" class="btn btn-outline-primary btn-sm rounded-pill">
-        <i class="fa fa-shopping-cart me-1"></i>Pedidos
+    <div class="d-flex gap-2">
+      <a href="{% url 'dashboard:order_list_staff' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+        <i class="fa fa-shopping-cart me-1"></i>Ver pedidos
+      </a>
+      <a href="{% url 'dashboard:appointment_list_staff' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+        <i class="fa fa-cut me-1"></i>Agendamentos
       </a>
     </div>
   </div>
 
-  <!-- Métricas -->
+  <!-- ══ Cards de métricas — linha 1: financeiro e pedidos ═══ -->
+  <div class="row g-3 mb-3">
+
+    <!-- Receita hoje -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#27ae60,#1e8449);border-radius:12px;">
+              <i class="fa fa-dollar-sign text-white"></i>
+            </div>
+            <span class="badge rounded-pill"
+              style="background:#d1fae5;color:#065f46;font-size:.7rem;">Hoje</span>
+          </div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            R$ {{ revenue_today|floatformat:2|intcomma }}
+          </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">Receita do dia</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receita mês -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#8A4B9F,#6B3A7D);border-radius:12px;">
+              <i class="fa fa-chart-line text-white"></i>
+            </div>
+            <span class="badge rounded-pill"
+              style="background:var(--primary-bg);color:var(--primary-dark);font-size:.7rem;">30 dias</span>
+          </div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            R$ {{ revenue_month|floatformat:2|intcomma }}
+          </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">Receita do mês</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pedidos hoje -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:12px;">
+              <i class="fa fa-shopping-cart text-white"></i>
+            </div>
+            {% if pending_orders > 0 %}
+            <span class="badge rounded-pill"
+              style="background:#fee2e2;color:#dc2626;font-size:.7rem;">
+              {{ pending_orders }} pendente{{ pending_orders|pluralize:"s" }}
+            </span>
+            {% endif %}
+          </div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            {{ total_orders_today }}
+          </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">Pedidos hoje</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Novos clientes -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#3498db,#2980b9);border-radius:12px;">
+              <i class="fa fa-users text-white"></i>
+            </div>
+            <span class="badge rounded-pill"
+              style="background:#dbeafe;color:#1e40af;font-size:.7rem;">7 dias</span>
+          </div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            {{ new_users }}
+          </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">
+            Novos clientes
+            <span class="text-muted" style="font-size:.75rem;">/ {{ total_customers }} total</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ Cards de métricas — linha 2: agendamentos e estoque ═ -->
   <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-      <div class="card dashboard-card border-0 shadow-sm h-100"
-        style="background:linear-gradient(135deg,#8A4B9F,#6B3A7D);">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
-            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
-            <i class="fa fa-shopping-bag text-white"></i>
+
+    <!-- Agendamentos hoje -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        style="border-left:4px solid #00897B !important;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#00897B,#00695C);border-radius:12px;">
+              <i class="fa fa-cut text-white"></i>
+            </div>
+            <a href="{% url 'dashboard:appointment_list_staff' %}?date={% now 'Y-m-d' %}"
+              class="badge rounded-pill text-decoration-none"
+              style="background:#ccfbf1;color:#065f4d;font-size:.7rem;">
+              Ver todos
+            </a>
           </div>
-          <div>
-            <div class="text-white fw-800 fs-4 lh-1">{{ total_orders_today }}</div>
-            <div class="text-white-75 small">Pedidos hoje</div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            {{ appt_today }}
           </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">Agendamentos hoje</div>
         </div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="card dashboard-card border-0 shadow-sm h-100"
-        style="background:linear-gradient(135deg,#27ae60,#1e8449);">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
-            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
-            <i class="fa fa-dollar-sign text-white"></i>
+
+    <!-- Agendamentos semana -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        style="border-left:4px solid #00ACC1 !important;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#00ACC1,#0097A7);border-radius:12px;">
+              <i class="fa fa-calendar-week text-white"></i>
+            </div>
+            {% if appt_pending > 0 %}
+            <span class="badge rounded-pill"
+              style="background:#fef3c7;color:#92400e;font-size:.7rem;">
+              {{ appt_pending }} aguardando
+            </span>
+            {% endif %}
           </div>
-          <div>
-            <div class="text-white fw-800 fs-5 lh-1">R$ {{ revenue_today|floatformat:2 }}</div>
-            <div class="text-white-75 small">Receita hoje</div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            {{ appt_week }}
           </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">Agend. próx. 7 dias</div>
         </div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="card dashboard-card border-0 shadow-sm h-100"
-        style="background:linear-gradient(135deg,#f39c12,#d68910);">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
-            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
-            <i class="fa fa-chart-line text-white"></i>
+
+    <!-- Estoque baixo -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        style="{% if out_stock_count > 0 %}border-left:4px solid #e74c3c !important;{% elif low_stock_count > 0 %}border-left:4px solid #f4b942 !important;{% endif %}">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#f4b942,#d49a1e);border-radius:12px;">
+              <i class="fa fa-boxes text-white"></i>
+            </div>
+            {% if out_stock_count > 0 %}
+            <span class="badge rounded-pill"
+              style="background:#fee2e2;color:#dc2626;font-size:.7rem;">
+              {{ out_stock_count }} zerado{{ out_stock_count|pluralize:"s" }}
+            </span>
+            {% endif %}
           </div>
-          <div>
-            <div class="text-white fw-800 fs-5 lh-1">R$ {{ revenue_month|floatformat:2 }}</div>
-            <div class="text-white-75 small">Receita do mês</div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            {{ low_stock_count }}
           </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">Produtos c/ estoque baixo</div>
         </div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="card dashboard-card border-0 shadow-sm h-100"
-        style="background:linear-gradient(135deg,#0288d1,#01579b);">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="metric-icon d-flex align-items-center justify-content-center p-2"
-            style="background:rgba(255,255,255,.15);border-radius:10px;width:44px;height:44px;">
-            <i class="fa fa-users text-white"></i>
+
+    <!-- Pedidos pendentes -->
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        {% if pending_orders > 0 %}style="border-left:4px solid #e74c3c !important;"{% endif %}>
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="metric-icon d-flex align-items-center justify-content-center"
+              style="width:44px;height:44px;background:linear-gradient(135deg,#e67e22,#ca6f1e);border-radius:12px;">
+              <i class="fa fa-clock text-white"></i>
+            </div>
+            {% if pending_orders > 0 %}
+            <a href="{% url 'dashboard:order_list_staff' %}?status=pending"
+              class="badge rounded-pill text-decoration-none"
+              style="background:#fee2e2;color:#dc2626;font-size:.7rem;">
+              Resolver
+            </a>
+            {% endif %}
           </div>
-          <div>
-            <div class="text-white fw-800 fs-4 lh-1">{{ new_users }}</div>
-            <div class="text-white-75 small">Novos usuários (7d)</div>
+          <div class="fw-800" style="font-size:1.5rem;color:var(--dark-text);">
+            {{ pending_orders }}
           </div>
+          <div class="text-muted mt-1" style="font-size:.82rem;">Pedidos pendentes</div>
         </div>
       </div>
     </div>
+
   </div>
 
-  <!-- Atalhos Rápidos -->
-  <div class="mb-4">
-    <h6 class="fw-700 mb-3">
-      <i class="fa fa-bolt text-warning me-2"></i>Atalhos rápidos
-    </h6>
-    <div class="row g-2">
-      {% for s in shortcuts %}
-      <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-        <a href="{{ s.url }}" class="card shortcut-card border-0 text-decoration-none d-block">
-          <div class="card-body text-center py-3 px-2">
-            <i class="fa {{ s.icon }} shortcut-icon mb-2 d-block" style="color:{{ s.color }};"></i>
-            <div class="fw-600 small text-dark">{{ s.label }}</div>
-          </div>
-        </a>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <div class="row g-4">
-
-    <!-- Coluna principal: Pedidos Recentes -->
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3 px-4">
-          <h6 class="fw-700 mb-0">Pedidos Recentes</h6>
-          <a href="{% url 'dashboard:order_list_staff' %}"
-            class="btn btn-outline-primary btn-sm rounded-pill">
-            Ver todos
+  <!-- ══ Atalhos rápidos ═══════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <h6 class="fw-700 mb-3 text-muted text-uppercase"
+        style="font-size:.72rem;letter-spacing:1px;">Acesso rápido</h6>
+      <div class="row g-2">
+        {% for sc in shortcuts %}
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+          <a href="{{ sc.url }}" class="shortcut-card card text-decoration-none p-3 text-center d-block">
+            <div class="shortcut-icon mb-2" style="color:{{ sc.color }};">
+              <i class="fa {{ sc.icon }} fa-lg"></i>
+            </div>
+            <div class="fw-600" style="font-size:.78rem;color:var(--dark-text);">
+              {{ sc.label }}
+            </div>
           </a>
         </div>
-        <div class="card-body p-0">
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Linha principal: pedidos recentes + estoque baixo ════ -->
+  <div class="row g-4 mb-4">
+
+    <!-- Pedidos recentes -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-700 mb-0">
+              <i class="fa fa-shopping-cart me-2" style="color:var(--primary);"></i>Pedidos Recentes
+            </h6>
+            <a href="{% url 'dashboard:order_list_staff' %}"
+              class="btn btn-outline-primary btn-sm rounded-pill px-3">
+              Ver todos
+            </a>
+          </div>
+
+          {% if recent_orders %}
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
+            <table class="table table-hover align-middle mb-0" style="font-size:.85rem;">
+              <thead style="background:var(--light-bg);">
                 <tr>
-                  <th class="px-4 py-3 small fw-700 text-muted">Pedido</th>
-                  <th class="py-3 small fw-700 text-muted">Cliente</th>
-                  <th class="py-3 small fw-700 text-muted">Valor</th>
-                  <th class="py-3 small fw-700 text-muted">Tipo</th>
-                  <th class="py-3 small fw-700 text-muted">Status</th>
+                  <th class="py-2 ps-3" style="font-size:.72rem;text-transform:uppercase;color:var(--muted-text);">Pedido</th>
+                  <th style="font-size:.72rem;text-transform:uppercase;color:var(--muted-text);">Cliente</th>
+                  <th style="font-size:.72rem;text-transform:uppercase;color:var(--muted-text);">Total</th>
+                  <th style="font-size:.72rem;text-transform:uppercase;color:var(--muted-text);">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {% for order in recent_orders %}
-                <tr class="cursor-pointer"
-                  onclick="window.location='{% url 'dashboard:order_detail_staff' order.order_number %}'">
-                  <td class="px-4 py-3">
-                    <span class="fw-600 text-primary">#{{ order.order_number }}</span>
+                <tr style="cursor:pointer;"
+                  onclick="location.href='{% url 'dashboard:order_detail_staff' order.order_number %}'">
+                  <td class="ps-3 fw-700" style="color:var(--primary);">
+                    #{{ order.order_number|slice:"-6:" }}
                   </td>
-                  <td class="py-3">
-                    <div class="fw-600 small">{{ order.user.get_full_name }}</div>
+                  <td>
+                    <div class="fw-600">{{ order.user.get_full_name }}</div>
+                    <div class="text-muted" style="font-size:.75rem;">{{ order.created_at|date:"d/m H:i" }}</div>
                   </td>
-                  <td class="py-3">
-                    <span class="fw-700" style="color:var(--primary);">
-                      R$ {{ order.total|floatformat:2 }}
-                    </span>
-                  </td>
-                  <td class="py-3">
-                    {% if order.delivery_type == 'delivery' %}
-                    <span class="badge rounded-pill"
-                      style="background:#e3f2fd;color:#1565c0;font-size:.7rem;">
-                      Entrega em domicílio
-                    </span>
-                    {% else %}
-                    <span class="badge rounded-pill"
-                      style="background:#f3e5f5;color:#6a1b9a;font-size:.7rem;">
-                      Retirada na loja
-                    </span>
-                    {% endif %}
-                  </td>
-                  <td class="py-3">
-                    <span class="badge status-badge status-{{ order.status }} rounded-pill px-3">
+                  <td class="fw-700">R$ {{ order.total|floatformat:2 }}</td>
+                  <td>
+                    <span class="badge rounded-pill status-badge status-{{ order.status }}"
+                      style="font-size:.72rem;">
                       {{ order.get_status_display }}
                     </span>
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="5" class="text-center text-muted py-5">
-                    <i class="fa fa-inbox fa-2x mb-2 d-block opacity-50"></i>
-                    Nenhum pedido ainda.
                   </td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="fa fa-inbox fa-2x mb-2"></i>
+            <p class="mb-0 small">Nenhum pedido ainda.</p>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- Coluna lateral -->
-    <div class="col-lg-4">
+    <!-- Estoque baixo -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-700 mb-0">
+              <i class="fa fa-exclamation-triangle me-2" style="color:var(--accent);"></i>Estoque Crítico
+            </h6>
+            <a href="{% url 'dashboard:product_list' %}?stock=low"
+              class="btn btn-outline-warning btn-sm rounded-pill px-3">
+              Ver todos
+            </a>
+          </div>
 
-      <!-- Eventos Ativos -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3 px-4">
-          <h6 class="fw-700 mb-0">
-            <i class="fa fa-calendar me-2" style="color:#F4B942;"></i>Eventos Ativos
-          </h6>
-          <a href="{% url 'dashboard:event_list' %}"
-            class="btn btn-outline-warning btn-sm rounded-pill"
-            style="font-size:.75rem;">
-            Ver todos
-          </a>
-        </div>
-        <div class="card-body px-4 py-2">
-          {% for event in active_events %}
-          <div class="d-flex align-items-start gap-3 py-3
-            {% if not forloop.last %}border-bottom{% endif %}">
-            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-3"
-              style="width:40px;height:40px;background:#fff8e1;">
-              <i class="fa fa-calendar-alt" style="color:#F4B942;"></i>
+          {% if low_stock %}
+          <div class="d-flex flex-column gap-2">
+            {% for stock in low_stock %}
+            <div class="d-flex align-items-center justify-content-between py-2
+              {% if not forloop.last %}border-bottom{% endif %}">
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                  style="width:34px;height:34px;background:var(--primary-bg);">
+                  <i class="fa fa-box" style="color:var(--primary);font-size:.75rem;"></i>
+                </div>
+                <div>
+                  <div class="fw-600" style="font-size:.85rem;">
+                    {{ stock.product.name|truncatechars:30 }}
+                  </div>
+                </div>
+              </div>
+              <span class="badge rounded-pill fw-700"
+                style="{% if stock.quantity <= 0 %}background:#fee2e2;color:#dc2626;{% else %}background:#fef3c7;color:#92400e;{% endif %}font-size:.75rem;">
+                {% if stock.quantity <= 0 %}Sem estoque{% else %}{{ stock.quantity }} un.{% endif %}
+              </span>
             </div>
-            <div class="flex-grow-1 min-w-0">
-              <div class="fw-600 small text-truncate">{{ event.title }}</div>
-              <div class="text-muted" style="font-size:.72rem;">
-                <i class="fa fa-clock me-1"></i>
-                {{ event.start_date|date:"d/m/Y H:i" }}
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="fa fa-check-circle fa-2x mb-2" style="color:var(--success);"></i>
+            <p class="mb-0 small">Estoque em dia!</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ Agendamentos da semana ════════════════════════════════ -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+          <h6 class="fw-700 mb-0">
+            <i class="fa fa-cut me-2" style="color:#00897B;"></i>Agendamentos — Próximos 7 dias
+          </h6>
+          <p class="text-muted mb-0 mt-1" style="font-size:.8rem;">
+            {{ appt_week }} agendamento{{ appt_week|pluralize:"s" }} confirmado{{ appt_week|pluralize:"s" }}
+          </p>
+        </div>
+        <a href="{% url 'dashboard:appointment_list_staff' %}"
+          class="btn btn-sm rounded-pill px-3 fw-600"
+          style="background:#ccfbf1;color:#065f4d;border:none;">
+          Ver todos <i class="fa fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+
+      {% if upcoming_appts %}
+      <div class="row g-3">
+        {% for appt in upcoming_appts %}
+        <div class="col-md-6 col-lg-3">
+          <div class="p-3 rounded-3 h-100"
+            style="background:{% if appt.status == 'confirmed' %}#f0fdf4;border:1px solid #86efac;{% else %}var(--light-bg);border:1px solid var(--border-color);{% endif %}">
+
+            <!-- Data destaque -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="rounded-2 text-center flex-shrink-0"
+                style="width:40px;background:{% if appt.status == 'confirmed' %}#16a34a{% else %}#00897B{% endif %};padding:4px 0;">
+                <div class="text-white fw-800" style="font-size:.9rem;line-height:1.1;">
+                  {{ appt.scheduled_at|date:"d" }}
+                </div>
+                <div class="text-white" style="font-size:.6rem;opacity:.9;">
+                  {{ appt.scheduled_at|date:"M" }}
+                </div>
               </div>
-              {% if event.location %}
-              <div class="text-muted" style="font-size:.72rem;">
-                <i class="fa fa-map-marker-alt me-1"></i>{{ event.location|truncatechars:30 }}
+              <div>
+                <div class="fw-700" style="font-size:.85rem;">
+                  {{ appt.scheduled_at|date:"H:i" }}
+                </div>
+                <div class="text-muted" style="font-size:.75rem;">
+                  {{ appt.scheduled_at|date:"D" }}
+                </div>
               </div>
+            </div>
+
+            <!-- Pet e serviço -->
+            <div class="fw-700 mb-1" style="font-size:.88rem;">
+              <i class="fa fa-paw me-1" style="color:var(--primary);font-size:.75rem;"></i>
+              {{ appt.pet.name }}
+            </div>
+            <div class="text-muted mb-2" style="font-size:.78rem;">
+              <i class="fa fa-cut me-1"></i>{{ appt.get_service_display }}
+            </div>
+
+            <!-- Dono -->
+            <div class="text-muted" style="font-size:.75rem;">
+              <i class="fa fa-user me-1"></i>{{ appt.user.get_full_name }}
+            </div>
+
+            <!-- Badges -->
+            <div class="d-flex align-items-center gap-1 mt-2">
+              {% if appt.status == 'confirmed' %}
+              <span class="badge rounded-pill"
+                style="background:#d1fae5;color:#065f46;font-size:.65rem;">
+                <i class="fa fa-check me-1"></i>Confirmado
+              </span>
+              {% else %}
+              <span class="badge rounded-pill"
+                style="background:#fef3c7;color:#92400e;font-size:.65rem;">
+                Pendente
+              </span>
               {% endif %}
+
+              {% if appt.used_plan_session %}
+              <span class="badge rounded-pill"
+                style="background:var(--primary-bg);color:var(--primary-dark);font-size:.65rem;">
+                <i class="fa fa-star me-1"></i>Plano
+              </span>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-5">
+        <i class="fa fa-calendar-check fa-3x mb-3" style="color:#b2dfdb;"></i>
+        <p class="text-muted mb-2">Nenhum agendamento nos próximos 7 dias.</p>
+        <a href="{% url 'appointments:booking' %}" class="btn btn-sm rounded-pill px-4 fw-600"
+          style="background:#ccfbf1;color:#065f4d;border:1px solid #99f6e4;">
+          <i class="fa fa-plus me-1"></i>Criar agendamento
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ══ Eventos ativos ════════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="fw-700 mb-0">
+          <i class="fa fa-calendar me-2" style="color:var(--accent);"></i>Eventos Ativos
+        </h6>
+        <a href="{% url 'dashboard:event_list' %}"
+          class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          Gerenciar
+        </a>
+      </div>
+
+      {% if active_events %}
+      <div class="row g-3">
+        {% for event in active_events %}
+        <div class="col-md-6 col-lg-4">
+          <div class="d-flex align-items-start gap-3 p-3 rounded-3"
+            style="background:var(--light-bg);border:1px solid var(--border-color);">
+            <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+              style="width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));">
+              <i class="fa fa-calendar-star text-white"></i>
+            </div>
+            <div class="flex-grow-1 min-width-0">
+              <div class="fw-700 text-truncate" style="font-size:.88rem;">{{ event.title }}</div>
+              <div class="text-muted" style="font-size:.78rem;">
+                <i class="fa fa-clock me-1"></i>{{ event.start_date|date:"d/m/Y H:i" }}
+              </div>
+              <div class="mt-1">
+                <span class="badge rounded-pill event-type-badge" style="font-size:.65rem;">
+                  {{ event.get_event_type_display }}
+                </span>
+              </div>
             </div>
             <a href="{% url 'dashboard:event_edit' event.pk %}"
               class="btn btn-sm btn-outline-secondary rounded-pill flex-shrink-0"
-              style="font-size:.7rem;padding:2px 10px;">
-              Editar
+              style="font-size:.72rem;padding:3px 10px;">
+              <i class="fa fa-edit"></i>
             </a>
           </div>
-          {% empty %}
-          <div class="text-center text-muted py-4">
-            <i class="fa fa-calendar-times fa-2x mb-2 d-block opacity-50"></i>
-            <div class="small">Nenhum evento ativo.</div>
-            <a href="{% url 'dashboard:event_create' %}"
-              class="btn btn-sm btn-warning rounded-pill mt-2 fw-600">
-              <i class="fa fa-plus me-1"></i>Criar evento
-            </a>
-          </div>
-          {% endfor %}
         </div>
+        {% endfor %}
       </div>
-
-      <!-- Estoque Baixo -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3 px-4">
-          <h6 class="fw-700 mb-0">
-            <i class="fa fa-exclamation-triangle me-2 text-warning"></i>Estoque Baixo
-          </h6>
-          <a href="{% url 'dashboard:product_list' %}?stock=low"
-            class="btn btn-outline-secondary btn-sm rounded-pill"
-            style="font-size:.75rem;">
-            Ver tudo
-          </a>
-        </div>
-        <div class="card-body px-4 py-2">
-          {% for stock in low_stock %}
-          <div class="d-flex align-items-center justify-content-between py-2
-            {% if not forloop.last %}border-bottom{% endif %}">
-            <div class="fw-600 small text-truncate me-2" style="max-width:160px;">
-              {{ stock.product.name|truncatechars:28 }}
-            </div>
-            {% if stock.is_out %}
-            <span class="badge bg-danger rounded-pill" style="font-size:.7rem;">
-              0 un.
-            </span>
-            {% else %}
-            <span class="badge bg-warning text-dark rounded-pill" style="font-size:.7rem;">
-              {{ stock.quantity }} un.
-            </span>
-            {% endif %}
-          </div>
-          {% empty %}
-          <div class="text-center text-muted py-4 small">
-            <i class="fa fa-check-circle fa-2x mb-2 d-block text-success opacity-75"></i>
-            Estoque normalizado.
-          </div>
-          {% endfor %}
-        </div>
+      {% else %}
+      <div class="text-center py-4 text-muted">
+        <i class="fa fa-calendar-times fa-2x mb-2" style="color:var(--border-color);"></i>
+        <p class="mb-2 small">Nenhum evento ativo no momento.</p>
+        <a href="{% url 'dashboard:event_create' %}"
+          class="btn btn-warning btn-sm rounded-pill px-4 fw-600">
+          <i class="fa fa-plus me-1"></i>Criar evento
+        </a>
       </div>
-
+      {% endif %}
     </div>
   </div>
 
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-  .cursor-pointer { cursor: pointer; }
-  .cursor-pointer:hover td { background-color: var(--primary-bg-soft); }
-</style>
 {% endblock %}

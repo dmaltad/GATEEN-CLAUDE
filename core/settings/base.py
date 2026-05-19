@@ -37,6 +37,7 @@ LOCAL_APPS = [
     'apps.loyalty',
     'apps.events',
     'apps.dashboard',
+    'apps.appointments',
     'apps.core_app',
 ]
 

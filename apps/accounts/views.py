@@ -9,6 +9,8 @@ from .forms import ProfileForm, AddressForm, PetForm
 
 @login_required
 def profile_view(request):
+    from django.utils import timezone
+
     user_plan = None
     try:
         from apps.plans.models import UserPlan
@@ -24,11 +26,24 @@ def profile_view(request):
     except Exception:
         pass
 
+    user_appointments = []
+    try:
+        from apps.appointments.models import Appointment
+        user_appointments = list(
+            Appointment.objects
+            .filter(user=request.user)
+            .select_related('pet', 'user_plan__plan')
+            .order_by('scheduled_at')[:6]
+        )
+    except Exception:
+        pass
+
     return render(request, 'accounts/profile.html', {
-        'user_plan':     user_plan,
-        'loyalty':       loyalty,
-        'pets':          request.user.pets.all(),
-        'addresses':     request.user.addresses.all(),
+        'user_plan':         user_plan,
+        'loyalty':           loyalty,
+        'pets':              request.user.pets.all(),
+        'addresses':         request.user.addresses.all(),
+        'user_appointments': user_appointments,
         'recent_orders': (
             request.user.orders
             .prefetch_related('items__product')

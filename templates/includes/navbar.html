@@ -64,16 +64,14 @@
 
       <ul class="navbar-nav me-auto flex-row flex-wrap gap-0">
 
-        <!-- Dashboard -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link text-white px-2 py-2 d-flex align-items-center gap-1"
             href="{% url 'dashboard:home' %}">
             <i class="fa fa-chart-bar fa-sm"></i>
             <span class="d-none d-xxl-inline">Dashboard</span>
           </a>
-        </li>
+        </li> -->
 
-        <!-- Produtos (com Categorias) -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Estoquista' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
@@ -83,15 +81,22 @@
           <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:product_list' %}">
-                <i class="fa fa-list me-2" style="color:var(--primary);"></i>Listar produtos
+                <i class="fa fa-list me-2" style="color:var(--primary);"></i>Produtos
               </a>
             </li>
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:product_create' %}">
-                <i class="fa fa-plus me-2" style="color:var(--success);"></i>Novo produto
+                <i class="fa fa-plus me-2" style="color:var(--success);"></i>Novo Produto
               </a>
             </li>
-            <li><hr class="dropdown-divider"></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
+            href="#" data-bs-toggle="dropdown">
+            <i class="fa fa-th fa-sm"></i><span>Categorias</span>
+          </a>
+          <ul class="dropdown-menu shadow border-0">
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:category_list' %}">
                 <i class="fa fa-th me-2" style="color:var(--primary);"></i>Categorias
@@ -99,14 +104,13 @@
             </li>
             <li>
               <a class="dropdown-item" href="{% url 'dashboard:category_create' %}">
-                <i class="fa fa-plus me-2" style="color:var(--success);"></i>Nova categoria
+                <i class="fa fa-plus me-2" style="color:var(--success);"></i>Nova Categoria
               </a>
             </li>
           </ul>
         </li>
         {% endif %}
 
-        <!-- Pedidos -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Atendimento' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
@@ -121,9 +125,20 @@
             </li>
           </ul>
         </li>
+        <li class="nav-item dropdown">
+           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
+            href="#" data-bs-toggle="dropdown">
+            <i class="fa fa-cut me-1"></i><span>Agendamentos</span>
+          </a>
+          <ul class="dropdown-menu shadow border-0">
+            <li>
+              <a class="dropdown-item" href="{% url 'dashboard:appointment_list_staff' %}">
+                <i class="fa fa-cut me-2" style="color:var(--primary);"></i>Agendamentos
+              </a>
+            </li>
+          </ul>
         {% endif %}
 
-        <!-- Eventos -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Marketing' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
@@ -145,7 +160,6 @@
         </li>
         {% endif %}
 
-        <!-- Planos -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Atendimento' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
@@ -167,7 +181,6 @@
         </li>
         {% endif %}
 
-        <!-- Fidelidade -->
         {% if user.is_superuser or user|has_group:'Gerente' or user|has_group:'Marketing' or user|has_group:'Atendimento' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
@@ -196,7 +209,6 @@
         </li>
         {% endif %}
 
-        <!-- Usuários -->
         {% if user.is_superuser or user|has_group:'Gerente' %}
         <li class="nav-item dropdown">
           <a class="nav-link text-white px-2 py-2 dropdown-toggle d-flex align-items-center gap-1"
@@ -220,7 +232,6 @@
 
       </ul>
 
-      <!-- DESKTOP: Perfil -->
       <div class="d-none d-xl-flex align-items-center ms-2">
         <div class="nav-item dropdown">
           <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center gap-2 px-3"
@@ -305,6 +316,11 @@
         <li class="nav-item">
           <a class="nav-link text-white fw-500" href="{% url 'events:event_list' %}">
             <i class="fa fa-calendar me-1"></i>Eventos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'appointments:booking' %}">
+            <i class="fa fa-cut me-1"></i>Banho & Tosa
           </a>
         </li>
       </ul>

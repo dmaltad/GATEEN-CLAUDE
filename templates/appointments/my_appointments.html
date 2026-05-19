@@ -1,0 +1,119 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Meus Agendamentos — Gateen{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="fw-800 mb-0">
+      <i class="fa fa-calendar-check me-2" style="color:var(--primary);"></i>Meus Agendamentos
+    </h2>
+    <a href="{% url 'appointments:booking' %}" class="btn btn-primary rounded-pill fw-700">
+      <i class="fa fa-plus me-2"></i>Novo agendamento
+    </a>
+  </div>
+
+  <!-- Próximos -->
+  <h5 class="fw-700 mb-3">Próximos</h5>
+  {% if upcoming %}
+  <div class="row g-3 mb-5">
+    {% for appt in upcoming %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+              style="width:48px;height:48px;background:var(--primary-bg);">
+              <i class="fa fa-cut fa-lg" style="color:var(--primary);"></i>
+            </div>
+            <div>
+              <div class="fw-700">{{ appt.pet.name }}</div>
+              <div class="text-muted small">{{ appt.get_service_display }}</div>
+            </div>
+          </div>
+          <div class="mb-2">
+            <i class="fa fa-calendar me-2 text-muted"></i>
+            <strong>{{ appt.scheduled_at|date:"d/m/Y" }}</strong>
+            às {{ appt.scheduled_at|date:"H:i" }}
+          </div>
+          {% if appt.used_plan_session %}
+          <div class="mb-2 small text-success">
+            <i class="fa fa-star me-1"></i>Sessão do plano utilizada
+          </div>
+          {% endif %}
+          <div class="d-flex align-items-center justify-content-between mt-3">
+            <span class="badge rounded-pill
+              {% if appt.status == 'confirmed' %}bg-success
+              {% elif appt.status == 'pending' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}"
+              style="font-size:.75rem;">
+              {{ appt.get_status_display }}
+            </span>
+            {% if appt.status in 'pending confirmed' %}
+            <form method="post" action="{% url 'appointments:cancel' appt.pk %}"
+              onsubmit="return confirm('Cancelar este agendamento?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                <i class="fa fa-times me-1"></i>Cancelar
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-4 mb-5">
+    <i class="fa fa-calendar-times fa-3x mb-3" style="color:var(--primary-lighter);"></i>
+    <p class="text-muted">Nenhum agendamento futuro.</p>
+    <a href="{% url 'appointments:booking' %}" class="btn btn-primary rounded-pill">
+      Agendar agora
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Histórico -->
+  {% if past %}
+  <h5 class="fw-700 mb-3">Histórico</h5>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead style="background:var(--light-bg);">
+            <tr>
+              <th class="ps-4 py-3">Pet</th>
+              <th>Serviço</th>
+              <th>Data</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for appt in past %}
+            <tr>
+              <td class="ps-4 fw-600">{{ appt.pet.name }}</td>
+              <td>{{ appt.get_service_display }}</td>
+              <td>{{ appt.scheduled_at|date:"d/m/Y H:i" }}</td>
+              <td>
+                <span class="badge rounded-pill
+                  {% if appt.status == 'done' %}bg-success
+                  {% elif appt.status == 'cancelled' %}bg-danger
+                  {% else %}bg-secondary{% endif %}"
+                  style="font-size:.72rem;">
+                  {{ appt.get_status_display }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

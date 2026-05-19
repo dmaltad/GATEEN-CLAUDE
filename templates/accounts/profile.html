@@ -335,6 +335,93 @@
           {% endif %}
         </div>
       </div>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-700 mb-0">
+              <i class="fa fa-cut me-2" style="color:var(--primary);"></i>Meus Agendamentos
+            </h5>
+            <a href="{% url 'appointments:booking' %}" class="btn btn-primary btn-sm rounded-pill fw-600 px-3">
+              <i class="fa fa-plus me-1"></i>Novo agendamento
+            </a>
+          </div>
+
+          {% with upcoming_appts=request.user.appointments.all %}
+          {% comment %}Filtramos via Python pois no template não temos acesso a timezone{% endcomment %}
+
+          {# Busca via view — ou use um inclusion_tag. Aqui usamos context da view. #}
+          {% if user_appointments %}
+            <div class="row g-3">
+              {% for appt in user_appointments %}
+              <div class="col-md-6">
+                <div class="d-flex align-items-start gap-3 p-3 rounded-3"
+                  style="background:var(--light-bg);border:1px solid var(--border-color);">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 mt-1"
+                    style="width:40px;height:40px;background:var(--primary-bg);">
+                    <i class="fa fa-cut" style="color:var(--primary);"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="fw-700" style="font-size:.92rem;">
+                      {{ appt.pet.name }} — {{ appt.get_service_display }}
+                    </div>
+                    <div class="text-muted small">
+                      <i class="fa fa-calendar me-1"></i>
+                      {{ appt.scheduled_at|date:"d/m/Y" }} às {{ appt.scheduled_at|date:"H:i" }}
+                    </div>
+                    {% if appt.used_plan_session %}
+                    <div class="small text-success mt-1">
+                      <i class="fa fa-star me-1"></i>Sessão do plano
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="d-flex flex-column align-items-end gap-2">
+                    {% if appt.status == 'pending' %}
+                    <span class="badge rounded-pill status-badge status-pending" style="font-size:.7rem;">Pendente</span>
+                    {% elif appt.status == 'confirmed' %}
+                    <span class="badge rounded-pill status-badge status-confirmed" style="font-size:.7rem;">Confirmado</span>
+                    {% elif appt.status == 'done' %}
+                    <span class="badge rounded-pill status-badge status-delivered" style="font-size:.7rem;">Concluído</span>
+                    {% elif appt.status == 'cancelled' %}
+                    <span class="badge rounded-pill status-badge status-cancelled" style="font-size:.7rem;">Cancelado</span>
+                    {% endif %}
+
+                    {% if appt.status in 'pending confirmed' %}
+                    <form method="post" action="{% url 'appointments:cancel' appt.pk %}"
+                      onsubmit="return confirm('Cancelar este agendamento?')">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2"
+                        style="font-size:.72rem;">
+                        <i class="fa fa-times me-1"></i>Cancelar
+                      </button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            {% if user_appointments|length >= 4 %}
+            <div class="text-center mt-3">
+              <a href="{% url 'appointments:my_appointments' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+                Ver todos os agendamentos
+              </a>
+            </div>
+            {% endif %}
+
+          {% else %}
+            <div class="text-center py-4">
+              <i class="fa fa-calendar-plus fa-2x mb-2" style="color:var(--primary-lighter);"></i>
+              <p class="text-muted small mb-3">Você não tem agendamentos futuros.</p>
+              <a href="{% url 'appointments:booking' %}" class="btn btn-primary btn-sm rounded-pill px-4 fw-600">
+                <i class="fa fa-cut me-2"></i>Agendar banho ou tosa
+              </a>
+            </div>
+          {% endif %}
+          {% endwith %}
+        </div>
+      </div>
 
       <div class="card border-0 shadow-sm" id="enderecos">
         <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">

@@ -16,6 +16,7 @@ urlpatterns = [
     path('eventos/', include('apps.events.urls', namespace='events')),
     path('minha-conta/', include('apps.accounts.urls', namespace='accounts')),
     path('dashboard/', include('apps.dashboard.urls', namespace='dashboard')),
+    path('agendamento/', include('apps.appointments.urls', namespace='appointments')),
 ]
 
 if settings.DEBUG:
