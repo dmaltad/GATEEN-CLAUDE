@@ -915,3 +915,39 @@ footer, .footer-gateen { flex-shrink: 0; }
   
 }
 
+/* Força o dropdown a flutuar mesmo dentro da navbar colapsada */
+.navbar .dropdown-menu {
+    position: absolute !important; /* Força ser absoluto */
+    z-index: 1050;                /* Garante que fique acima de tudo */
+}
+
+/* Ajuste específico para quando a navbar estiver colapsada */
+@media (max-width: 1199.98px) {
+    .navbar-collapse .dropdown-menu {
+        position: absolute !important; 
+        right: 10px; /* Alinha à direita */
+        margin-top: 0.5rem;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════
+   CORREÇÃO DROPDOWN (Fundo e Sombra)
+   ══════════════════════════════════════════════════════════ */
+.navbar .dropdown-menu {
+    background-color: #ffffff !important; /* Força o fundo branco */
+    border: 1px solid rgba(0,0,0,0.15) !important; /* Borda leve para delimitar */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; /* Sombra que o bootstrap dá */
+    min-width: 12rem;
+    padding: 0.5rem 0;
+}
+
+/* Garante que os links dentro do dropdown fiquem legíveis no fundo branco */
+.navbar .dropdown-menu .dropdown-item {
+    color: var(--dark-text) !important;
+    padding: 0.5rem 1rem;
+}
+
+.navbar .dropdown-menu .dropdown-item:hover {
+    background-color: var(--primary-bg) !important;
+    color: var(--primary) !important;
+}
