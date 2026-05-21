@@ -15,6 +15,16 @@ class PlanListView(ListView):
     def get_queryset(self):
         return ServicePlan.objects.filter(is_active=True).prefetch_related('features')
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['garantias'] = [
+            ('fa-calendar-check', '#8A4B9F', 'Sem fidelidade',   'Cancele quando quiser, sem multas'),
+            ('fa-cut',            '#00897B', 'Banho incluso',     'Sessões mensais com profissionais'),
+            ('fa-tag',            '#e74c3c', 'Desconto na loja',  'Economia em cada compra no pet shop'),
+            ('fa-gift',           '#f4b942', 'Pontos extras',     'Acumule mais rápido no programa fiel'),
+        ]
+        return ctx
+
 
 @login_required
 def subscribe_plan(request, slug):

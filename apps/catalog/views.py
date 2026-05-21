@@ -42,6 +42,13 @@ class ProductListView(ListView):
         ctx['categories'] = Category.objects.filter(is_active=True)
         ctx['query'] = self.request.GET.get('q', '')
         ctx['species_choices'] = Product.SPECIES_CHOICES
+        ctx['cat'] = self.kwargs.get('category_slug') or self.request.GET.get('category', '')
+        ctx['order_options'] = [
+            {'val': '-created_at', 'label': 'Mais recentes',  'icon': 'fa-clock'},
+            {'val': 'price',       'label': 'Menor preço',    'icon': 'fa-arrow-up'},
+            {'val': '-price',      'label': 'Maior preço',    'icon': 'fa-arrow-down'},
+            {'val': 'name',        'label': 'A-Z',            'icon': 'fa-sort-alpha-down'},
+        ]
         return ctx
 
 

@@ -1,66 +1,144 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
 
-{% block title %}Eventos — Gateen{% endblock %}
+{% block title %}Eventos — Gateen Petshop{% endblock %}
 
 {% block content %}
 
-<section class="py-5 bg-light">
-  <div class="container">
-    <div class="text-center mb-5">
-      <span class="section-badge">Agenda</span>
-      <h2 class="fw-800 mt-2">Próximos Eventos</h2>
-      <p class="text-muted">Fique por dentro de tudo que acontece na Gateen e na comunidade pet!</p>
-    </div>
+<!-- Hero -->
+<div style="background:linear-gradient(135deg,var(--secondary) 0%,#2d2a45 50%,var(--primary-darker) 100%);padding:64px 0 90px;position:relative;overflow:hidden;">
+  <div class="position-absolute" style="top:-40px;right:5%;width:260px;height:260px;background:rgba(244,185,66,.08);border-radius:50%;"></div>
+  <div class="position-absolute" style="bottom:-60px;left:-30px;width:220px;height:220px;background:rgba(138,75,159,.12);border-radius:50%;"></div>
+  <div class="container text-center text-white position-relative">
+    <span class="section-badge mb-3 d-inline-block"
+      style="background:rgba(244,185,66,.2);color:var(--accent);">
+      📅 Agenda Gateen
+    </span>
+    <h1 class="fw-800 mb-3" style="font-size:2.6rem;">Eventos & Promoções</h1>
+    <p class="text-white-75 mx-auto mb-0" style="max-width:500px;font-size:1.05rem;">
+      Feiras de adoção, workshops, promoções especiais e muito mais.
+      Fique por dentro do que está acontecendo!
+    </p>
+  </div>
+</div>
 
-    <div class="row g-4">
-      {% for event in events %}
-      <div class="col-md-6 col-lg-4">
-        <div class="event-card card border-0 shadow-sm h-100 overflow-hidden">
-          {% if event.image %}
-          <div class="position-relative">
-            <img src="{{ event.image.url }}" alt="{{ event.title }}" class="card-img-top event-img">
-            <span class="badge event-type-badge position-absolute top-0 start-0 m-3">
-              {{ event.get_event_type_display }}
-            </span>
-            {% if event.is_ongoing %}
-            <span class="badge bg-success position-absolute top-0 end-0 m-3">
-              <i class="fa fa-circle me-1" style="font-size:.5rem;"></i>Acontecendo agora
-            </span>
-            {% endif %}
-          </div>
+<div style="margin-top:-2px;">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 50" preserveAspectRatio="none"
+    style="display:block;width:100%;height:50px;">
+    <path fill="#ffffff"
+      d="M0,25L180,20C360,15,720,5,900,8C1080,11,1260,25,1350,32L1440,38L1440,50L0,50Z"/>
+  </svg>
+</div>
+
+<div class="container py-4 pb-5">
+
+  {% if events %}
+
+  <!-- Evento em destaque (primeiro) -->
+  {% with event=events.0 %}
+  <div class="card border-0 shadow mb-5"
+    style="border-radius:20px;overflow:hidden;">
+    <div class="row g-0">
+      <div class="col-md-5">
+        {% if event.banner and event.banner.name %}
+        <img src="{{ event.banner.url }}" alt="{{ event.title }}"
+          style="width:100%;height:100%;object-fit:cover;min-height:280px;">
+        {% elif event.image and event.image.name %}
+        <img src="{{ event.image.url }}" alt="{{ event.title }}"
+          style="width:100%;height:100%;object-fit:cover;min-height:280px;">
+        {% else %}
+        <div class="d-flex align-items-center justify-content-center"
+          style="min-height:280px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));">
+          <i class="fa fa-calendar fa-5x text-white opacity-25"></i>
+        </div>
+        {% endif %}
+      </div>
+      <div class="col-md-7 p-5 d-flex flex-column justify-content-center">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="event-type-badge">{{ event.get_event_type_display }}</span>
+          <span class="badge rounded-pill"
+            style="background:#fef3c7;color:#92400e;font-size:.72rem;">
+            ⭐ Destaque
+          </span>
+        </div>
+        <h2 class="fw-800 mb-3">{{ event.title }}</h2>
+        <p class="text-muted mb-4">{{ event.short_description }}</p>
+        <div class="d-flex flex-wrap gap-3 mb-4 text-muted" style="font-size:.88rem;">
+          <span><i class="fa fa-calendar me-2" style="color:var(--primary);"></i>{{ event.start_date|date:"d/m/Y \à\s H:i" }}</span>
+          {% if event.location %}
+          <span><i class="fa fa-map-marker-alt me-2" style="color:var(--primary);"></i>{{ event.location }}</span>
           {% endif %}
-          <div class="card-body p-4">
-            <h5 class="fw-700 mb-2">{{ event.title }}</h5>
-            <p class="text-muted small mb-3">{{ event.short_description }}</p>
-            <div class="d-flex flex-wrap gap-3 text-muted small mb-3">
-              <span><i class="fa fa-calendar me-1 text-primary"></i>{{ event.start_date|date:"d/m/Y" }}</span>
-              <span><i class="fa fa-clock me-1 text-primary"></i>{{ event.start_date|date:"H:i" }}</span>
-              {% if event.location %}
-              <span><i class="fa fa-map-marker-alt me-1 text-primary"></i>{{ event.location|truncatechars:25 }}</span>
-              {% endif %}
-              {% if event.is_online %}
-              <span><i class="fa fa-wifi me-1 text-primary"></i>Online</span>
-              {% endif %}
-            </div>
-          </div>
-          <div class="card-footer bg-transparent border-0 px-4 pb-4">
-            <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary btn-sm rounded-pill w-100">
-              Saiba mais <i class="fa fa-arrow-right ms-1"></i>
-            </a>
-          </div>
+          {% if event.is_online %}
+          <span><i class="fa fa-laptop me-2" style="color:var(--primary);"></i>Online</span>
+          {% endif %}
+        </div>
+        <div>
+          <a href="{% url 'events:event_detail' event.slug %}"
+            class="btn btn-primary rounded-pill fw-700 px-5">
+            Saiba mais <i class="fa fa-arrow-right ms-2"></i>
+          </a>
         </div>
       </div>
-      {% empty %}
-      <div class="col-12 text-center py-5">
-        <i class="fa fa-calendar fa-4x text-muted mb-4 opacity-25"></i>
-        <h4 class="text-muted">Nenhum evento próximo</h4>
-        <p class="text-muted">Fique ligado! Novos eventos em breve.</p>
-      </div>
-      {% endfor %}
     </div>
-
   </div>
-</section>
+  {% endwith %}
 
+  <!-- Demais eventos -->
+  {% if events|length > 1 %}
+  <h4 class="fw-700 mb-4">Próximos eventos</h4>
+  <div class="row g-4">
+    {% for event in events %}
+    {% if not forloop.first %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card event-card border-0 shadow-sm h-100">
+        <div style="height:200px;overflow:hidden;border-radius:16px 16px 0 0;">
+          {% if event.banner and event.banner.name %}
+          <img src="{{ event.banner.url }}" alt="{{ event.title }}"
+            style="width:100%;height:100%;object-fit:cover;">
+          {% elif event.image and event.image.name %}
+          <img src="{{ event.image.url }}" alt="{{ event.title }}"
+            style="width:100%;height:100%;object-fit:cover;">
+          {% else %}
+          <div class="d-flex align-items-center justify-content-center h-100"
+            style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));">
+            <i class="fa fa-calendar fa-3x text-white opacity-25"></i>
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="mb-2">
+            <span class="event-type-badge">{{ event.get_event_type_display }}</span>
+          </div>
+          <h5 class="fw-700 mb-2">{{ event.title }}</h5>
+          <p class="text-muted small flex-grow-1 mb-3">{{ event.short_description }}</p>
+          <div class="d-flex flex-column gap-1 text-muted mb-4" style="font-size:.82rem;">
+            <span><i class="fa fa-calendar me-2" style="color:var(--primary);"></i>{{ event.start_date|date:"d/m/Y \à\s H:i" }}</span>
+            {% if event.location %}
+            <span><i class="fa fa-map-marker-alt me-2" style="color:var(--primary);"></i>{{ event.location|truncatechars:40 }}</span>
+            {% endif %}
+          </div>
+          <a href="{% url 'events:event_detail' event.slug %}"
+            class="btn btn-outline-primary rounded-pill fw-600 w-100">
+            Ver detalhes <i class="fa fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <div style="font-size:4rem;margin-bottom:16px;">📅</div>
+    <h4 class="fw-700 mb-2">Nenhum evento por enquanto</h4>
+    <p class="text-muted mb-4">Mas fique de olho — em breve teremos novidades!</p>
+    <a href="{% url 'home' %}" class="btn btn-primary rounded-pill px-5 fw-700">
+      <i class="fa fa-home me-2"></i>Voltar ao início
+    </a>
+  </div>
+  {% endif %}
+
+</div>
 {% endblock %}
