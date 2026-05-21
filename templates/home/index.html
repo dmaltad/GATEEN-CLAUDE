@@ -1,196 +1,360 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
-{% load humanize %}
 
 {% block title %}Gateen Petshop — Cuidando do seu pet com amor{% endblock %}
 
 {% block content %}
 
-<!-- HERO -->
+<!-- ══════════════════════════════════════════════════════════
+     HERO
+     ══════════════════════════════════════════════════════════ -->
 <section class="hero-section">
-  <div class="container py-5">
-    <div class="row align-items-center min-vh-60">
-      <div class="col-lg-6" data-aos="fade-right">
-        <span class="badge bg-warning text-dark fw-600 px-3 py-2 mb-3 rounded-pill">
-          <i class="fa fa-paw me-1"></i>Bem-vindo à Gateen!
-        </span>
-        <h1 class="display-4 fw-800 text-white mb-4 lh-sm">
-          Tudo que seu <span class="text-warning">pet</span> precisa em um só lugar
+  <div class="container">
+    <div class="row align-items-center min-vh-60 py-5">
+      <div class="col-lg-6 text-white">
+        <div class="section-badge mb-3" style="background:rgba(255,255,255,.15);backdrop-filter:blur(8px);">
+          🐾 Bem-vindo à Gateen Petshop
+        </div>
+        <h1 class="display-4 fw-800 mb-4" style="line-height:1.15;">
+          Tudo que seu pet<br>
+          <span style="color:var(--accent);">precisa e merece</span>
         </h1>
-        <p class="lead text-white-75 mb-4">
-          Produtos de qualidade, planos personalizados, banho e tosa e muito amor. Porque seu pet merece o melhor.
+        <p class="mb-5 text-white-75" style="font-size:1.1rem;max-width:480px;">
+          Produtos premium, banho e tosa profissional, planos de cuidado e muito amor
+          para o seu melhor amigo.
         </p>
-        <div class="d-flex gap-3 flex-wrap">
-          <a href="{% url 'catalog:product_list' %}" class="btn btn-warning btn-lg fw-700 px-4 rounded-pill">
-            <i class="fa fa-shopping-bag me-2"></i>Ver Produtos
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{% url 'catalog:product_list' %}"
+            class="btn btn-warning btn-lg rounded-pill fw-700 px-5">
+            <i class="fa fa-box me-2"></i>Ver produtos
           </a>
-          <a href="{% url 'plans:plan_list' %}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
-            <i class="fa fa-star me-2"></i>Nossos Planos
+          <a href="{% url 'appointments:booking' %}"
+            class="btn btn-lg rounded-pill fw-700 px-5"
+            style="background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.5);color:#fff;backdrop-filter:blur(8px);">
+            <i class="fa fa-cut me-2"></i>Agendar banho e tosa
           </a>
         </div>
-        <div class="d-flex gap-4 mt-5">
-          <div class="text-center">
-            <div class="fw-800 fs-3 text-warning">500+</div>
-            <div class="text-white-50 small">Produtos</div>
+
+        <!-- Estatísticas rápidas -->
+        <div class="d-flex gap-4 mt-5 pt-2">
+          <div>
+            <div class="fw-800 text-white" style="font-size:1.5rem;">500+</div>
+            <div class="text-white-75" style="font-size:.85rem;">Produtos</div>
           </div>
-          <div class="text-center">
-            <div class="fw-800 fs-3 text-warning">1k+</div>
-            <div class="text-white-50 small">Clientes felizes</div>
+          <div style="width:1px;background:rgba(255,255,255,.2);"></div>
+          <div>
+            <div class="fw-800 text-white" style="font-size:1.5rem;">1.200+</div>
+            <div class="text-white-75" style="font-size:.85rem;">Clientes felizes</div>
           </div>
-          <div class="text-center">
-            <div class="fw-800 fs-3 text-warning">5★</div>
-            <div class="text-white-50 small">Avaliação</div>
+          <div style="width:1px;background:rgba(255,255,255,.2);"></div>
+          <div>
+            <div class="fw-800 text-white" style="font-size:1.5rem;">5★</div>
+            <div class="text-white-75" style="font-size:.85rem;">Avaliação</div>
           </div>
         </div>
       </div>
-      <div class="col-lg-6 text-center d-none d-lg-block">
-        <img src="{% static 'base/img/cachorro1.jpg' %}" alt="Pets felizes" class="img-fluid hero-img">
+
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center align-items-center">
+        <div class="position-relative" style="width:400px;height:400px;">
+          <!-- Círculo decorativo -->
+          <div class="position-absolute"
+            style="inset:0;background:rgba(255,255,255,.08);border-radius:50%;border:2px solid rgba(255,255,255,.15);"></div>
+          <div class="position-absolute"
+            style="inset:30px;background:rgba(255,255,255,.06);border-radius:50%;"></div>
+          <!-- Ícone central -->
+          <div class="position-absolute d-flex align-items-center justify-content-center"
+            style="inset:0;">
+            <i class="fa fa-paw text-white" style="font-size:8rem;opacity:.25;"></i>
+          </div>
+          <!-- Badges flutuantes -->
+          <div class="position-absolute bg-white rounded-3 shadow-lg px-3 py-2 d-flex align-items-center gap-2"
+            style="top:60px;left:-10px;animation:float 3s ease-in-out infinite;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+              style="width:32px;height:32px;background:#d1fae5;">
+              <i class="fa fa-check" style="color:#059669;font-size:.75rem;"></i>
+            </div>
+            <div>
+              <div class="fw-700" style="font-size:.78rem;color:var(--dark-text);">Banho concluído!</div>
+              <div class="text-muted" style="font-size:.68rem;">Rex • agora mesmo</div>
+            </div>
+          </div>
+          <div class="position-absolute bg-white rounded-3 shadow-lg px-3 py-2 d-flex align-items-center gap-2"
+            style="bottom:80px;right:-20px;animation:float 3s ease-in-out infinite .8s;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+              style="width:32px;height:32px;background:var(--primary-bg);">
+              <i class="fa fa-star" style="color:var(--primary);font-size:.75rem;"></i>
+            </div>
+            <div>
+              <div class="fw-700" style="font-size:.78rem;color:var(--dark-text);">Plano Premium</div>
+              <div class="text-muted" style="font-size:.68rem;">2 sessões/mês</div>
+            </div>
+          </div>
+          <div class="position-absolute bg-white rounded-3 shadow-lg px-3 py-2 d-flex align-items-center gap-2"
+            style="top:200px;right:-30px;animation:float 3s ease-in-out infinite 1.5s;">
+            <i class="fa fa-cut" style="color:#00897B;font-size:1rem;"></i>
+            <div class="fw-700" style="font-size:.78rem;color:var(--dark-text);">Tosa agendada</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Wave -->
   <div class="hero-wave">
-    <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#f8f9fa"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 60" preserveAspectRatio="none"
+      style="display:block;width:100%;height:60px;">
+      <path fill="#ffffff" fill-opacity="1"
+        d="M0,32L80,37.3C160,43,320,53,480,53.3C640,53,800,43,960,37.3C1120,32,1280,32,1360,32L1440,32L1440,60L1360,60C1280,60,1120,60,960,60C800,60,640,60,480,60C320,60,160,60,80,60L0,60Z">
+      </path>
     </svg>
   </div>
 </section>
 
-<!-- CATEGORIAS -->
-<section class="py-5 bg-light">
+<!-- ══════════════════════════════════════════════════════════
+     CATEGORIAS
+     ══════════════════════════════════════════════════════════ -->
+{% if categories %}
+<section class="py-5">
   <div class="container">
-    <div class="text-center mb-5">
-      <span class="section-badge">Categorias</span>
-      <h2 class="fw-800 mt-2">Encontre o que seu pet precisa</h2>
+    <div class="text-center mb-4">
+      <span class="section-badge mb-2">Categorias</span>
+      <h2 class="fw-800 mt-2">O que você procura?</h2>
     </div>
-    <div class="row g-3">
+    <div class="row g-3 justify-content-center">
       {% for category in categories %}
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="{% url 'catalog:by_category' category.slug %}" class="category-card text-decoration-none">
-          <div class="card border-0 text-center p-3 h-100 category-item">
-            {% if category.image %}
-            <img src="{{ category.image.url }}" alt="{{ category.name }}" class="category-img mx-auto mb-2">
-            {% else %}
-            <div class="category-icon-wrap mb-2">
-              <i class="fa {{ category.icon|default:'fa-box' }} fa-2x text-primary"></i>
-            </div>
-            {% endif %}
-            <span class="fw-600 text-dark small">{{ category.name }}</span>
+      <div class="col-4 col-sm-3 col-md-2">
+        <a href="{% url 'catalog:by_category' category.slug %}"
+          class="category-item card text-center text-decoration-none py-3 px-2 h-100">
+          <div class="category-icon-wrap mx-auto mb-2">
+            <i class="fa {{ category.icon }} fa-lg"></i>
           </div>
+          <div class="fw-600" style="font-size:.82rem;color:var(--dark-text);">{{ category.name }}</div>
         </a>
       </div>
       {% endfor %}
     </div>
   </div>
 </section>
+{% endif %}
 
-<!-- PROMOÇÕES BANNER -->
-{% if active_promotions %}
-<section class="py-4">
-  <div class="container">
-    <div id="promoCarousel" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-inner rounded-4 overflow-hidden">
-        {% for promo in active_promotions %}
-        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-          {% if promo.banner %}
-          <img src="{{ promo.banner.url }}" class="d-block w-100 promo-banner" alt="{{ promo.title }}">
-          {% else %}
-          <div class="promo-banner-placeholder d-flex align-items-center justify-content-between px-5" style="background: linear-gradient(135deg, #E85D26, #ff8c5a);">
-            <div class="text-white">
-              <p class="fw-600 fs-5 mb-1 opacity-75">Promoção especial</p>
-              <h3 class="fw-800 display-6">{{ promo.title }}</h3>
-              <p class="mb-3">{{ promo.description|truncatechars:100 }}</p>
-              {% if promo.coupon_code %}
-              <span class="badge bg-white text-primary fs-6 px-3 py-2">
-                Cupom: {{ promo.coupon_code }}
-              </span>
-              {% endif %}
-            </div>
-            <div class="promo-discount-badge">
-              {% if promo.discount_type == 'percentage' %}
-              <span class="display-4 fw-800 text-white">-{{ promo.discount_value|floatformat:0 }}%</span>
-              {% else %}
-              <span class="display-5 fw-800 text-white">-R${{ promo.discount_value }}</span>
-              {% endif %}
+<!-- ══════════════════════════════════════════════════════════
+     BANHO E TOSA — SEÇÃO PRINCIPAL
+     ══════════════════════════════════════════════════════════ -->
+<section class="py-5 position-relative overflow-hidden"
+  style="background:linear-gradient(135deg,#004D40 0%,#00695C 40%,#00897B 100%);">
+
+  <!-- Decorações de fundo -->
+  <div class="position-absolute"
+    style="top:-80px;right:-80px;width:320px;height:320px;background:rgba(255,255,255,.04);border-radius:50%;"></div>
+  <div class="position-absolute"
+    style="bottom:-60px;left:-60px;width:240px;height:240px;background:rgba(255,255,255,.04);border-radius:50%;"></div>
+
+  <div class="container position-relative">
+    <div class="row align-items-center g-5">
+
+      <!-- Lado esquerdo: cards de serviços -->
+      <div class="col-lg-5">
+        <div class="row g-3">
+
+          <!-- Banho -->
+          <div class="col-6">
+            <div class="rounded-3 p-4 text-center h-100"
+              style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);">
+              <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                style="width:56px;height:56px;background:rgba(255,255,255,.15);">
+                <i class="fa fa-shower text-white fa-lg"></i>
+              </div>
+              <div class="fw-700 text-white mb-1">Banho</div>
+              <div class="text-white-75" style="font-size:.8rem;">
+                Shampoo especial, secagem e perfume
+              </div>
             </div>
           </div>
+
+          <!-- Tosa -->
+          <div class="col-6">
+            <div class="rounded-3 p-4 text-center h-100"
+              style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);">
+              <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                style="width:56px;height:56px;background:rgba(255,255,255,.15);">
+                <i class="fa fa-cut text-white fa-lg"></i>
+              </div>
+              <div class="fw-700 text-white mb-1">Tosa</div>
+              <div class="text-white-75" style="font-size:.8rem;">
+                Corte sob medida para cada raça
+              </div>
+            </div>
+          </div>
+
+          <!-- Banho + Tosa -->
+          <div class="col-12">
+            <div class="rounded-3 p-4 d-flex align-items-center gap-4"
+              style="background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);">
+              <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                style="width:56px;height:56px;background:var(--accent);">
+                <i class="fa fa-star" style="color:var(--dark-text);font-size:1.2rem;"></i>
+              </div>
+              <div>
+                <div class="fw-700 text-white">Banho + Tosa</div>
+                <div class="text-white-75" style="font-size:.82rem;">
+                  O combo completo com desconto especial para assinantes do plano
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Horários -->
+          <div class="col-12">
+            <div class="rounded-3 p-3"
+              style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1);">
+              <div class="fw-600 text-white mb-2" style="font-size:.85rem;">
+                <i class="fa fa-clock me-2" style="color:var(--accent);"></i>Horários de atendimento
+              </div>
+              <div class="d-flex justify-content-between text-white-75" style="font-size:.8rem;">
+                <span><i class="fa fa-calendar-week me-1"></i>Seg — Sex</span>
+                <span class="fw-600 text-white">07h às 17h</span>
+              </div>
+              <div class="d-flex justify-content-between text-white-75 mt-1" style="font-size:.8rem;">
+                <span><i class="fa fa-calendar me-1"></i>Sábado</span>
+                <span class="fw-600 text-white">07h às 13h</span>
+              </div>
+              <div class="d-flex justify-content-between mt-1" style="font-size:.8rem;">
+                <span class="text-white-75"><i class="fa fa-calendar-times me-1"></i>Domingo</span>
+                <span style="color:#fca5a5;">Fechado</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Lado direito: texto e CTA -->
+      <div class="col-lg-7 text-white">
+        <div class="section-badge mb-3"
+          style="background:rgba(255,255,255,.15);backdrop-filter:blur(8px);color:#fff;">
+          ✂️ Serviço Premium
+        </div>
+        <h2 class="fw-800 mb-4" style="font-size:2.4rem;line-height:1.2;">
+          Banho e Tosa<br>
+          <span style="color:var(--accent);">com quem seu pet<br>pode confiar</span>
+        </h2>
+        <p class="mb-4 text-white-75" style="font-size:1.05rem;max-width:460px;line-height:1.8;">
+          Nosso serviço de banho e tosa é o <strong class="text-white">coração da Gateen Petshop</strong>.
+          Profissionais experientes, produtos de qualidade e um ambiente tranquilo para
+          que seu pet se sinta confortável e seguro durante todo o processo.
+        </p>
+
+        <!-- Diferenciais -->
+        <div class="d-flex flex-column gap-2 mb-5">
+          {% for diferencial in diferenciais_banho %}
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+              style="width:24px;height:24px;background:rgba(255,255,255,.15);">
+              <i class="fa fa-check text-white" style="font-size:.65rem;"></i>
+            </div>
+            <span style="font-size:.92rem;">{{ diferencial }}</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- CTAs -->
+        <div class="d-flex flex-wrap gap-3">
+          {% if user.is_authenticated %}
+          <a href="{% url 'appointments:booking' %}"
+            class="btn btn-warning btn-lg rounded-pill fw-700 px-5"
+            style="color:var(--dark-text);">
+            <i class="fa fa-calendar-plus me-2"></i>Agendar agora
+          </a>
+          {% else %}
+          <a href="{% url 'account_signup' %}"
+            class="btn btn-warning btn-lg rounded-pill fw-700 px-5"
+            style="color:var(--dark-text);">
+            <i class="fa fa-calendar-plus me-2"></i>Criar conta e agendar
+          </a>
+          <a href="{% url 'account_login' %}?next={% url 'appointments:booking' %}"
+            class="btn btn-lg rounded-pill fw-700 px-5"
+            style="background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.5);color:#fff;">
+            <i class="fa fa-sign-in-alt me-2"></i>Já tenho conta
+          </a>
           {% endif %}
         </div>
-        {% endfor %}
+
+        <!-- Nota de planos -->
+        <div class="mt-4 d-flex align-items-center gap-2"
+          style="font-size:.82rem;color:rgba(255,255,255,.65);">
+          <i class="fa fa-star" style="color:var(--accent);"></i>
+          Assinantes dos nossos planos têm sessões de banho e tosa inclusas todo mês.
+          <a href="{% url 'plans:plan_list' %}" class="text-white fw-600 ms-1">Ver planos →</a>
+        </div>
       </div>
-      {% if active_promotions|length > 1 %}
-      <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
-      {% endif %}
+
     </div>
   </div>
 </section>
-{% endif %}
 
-<!-- PRODUTOS EM DESTAQUE -->
+<!-- ══════════════════════════════════════════════════════════
+     PRODUTOS EM DESTAQUE
+     ══════════════════════════════════════════════════════════ -->
+{% if featured_products %}
 <section class="py-5">
   <div class="container">
-    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-end justify-content-between mb-4">
       <div>
-        <span class="section-badge">Destaques</span>
-        <h2 class="fw-800 mt-1 mb-0">Produtos mais amados</h2>
+        <span class="section-badge mb-2 d-block">Produtos</span>
+        <h2 class="fw-800 mb-0">Destaques da semana</h2>
       </div>
-      <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-primary rounded-pill">
-        Ver todos <i class="fa fa-arrow-right ms-1"></i>
+      <a href="{% url 'catalog:product_list' %}"
+        class="btn btn-outline-primary rounded-pill fw-600 px-4 d-none d-md-inline-flex">
+        Ver todos <i class="fa fa-arrow-right ms-2"></i>
       </a>
     </div>
+
     <div class="row g-3">
       {% for product in featured_products %}
       <div class="col-6 col-md-4 col-lg-3">
-        <div class="product-card card border-0 shadow-sm h-100">
-          <div class="product-img-wrap position-relative">
+        <div class="card product-card border-0 shadow-sm h-100">
+          <div class="product-img-wrap">
+            {% if product.has_discount %}
+            <span class="discount-badge">-{{ product.discount_percentage }}%</span>
+            {% endif %}
             {% if product.image %}
-            <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}"
+              class="product-img" loading="lazy">
             {% else %}
             <div class="product-img d-flex align-items-center justify-content-center"
               style="background:var(--primary-bg);">
               <i class="fa fa-image fa-3x" style="color:var(--primary-lighter);"></i>
             </div>
             {% endif %}
-            {% if product.has_discount %}
-            <span class="discount-badge">-{{ product.discount_percentage }}%</span>
-            {% endif %}
-
-            <!-- Botão AJAX — mesma estrutura do product_list -->
             <div class="product-actions">
-              <button
-                class="add-cart-btn ajax-add-cart"
-                type="button"
+              <form method="post" action="{% url 'orders:add_to_cart' product.pk %}"
+                data-ajax-cart="1"
                 data-product-id="{{ product.pk }}"
-                data-product-name="{{ product.name }}"
-                data-qty="1"
-                title="Adicionar ao carrinho">
-                <i class="fa fa-cart-plus"></i>
-              </button>
+                data-product-name="{{ product.name }}">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" class="add-cart-btn" title="Adicionar ao carrinho">
+                  <i class="fa fa-cart-plus"></i>
+                </button>
+              </form>
             </div>
           </div>
-
           <div class="card-body p-3">
-            <p class="text-muted small mb-1">{{ product.category.name }}</p>
-            <h6 class="fw-600 mb-2 product-title">
+            <div class="product-title fw-600 mb-2" style="font-size:.88rem;">
               <a href="{% url 'catalog:product_detail' product.slug %}"
-                class="product-link stretched-link text-dark text-decoration-none">
-                {{ product.name }}
-              </a>
-            </h6>
-            {% if product.brand %}
-            <p class="text-muted small mb-1">{{ product.brand.name }}</p>
-            {% endif %}
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-800" style="color:var(--primary);">
-                R$ {{ product.current_price }}
-              </span>
+                class="product-link stretched-link">{{ product.name }}</a>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
               {% if product.has_discount %}
-              <span class="text-muted text-decoration-line-through small">
-                R$ {{ product.price }}
+              <span class="text-muted text-decoration-line-through" style="font-size:.78rem;">
+                R$ {{ product.price|floatformat:2 }}
+              </span>
+              <span class="fw-800" style="color:var(--primary);font-size:1rem;">
+                R$ {{ product.promotional_price|floatformat:2 }}
+              </span>
+              {% else %}
+              <span class="fw-800" style="color:var(--primary);font-size:1rem;">
+                R$ {{ product.price|floatformat:2 }}
               </span>
               {% endif %}
             </div>
@@ -199,66 +363,76 @@
       </div>
       {% endfor %}
     </div>
+
+    <div class="text-center mt-4 d-md-none">
+      <a href="{% url 'catalog:product_list' %}"
+        class="btn btn-outline-primary rounded-pill fw-600 px-5">
+        Ver todos os produtos
+      </a>
+    </div>
   </div>
 </section>
+{% endif %}
 
-<!-- PLANOS -->
+<!-- ══════════════════════════════════════════════════════════
+     PLANOS
+     ══════════════════════════════════════════════════════════ -->
+{% if plans %}
 <section class="plans-section py-5">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="section-badge">Planos</span>
-      <h2 class="fw-800 mt-2">Cuide do seu pet todo mês</h2>
-      <p class="text-muted">Escolha o plano ideal e economize com ração, banho e tosa e muito mais</p>
+      <span class="section-badge mb-2">Planos</span>
+      <h2 class="fw-800 mt-2 mb-2">Cuide do seu pet todo mês</h2>
+      <p class="text-muted mx-auto" style="max-width:520px;">
+        Planos mensais com ração, banho e tosa e muito mais.
+        Quanto mais você cuida, mais economiza.
+      </p>
     </div>
     <div class="row g-4 justify-content-center">
       {% for plan in plans %}
       <div class="col-md-4">
-        <div class="plan-card card border-0 shadow h-100 {% if plan.is_featured %}plan-featured{% endif %}">
+        <div class="card plan-card border-0 shadow-sm h-100 {% if plan.is_featured %}plan-featured{% endif %}">
           {% if plan.is_featured %}
-          <div class="plan-popular-badge">
-            <i class="fa fa-star me-1"></i>Mais popular
-          </div>
+          <div class="plan-popular-badge">⭐ Mais popular</div>
           {% endif %}
-          <!-- Seção PLANOS na home — apenas o card-body muda -->
-          <div class="card-body p-4 text-center d-flex flex-column">
-            <div class="plan-icon mb-3" style="background-color: {{ plan.color }}20">
-              <i class="fa fa-paw fa-2x" style="color: {{ plan.color }}"></i>
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="plan-icon mb-3" style="background:{{ plan.color }}22;">
+              <i class="fa fa-paw fa-lg" style="color:{{ plan.color }};"></i>
             </div>
-            <h4 class="fw-800">{{ plan.name }}</h4>
+            <h4 class="fw-800 mb-1">{{ plan.name }}</h4>
             <p class="text-muted small mb-3">{{ plan.description }}</p>
-            <div class="plan-price mb-4">
-              <span class="text-muted small">R$</span>
-              <span class="display-5 fw-800" style="color: {{ plan.color }}">{{ plan.price }}</span>
-              <span class="text-muted small">/{{ plan.get_period_display }}</span>
+
+            <div class="mb-3">
+              <span class="fw-800" style="font-size:2rem;color:{{ plan.color }};">
+                R$ {{ plan.price|floatformat:2 }}
+              </span>
+              <span class="text-muted">/mês</span>
             </div>
-            <ul class="list-unstyled text-start mb-4 flex-grow-1">
+
+            <ul class="list-unstyled flex-grow-1 mb-4">
               {% if plan.food_bags_per_month %}
-              <li class="mb-2">
-                <i class="fa fa-check-circle text-success me-2"></i>
-                {{ plan.food_bags_per_month }} saco(s) de ração/mês
+              <li class="d-flex align-items-center gap-2 py-1">
+                <i class="fa fa-check-circle" style="color:{{ plan.color }};"></i>
+                <span class="small">{{ plan.food_bags_per_month }} saco(s) de ração/mês</span>
               </li>
               {% endif %}
               {% if plan.grooming_sessions_per_month %}
-              <li class="mb-2">
-                <i class="fa fa-check-circle text-success me-2"></i>
-                {{ plan.grooming_sessions_per_month }} banho(s) e tosa/mês
-              </li>
-              {% endif %}
-              {% if plan.includes_health_plan %}
-              <li class="mb-2">
-                <i class="fa fa-check-circle text-success me-2"></i>Plano de saúde incluído
+              <li class="d-flex align-items-center gap-2 py-1">
+                <i class="fa fa-check-circle" style="color:{{ plan.color }};"></i>
+                <span class="small">{{ plan.grooming_sessions_per_month }} banho(s) e tosa(s)/mês</span>
               </li>
               {% endif %}
               {% for feature in plan.features.all %}
-              <li class="mb-2">
-                <i class="fa fa-check-circle text-success me-2"></i>{{ feature.description }}
+              <li class="d-flex align-items-center gap-2 py-1">
+                <i class="fa fa-check-circle" style="color:{{ plan.color }};"></i>
+                <span class="small">{{ feature.description }}</span>
               </li>
               {% endfor %}
             </ul>
-            <!-- botão sempre no fundo -->
+
             <a href="{% url 'plans:subscribe' plan.slug %}"
-              class="btn w-100 rounded-pill fw-700 mt-auto"
-              style="background-color: {{ plan.color }}; color: white;">
+              class="btn rounded-pill fw-700 w-100"
+              style="background:{{ plan.color }};color:#fff;border:none;">
               Assinar agora
             </a>
           </div>
@@ -266,45 +440,60 @@
       </div>
       {% endfor %}
     </div>
-    <div class="text-center mt-4">
-      <a href="{% url 'plans:plan_list' %}" class="btn btn-outline-primary rounded-pill">Ver todos os planos</a>
-    </div>
   </div>
 </section>
+{% endif %}
 
-<!-- EVENTOS -->
+<!-- ══════════════════════════════════════════════════════════
+     EVENTOS
+     ══════════════════════════════════════════════════════════ -->
 {% if upcoming_events %}
-<section class="py-5 bg-light">
+<section class="py-5">
   <div class="container">
-    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-end justify-content-between mb-4">
       <div>
-        <span class="section-badge">Eventos</span>
-        <h2 class="fw-800 mt-1 mb-0">Próximos eventos</h2>
+        <span class="section-badge mb-2 d-block">Eventos</span>
+        <h2 class="fw-800 mb-0">Fique por dentro</h2>
       </div>
-      <a href="{% url 'events:event_list' %}" class="btn btn-outline-primary rounded-pill">
-        Ver todos <i class="fa fa-arrow-right ms-1"></i>
+      <a href="{% url 'events:event_list' %}"
+        class="btn btn-outline-primary rounded-pill fw-600 px-4 d-none d-md-inline-flex">
+        Ver todos <i class="fa fa-arrow-right ms-2"></i>
       </a>
     </div>
     <div class="row g-4">
       {% for event in upcoming_events %}
       <div class="col-md-4">
-        <div class="event-card card border-0 shadow-sm h-100 overflow-hidden">
-          {% if event.image %}
+        <div class="card event-card border-0 shadow-sm h-100">
+          {% if event.banner and event.banner.name %}
+          <img src="{{ event.banner.url }}" alt="{{ event.title }}" class="card-img-top event-img">
+          {% elif event.image and event.image.name %}
           <img src="{{ event.image.url }}" alt="{{ event.title }}" class="card-img-top event-img">
+          {% else %}
+          <div class="event-img d-flex align-items-center justify-content-center"
+            style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));">
+            <i class="fa fa-calendar fa-3x text-white opacity-50"></i>
+          </div>
           {% endif %}
           <div class="card-body p-4">
-            <span class="badge event-type-badge mb-2">{{ event.get_event_type_display }}</span>
-            <h5 class="fw-700">{{ event.title }}</h5>
-            <p class="text-muted small mb-3">{{ event.short_description|truncatechars:80 }}</p>
-            <div class="d-flex align-items-center gap-3 text-muted small">
-              <span><i class="fa fa-calendar me-1 text-primary"></i>{{ event.start_date|date:"d/m/Y" }}</span>
-              {% if event.location %}
-              <span><i class="fa fa-map-marker-alt me-1 text-primary"></i>{{ event.location|truncatechars:20 }}</span>
-              {% endif %}
+            <div class="mb-2">
+              <span class="event-type-badge">{{ event.get_event_type_display }}</span>
             </div>
+            <h5 class="fw-700 mb-2">{{ event.title }}</h5>
+            <p class="text-muted small mb-3">{{ event.short_description }}</p>
+            <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+              <i class="fa fa-calendar"></i>
+              <span>{{ event.start_date|date:"d/m/Y \à\s H:i" }}</span>
+            </div>
+            {% if event.location %}
+            <div class="d-flex align-items-center gap-2 text-muted small">
+              <i class="fa fa-map-marker-alt"></i>
+              <span>{{ event.location }}</span>
+            </div>
+            {% endif %}
           </div>
           <div class="card-footer bg-transparent border-0 px-4 pb-4">
-            <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-outline-primary btn-sm rounded-pill">
+            <a href="{% url 'events:event_detail' event.slug %}"
+              class="btn btn-outline-primary rounded-pill fw-600 w-100">
               Saiba mais <i class="fa fa-arrow-right ms-1"></i>
             </a>
           </div>
@@ -316,40 +505,84 @@
 </section>
 {% endif %}
 
-<!-- FIDELIDADE CTA -->
+<!-- ══════════════════════════════════════════════════════════
+     CTA — FIDELIDADE
+     ══════════════════════════════════════════════════════════ -->
 <section class="loyalty-cta py-5">
   <div class="container">
-    <div class="row align-items-center">
-      <div class="col-lg-7">
-        <span class="badge bg-warning text-dark fw-600 mb-3">Programa de Fidelidade</span>
-        <h2 class="fw-800 text-white fs-1">Compre, acumule pontos e ganhe brindes!</h2>
-        <p class="text-white-75 fs-5 mb-4">Na compra de 2 sacos de ração de qualquer marca, você leva uma guia de brinde. Acumule pontos e troque por produtos exclusivos.</p>
-        <a href="{% url 'loyalty:dashboard' %}" class="btn btn-warning btn-lg rounded-pill fw-700 px-5">
-          <i class="fa fa-gift me-2"></i>Conheça o programa
-        </a>
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6 text-white">
+        <span class="section-badge mb-3 d-inline-block"
+          style="background:rgba(255,255,255,.15);">🎁 Programa de fidelidade</span>
+        <h2 class="fw-800 mb-3">Acumule pontos e<br>ganhe recompensas</h2>
+        <p class="text-white-75 mb-4" style="max-width:440px;">
+          Cada compra e cada banho e tosa gera pontos que você pode trocar por
+          produtos, descontos e sessões gratuitas.
+        </p>
+        <div class="d-flex gap-3 flex-wrap">
+          {% if user.is_authenticated %}
+          <a href="{% url 'loyalty:dashboard' %}"
+            class="btn btn-warning rounded-pill fw-700 px-5">
+            <i class="fa fa-gift me-2"></i>Meus pontos
+          </a>
+          {% else %}
+          <a href="{% url 'account_signup' %}"
+            class="btn btn-warning rounded-pill fw-700 px-5">
+            <i class="fa fa-user-plus me-2"></i>Criar conta grátis
+          </a>
+          {% endif %}
+        </div>
       </div>
-      <div class="col-lg-5 text-center mt-4 mt-lg-0">
-        <div class="loyalty-levels d-flex justify-content-center gap-3">
-          <div class="level-card text-center p-3">
-            <div class="level-icon bronze"><i class="fa fa-award fa-2x"></i></div>
-            <div class="small fw-600 mt-1 text-white-50">Bronze</div>
+      <div class="col-lg-6">
+        <div class="row g-3">
+          {% for icon, label, icon_name, pts, color in levels %}
+          <div class="col-6">
+            <div class="level-card p-3 text-center rounded-3">
+              <i class="fa fa-{{ icon_name }} fa-2x level-icon {{ icon }} mb-2"></i>
+              <div class="text-white fw-700">{{ label }}</div>
+              <div class="text-white-75 small">A partir de {{ pts }} pts</div>
+            </div>
           </div>
-          <div class="level-card text-center p-3">
-            <div class="level-icon silver"><i class="fa fa-medal fa-2x"></i></div>
-            <div class="small fw-600 mt-1 text-white-50">Prata</div>
-          </div>
-          <div class="level-card text-center p-3">
-            <div class="level-icon gold"><i class="fa fa-crown fa-2x"></i></div>
-            <div class="small fw-600 mt-1 text-white-50">Ouro</div>
-          </div>
-          <div class="level-card text-center p-3">
-            <div class="level-icon diamond"><i class="fa fa-gem fa-2x"></i></div>
-            <div class="small fw-600 mt-1 text-white-50">Diamante</div>
-          </div>
+          {% endfor %}
         </div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- ══════════════════════════════════════════════════════════
+     CTA FINAL — AGENDAR
+     ══════════════════════════════════════════════════════════ -->
+<section class="py-5 text-center"
+  style="background:linear-gradient(135deg,var(--primary-bg-soft),var(--primary-bg));">
+  <div class="container">
+    <div class="mx-auto" style="max-width:560px;">
+      <div class="mb-3" style="font-size:2.5rem;">✂️</div>
+      <h2 class="fw-800 mb-3">Pronto para agendar?</h2>
+      <p class="text-muted mb-4" style="font-size:1.05rem;">
+        Seu pet merece o melhor cuidado. Agende um horário de banho ou tosa
+        com apenas alguns cliques.
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{% url 'appointments:booking' %}"
+          class="btn btn-primary btn-lg rounded-pill fw-700 px-5">
+          <i class="fa fa-calendar-plus me-2"></i>Agendar agora
+        </a>
+        <a href="{% url 'plans:plan_list' %}"
+          class="btn btn-outline-primary btn-lg rounded-pill fw-700 px-5">
+          <i class="fa fa-star me-2"></i>Ver planos
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Passa variáveis para o cart.js
+window.ADD_CART_BASE_URL = "{% url 'orders:add_to_cart' 0 %}".replace('/0/', '/');
+window.CSRF_TOKEN = "{{ csrf_token }}";
+</script>
 {% endblock %}

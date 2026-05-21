@@ -27,12 +27,13 @@
     </div>
   </div>
 
-  <!-- ══ Cards de métricas — linha 1: financeiro e pedidos ═══ -->
+  <<!-- ══ Cards de métricas — linha 1: financeiro e pedidos ═══ -->
   <div class="row g-3 mb-3">
 
     <!-- Receita hoje -->
     <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 dashboard-card">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        style="border-left:4px solid #27ae60 !important;">
         <div class="card-body p-4">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="metric-icon d-flex align-items-center justify-content-center"
@@ -52,7 +53,8 @@
 
     <!-- Receita mês -->
     <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 dashboard-card">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        style="border-left:4px solid #8A4B9F !important;">
         <div class="card-body p-4">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="metric-icon d-flex align-items-center justify-content-center"
@@ -72,7 +74,8 @@
 
     <!-- Pedidos hoje -->
     <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 dashboard-card">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        style="border-left:4px solid #e74c3c !important;">
         <div class="card-body p-4">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="metric-icon d-flex align-items-center justify-content-center"
@@ -96,7 +99,8 @@
 
     <!-- Novos clientes -->
     <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 dashboard-card">
+      <div class="card border-0 shadow-sm h-100 dashboard-card"
+        style="border-left:4px solid #3498db !important;">
         <div class="card-body p-4">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="metric-icon d-flex align-items-center justify-content-center"
@@ -174,7 +178,7 @@
     <!-- Estoque baixo -->
     <div class="col-6 col-md-3">
       <div class="card border-0 shadow-sm h-100 dashboard-card"
-        style="{% if out_stock_count > 0 %}border-left:4px solid #e74c3c !important;{% elif low_stock_count > 0 %}border-left:4px solid #f4b942 !important;{% endif %}">
+        style="{% if out_stock_count > 0 %}border-left:4px solid #f4b942 !important;{% elif low_stock_count > 0 %}border-left:4px solid #f4b942 !important;{% endif %}">
         <div class="card-body p-4">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="metric-icon d-flex align-items-center justify-content-center"
@@ -199,7 +203,7 @@
     <!-- Pedidos pendentes -->
     <div class="col-6 col-md-3">
       <div class="card border-0 shadow-sm h-100 dashboard-card"
-        {% if pending_orders > 0 %}style="border-left:4px solid #e74c3c !important;"{% endif %}>
+        {% if pending_orders > 0 %}style="border-left:4px solid #e67e22 !important;"{% endif %}>
         <div class="card-body p-4">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="metric-icon d-flex align-items-center justify-content-center"
