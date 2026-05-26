@@ -198,5 +198,72 @@ input:focus {
     this.value = v;
   });
 })();
+
+/* Validação de e-mail em tempo real */
+(function () {
+  var emailInput = document.querySelector('input[name="email"], input[type="email"]');
+  if (!emailInput) return;
+
+  var feedback = document.createElement('div');
+  feedback.className = 'invalid-feedback d-block';
+  feedback.style.display = 'none !important';
+
+  var COMMON_TYPOS = {
+    'gmai.com':   'gmail.com',
+    'gmial.com':  'gmail.com',
+    'gmal.com':   'gmail.com',
+    'hotmai.com': 'hotmail.com',
+    'hotmal.com': 'hotmail.com',
+    'yaho.com':   'yahoo.com',
+    'yahooo.com': 'yahoo.com',
+  };
+
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  emailInput.parentNode.appendChild(feedback);
+
+  emailInput.addEventListener('blur', function () {
+    var val = this.value.trim().toLowerCase();
+    if (!val) return;
+
+    feedback.style.display = '';
+    feedback.style.cssText = '';
+
+    if (!EMAIL_RE.test(val)) {
+      feedback.textContent = '⚠ Formato de e-mail inválido. Ex: nome@dominio.com';
+      emailInput.style.borderColor = 'var(--danger)';
+      return;
+    }
+
+    var domain = val.split('@')[1];
+    if (COMMON_TYPOS[domain]) {
+      feedback.innerHTML =
+        '💡 Você quis dizer <strong>' + val.split('@')[0] + '@' + COMMON_TYPOS[domain] + '</strong>?';
+      emailInput.style.borderColor = 'var(--warning)';
+      return;
+    }
+
+    feedback.textContent = '';
+    emailInput.style.borderColor = 'var(--success)';
+  });
+
+  emailInput.addEventListener('input', function () {
+    feedback.textContent = '';
+    emailInput.style.borderColor = '';
+  });
+
+  /* Bloqueia submit se e-mail claramente inválido */
+  var form = emailInput.closest('form');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      var val = emailInput.value.trim();
+      if (!EMAIL_RE.test(val)) {
+        e.preventDefault();
+        feedback.textContent = '⚠ Informe um e-mail válido antes de continuar.';
+        emailInput.focus();
+      }
+    });
+  }
+})();
 </script>
 {% endblock %}

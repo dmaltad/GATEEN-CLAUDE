@@ -4,268 +4,203 @@
 {% block title %}Produtos — Gateen Petshop{% endblock %}
 
 {% block content %}
-
-<!-- Hero compacto -->
-<div style="background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);padding:48px 0 80px;">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-lg-6 text-white">
-        <span class="section-badge mb-3 d-inline-block"
-          style="background:rgba(255,255,255,.15);">🛒 Loja</span>
-        <h1 class="fw-800 mb-2" style="font-size:2.2rem;">
-          {% if query %}Resultados para "{{ query }}"
-          {% elif cat %}{{ cat|title }}
-          {% else %}Todos os produtos{% endif %}
-        </h1>
-        <p class="text-white-75 mb-0">
-          Produtos premium para o bem-estar e felicidade do seu pet
-        </p>
-      </div>
-      <div class="col-lg-6 mt-3 mt-lg-0">
-        <form method="get" class="d-flex gap-2">
-          <input type="text" name="q" value="{{ query }}"
-            class="form-control rounded-pill border-0 shadow-sm"
-            placeholder="Buscar produtos, marcas…"
-            style="font-size:.9rem;padding:10px 20px;">
-          <button type="submit"
-            class="btn btn-warning rounded-pill fw-700 px-4 flex-shrink-0">
-            <i class="fa fa-search"></i>
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Wave -->
-<div style="margin-top:-2px;margin-bottom:-2px;">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 40" preserveAspectRatio="none"
-    style="display:block;width:100%;height:40px;">
-    <path fill="#ffffff"
-      d="M0,20L60,18C120,16,240,12,360,14C480,16,600,24,720,26C840,28,960,24,1080,20C1200,16,1320,12,1380,10L1440,8L1440,40L0,40Z"/>
-  </svg>
-</div>
-
-<div class="container py-4">
+<div class="container py-5">
   <div class="row g-4">
 
-    <!-- Sidebar de filtros -->
+    <!-- SIDEBAR FILTROS -->
     <div class="col-lg-3">
-      <div class="card border-0 shadow-sm" style="border-radius:16px;position:sticky;top:90px;">
+      <div class="card border-0 shadow-sm sticky-lg-top" style="top:80px;">
         <div class="card-body p-4">
+          <h5 class="fw-700 mb-4" style="color:var(--primary);">
+            <i class="fa fa-filter me-2"></i>Filtros
+          </h5>
+          <form method="get" id="filterForm">
+            {% if request.GET.q %}
+            <input type="hidden" name="q" value="{{ request.GET.q }}">
+            {% endif %}
 
-          <h6 class="fw-700 mb-4 text-muted text-uppercase"
-            style="font-size:.72rem;letter-spacing:1px;">
-            <i class="fa fa-filter me-2" style="color:var(--primary);"></i>Filtros
-          </h6>
-
-          <!-- Categorias -->
-          <div class="mb-4">
-            <div class="fw-700 mb-2" style="font-size:.85rem;">Categorias</div>
-            <div class="d-flex flex-column gap-1">
-              <a href="{% url 'catalog:product_list' %}{% if query %}?q={{ query }}{% endif %}"
-                class="d-flex align-items-center gap-2 py-2 px-3 rounded-3 text-decoration-none
-                  {% if not cat %}fw-700{% else %}text-muted{% endif %}"
-                style="font-size:.85rem;
-                  {% if not cat %}background:var(--primary-bg);color:var(--primary);{% endif %}
-                  transition:all .2s;">
-                <i class="fa fa-th-large" style="width:16px;"></i> Todos
-              </a>
-              {% for category in categories %}
-              <a href="{% url 'catalog:by_category' category.slug %}{% if query %}?q={{ query }}{% endif %}"
-                class="d-flex align-items-center gap-2 py-2 px-3 rounded-3 text-decoration-none
-                  {% if cat == category.slug %}fw-700{% else %}text-muted{% endif %}"
-                style="font-size:.85rem;
-                  {% if cat == category.slug %}background:var(--primary-bg);color:var(--primary);{% endif %}
-                  transition:all .2s;">
-                <i class="fa {{ category.icon }}" style="width:16px;"></i>
-                {{ category.name }}
-              </a>
-              {% endfor %}
+            <!-- Categorias -->
+            <div class="mb-4">
+              <h6 class="fw-600 mb-3 text-muted text-uppercase" style="font-size:.72rem;letter-spacing:1px;">
+                Categorias
+              </h6>
+              <div class="list-group list-group-flush">
+                <a href="{% url 'catalog:product_list' %}"
+                  class="list-group-item list-group-item-action border-0 px-0 py-1
+                  {% if not selected_category %}fw-700{% endif %}"
+                  style="{% if not selected_category %}color:var(--primary);{% endif %}">
+                  <i class="fa fa-th me-2"></i>Todos
+                </a>
+                {% for cat in categories %}
+                <a href="{% url 'catalog:by_category' cat.slug %}"
+                  class="list-group-item list-group-item-action border-0 px-0 py-1
+                  {% if selected_category == cat.slug %}fw-700{% endif %}"
+                  style="{% if selected_category == cat.slug %}color:var(--primary);{% endif %}">
+                  <i class="fa {{ cat.icon|default:'fa-box' }} me-2"></i>{{ cat.name }}
+                </a>
+                {% endfor %}
+              </div>
             </div>
-          </div>
 
-          <!-- Espécie -->
-          <div class="mb-4">
-            <div class="fw-700 mb-2" style="font-size:.85rem;">Para qual pet?</div>
-            <div class="d-flex flex-wrap gap-2">
-              {% for val, label in species_choices %}
-              <a href="?{% if query %}q={{ query }}&{% endif %}{% if cat %}category={{ cat }}&{% endif %}species={{ val }}"
-                class="badge rounded-pill text-decoration-none fw-600"
-                style="font-size:.75rem;padding:6px 14px;
-                  border:1.5px solid {% if request.GET.species == val %}var(--primary){% else %}var(--border-color){% endif %};
-                  background:{% if request.GET.species == val %}var(--primary){% else %}#fff{% endif %};
-                  color:{% if request.GET.species == val %}#fff{% else %}var(--muted-text){% endif %};">
-                {{ label }}
-              </a>
-              {% endfor %}
+            <!-- Para qual pet -->
+            <div class="mb-4">
+              <h6 class="fw-600 mb-3 text-muted text-uppercase" style="font-size:.72rem;letter-spacing:1px;">
+                Para qual pet?
+              </h6>
+              <div class="d-flex flex-wrap gap-2">
+                {% for value, label in species_choices %}
+                <div class="form-check form-check-inline m-0">
+                  <input class="form-check-input" type="radio"
+                    name="species" id="sp_{{ value }}" value="{{ value }}"
+                    {% if request.GET.species == value %}checked{% endif %}
+                    onchange="document.getElementById('filterForm').submit()">
+                  <label class="form-check-label small" for="sp_{{ value }}">{{ label }}</label>
+                </div>
+                {% endfor %}
+              </div>
             </div>
-          </div>
 
-          <!-- Ordenação -->
-          <div>
-            <div class="fw-700 mb-2" style="font-size:.85rem;">Ordenar por</div>
-            <div class="d-flex flex-column gap-1">
-              {% for val, label in "-created_at,Mais recentes|price,Menor preço|-price,Maior preço|name,A-Z"|split:"|" %}
-              {% endfor %}
-              {% for item in order_options %}
-              <a href="?{% if query %}q={{ query }}&{% endif %}{% if cat %}category={{ cat }}&{% endif %}order={{ item.val }}"
-                class="d-flex align-items-center gap-2 py-2 px-3 rounded-3 text-decoration-none"
-                style="font-size:.82rem;
-                  {% if request.GET.order == item.val or not request.GET.order and item.val == '-created_at' %}
-                    background:var(--primary-bg);color:var(--primary);font-weight:700;
-                  {% else %}color:var(--muted-text);{% endif %}">
-                <i class="fa {{ item.icon }}" style="width:16px;"></i>{{ item.label }}
-              </a>
-              {% endfor %}
+            <!-- Ordenar -->
+            <div class="mb-2">
+              <h6 class="fw-600 mb-2 text-muted text-uppercase" style="font-size:.72rem;letter-spacing:1px;">
+                Ordenar por
+              </h6>
+              <select name="order" class="form-select form-select-sm"
+                onchange="this.form.submit()">
+                <option value="-created_at"
+                  {% if not request.GET.order or request.GET.order == '-created_at' %}selected{% endif %}>
+                  Mais recentes
+                </option>
+                <option value="price"  {% if request.GET.order == 'price' %}selected{% endif %}>Menor preço</option>
+                <option value="-price" {% if request.GET.order == '-price' %}selected{% endif %}>Maior preço</option>
+                <option value="name"   {% if request.GET.order == 'name' %}selected{% endif %}>Nome A–Z</option>
+              </select>
             </div>
-          </div>
-
+          </form>
         </div>
       </div>
     </div>
 
-    <!-- Grade de produtos -->
+    <!-- LISTAGEM -->
     <div class="col-lg-9">
-
-      <!-- Barra de resultados -->
       <div class="d-flex align-items-center justify-content-between mb-4">
-        <div class="text-muted" style="font-size:.88rem;">
-          {% if page_obj.paginator.count %}
-          <strong class="text-dark">{{ page_obj.paginator.count }}</strong> produto{{ page_obj.paginator.count|pluralize }} encontrado{{ page_obj.paginator.count|pluralize }}
-          {% endif %}
-        </div>
-        <!-- Ordenação mobile -->
-        <div class="d-lg-none">
-          <select class="form-select form-select-sm rounded-pill"
-            style="font-size:.8rem;"
-            onchange="location.href='?order='+this.value+'{% if query %}&q={{ query }}{% endif %}{% if cat %}&category={{ cat }}{% endif %}'">
-            <option value="-created_at" {% if not request.GET.order or request.GET.order == '-created_at' %}selected{% endif %}>Mais recentes</option>
-            <option value="price" {% if request.GET.order == 'price' %}selected{% endif %}>Menor preço</option>
-            <option value="-price" {% if request.GET.order == '-price' %}selected{% endif %}>Maior preço</option>
-            <option value="name" {% if request.GET.order == 'name' %}selected{% endif %}>A-Z</option>
-          </select>
+        <div>
+          <h4 class="fw-700 mb-0">
+            {% if query %}Resultados para "{{ query }}"
+            {% elif selected_category %}{{ selected_category|capfirst }}
+            {% else %}Todos os produtos{% endif %}
+          </h4>
+          <small class="text-muted">{{ page_obj.paginator.count }} produto(s)</small>
         </div>
       </div>
 
-      {% if products %}
-      <div class="row g-3">
+      <div class="row g-3" id="productGrid">
         {% for product in products %}
-        <div class="col-6 col-md-4 col-xl-3">
-          <div class="card product-card border-0 shadow-sm h-100">
-            <div class="product-img-wrap">
-              {% if product.has_discount %}
-              <span class="discount-badge">-{{ product.discount_percentage }}%</span>
-              {% endif %}
-              {% if product.image and product.image.name %}
-              <img src="{{ product.image.url }}" alt="{{ product.name }}"
-                class="product-img" loading="lazy">
+        <div class="col-6 col-md-4">
+
+          <!-- Card inteiro clicável via stretched-link -->
+          <div class="product-card card border-0 shadow-sm h-100">
+            <div class="product-img-wrap position-relative">
+              {% if product.image %}
+              <img src="{{ product.image.url }}" class="card-img-top product-img"
+                alt="{{ product.name }}" loading="lazy">
               {% else %}
               <div class="product-img d-flex align-items-center justify-content-center"
                 style="background:var(--primary-bg);">
                 <i class="fa fa-image fa-3x" style="color:var(--primary-lighter);"></i>
               </div>
               {% endif %}
+              {% if product.has_discount %}
+              <span class="discount-badge">-{{ product.discount_percentage }}%</span>
+              {% endif %}
+
+              <!-- Botão de carrinho — z-index acima do stretched-link -->
               <div class="product-actions">
                 <button class="add-cart-btn ajax-add-cart"
                   data-product-id="{{ product.pk }}"
                   data-product-name="{{ product.name }}"
-                  title="Adicionar ao carrinho">
+                  title="Adicionar ao carrinho"
+                  type="button">
                   <i class="fa fa-cart-plus"></i>
                 </button>
               </div>
             </div>
-            <div class="card-body p-3 d-flex flex-column">
-              {% if product.brand %}
-              <div class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;">
-                {{ product.brand.name }}
-              </div>
-              {% endif %}
-              <div class="product-title fw-600 mb-2 flex-grow-1" style="font-size:.85rem;">
+
+            <div class="card-body p-3">
+              <p class="text-muted small mb-1">{{ product.category.name }}</p>
+
+              <!-- product-link tem ::after que cobre todo o card -->
+              <h6 class="fw-600 mb-2 product-title">
                 <a href="{% url 'catalog:product_detail' product.slug %}"
-                  class="product-link stretched-link">{{ product.name }}</a>
-              </div>
-              <div class="d-flex align-items-center justify-content-between mt-auto">
-                <div>
-                  {% if product.has_discount %}
-                  <div class="text-muted text-decoration-line-through" style="font-size:.72rem;">
-                    R$ {{ product.price|floatformat:2 }}
-                  </div>
-                  <div class="fw-800" style="color:var(--primary);font-size:.95rem;">
-                    R$ {{ product.promotional_price|floatformat:2 }}
-                  </div>
-                  {% else %}
-                  <div class="fw-800" style="color:var(--primary);font-size:.95rem;">
-                    R$ {{ product.price|floatformat:2 }}
-                  </div>
-                  {% endif %}
-                </div>
-                {% if product.stock.quantity <= 5 and product.stock.quantity > 0 %}
-                <span class="badge rounded-pill"
-                  style="background:#fef3c7;color:#92400e;font-size:.65rem;">
-                  Últimas {{ product.stock.quantity }}
+                  class="product-link stretched-link text-dark text-decoration-none">
+                  {{ product.name }}
+                </a>
+              </h6>
+
+              {% if product.brand %}
+              <p class="text-muted small mb-2">{{ product.brand.name }}</p>
+              {% endif %}
+
+              <div class="d-flex align-items-center gap-2">
+                <span class="fw-800" style="color:var(--primary);">
+                  R$ {{ product.current_price }}
+                </span>
+                {% if product.has_discount %}
+                <span class="text-muted text-decoration-line-through small">
+                  R$ {{ product.price }}
                 </span>
                 {% endif %}
               </div>
             </div>
           </div>
         </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+          <i class="fa fa-search fa-3x mb-3 opacity-25" style="color:var(--primary);"></i>
+          <h5 class="text-muted">Nenhum produto encontrado.</h5>
+          <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-primary mt-2 rounded-pill">
+            Ver todos os produtos
+          </a>
+        </div>
         {% endfor %}
       </div>
 
-      <!-- Paginação -->
-      {% if page_obj.has_other_pages %}
-      <div class="d-flex justify-content-center mt-5">
-        <nav>
-          <ul class="pagination">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if cat %}&category={{ cat }}{% endif %}">
-                <i class="fa fa-chevron-left"></i>
-              </a>
-            </li>
-            {% endif %}
-            {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if cat %}&category={{ cat }}{% endif %}">{{ num }}</a>
-            </li>
-            {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if cat %}&category={{ cat }}{% endif %}">
-                <i class="fa fa-chevron-right"></i>
-              </a>
-            </li>
-            {% endif %}
-          </ul>
-        </nav>
-      </div>
+      <!-- PAGINAÇÃO -->
+      {% if is_paginated %}
+      <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="fa fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+          </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="fa fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
       {% endif %}
-
-      {% else %}
-      <div class="text-center py-5">
-        <div class="mb-4" style="font-size:4rem;">🔍</div>
-        <h4 class="fw-700 mb-2">Nenhum produto encontrado</h4>
-        <p class="text-muted mb-4">Tente outros termos ou explore nossas categorias.</p>
-        <a href="{% url 'catalog:product_list' %}" class="btn btn-primary rounded-pill px-5 fw-700">
-          Ver todos os produtos
-        </a>
-      </div>
-      {% endif %}
-
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
+<!-- CSRF para AJAX -->
 <script>
-window.ADD_CART_BASE_URL = "{% url 'orders:add_to_cart' 0 %}".replace('/0/', '/');
-window.CSRF_TOKEN = "{{ csrf_token }}";
+var CSRF_TOKEN = '{{ csrf_token }}';
+var ADD_CART_BASE_URL = '{% url "orders:add_to_cart" 0 %}'.replace('/0/', '/');
 </script>
+<script src="{% static 'catalog/js/product_list.js' %}"></script>
 {% endblock %}

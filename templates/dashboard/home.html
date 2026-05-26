@@ -4,10 +4,10 @@
 {% block title %}Dashboard — Gateen Gestão{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4 px-4">
+<div class="container-fluid py-4 px-3 px-md-4">
 
   <!-- ══ Cabeçalho ════════════════════════════════════════════ -->
-  <div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <div>
       <h2 class="fw-800 mb-1">
         Olá, {{ request.user.first_name }}! 👋
@@ -27,7 +27,7 @@
     </div>
   </div>
 
-  <<!-- ══ Cards de métricas — linha 1: financeiro e pedidos ═══ -->
+  <!-- ══ Cards de métricas — linha 1: financeiro e pedidos ═══ -->
   <div class="row g-3 mb-3">
 
     <!-- Receita hoje -->
@@ -203,7 +203,7 @@
     <!-- Pedidos pendentes -->
     <div class="col-6 col-md-3">
       <div class="card border-0 shadow-sm h-100 dashboard-card"
-        {% if pending_orders > 0 %}style="border-left:4px solid #e67e22 !important;"{% endif %}>
+      style="border-left:4px solid #e67e22 !important;">
         <div class="card-body p-4">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="metric-icon d-flex align-items-center justify-content-center"
@@ -476,15 +476,17 @@
       {% if active_events %}
       <div class="row g-3">
         {% for event in active_events %}
-        <div class="col-md-6 col-lg-4">
+        <div class="col-12 col-md-6">
           <div class="d-flex align-items-start gap-3 p-3 rounded-3"
-            style="background:var(--light-bg);border:1px solid var(--border-color);">
+            style="background:var(--light-bg);border:1px solid var(--border-color);min-width:0;">
             <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
-              style="width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));">
-              <i class="fa fa-calendar-star text-white"></i>
+              style="width:42px;height:42px;min-width:42px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));">
+              <i class="fa fa-calendar text-white" style="font-size:.85rem;"></i>
             </div>
-            <div class="flex-grow-1 min-width-0">
-              <div class="fw-700 text-truncate" style="font-size:.88rem;">{{ event.title }}</div>
+            <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+              <div class="fw-700 text-truncate" style="font-size:.88rem;max-width:100%;">
+                {{ event.title }}
+              </div>
               <div class="text-muted" style="font-size:.78rem;">
                 <i class="fa fa-clock me-1"></i>{{ event.start_date|date:"d/m/Y H:i" }}
               </div>
@@ -495,8 +497,8 @@
               </div>
             </div>
             <a href="{% url 'dashboard:event_edit' event.pk %}"
-              class="btn btn-sm btn-outline-secondary rounded-pill flex-shrink-0"
-              style="font-size:.72rem;padding:3px 10px;">
+              class="btn btn-sm btn-outline-secondary rounded-pill flex-shrink-0 align-self-start"
+              style="font-size:.72rem;padding:3px 10px;white-space:nowrap;">
               <i class="fa fa-edit"></i>
             </a>
           </div>

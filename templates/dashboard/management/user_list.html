@@ -1,6 +1,6 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Gestão de Usuários{% endblock %}
+{% block title %}Usuários — Gestão{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4 px-4">
@@ -11,19 +11,14 @@
       </h4>
       <p class="text-muted mb-0">{{ page_obj.paginator.count }} usuário(s)</p>
     </div>
-    <a href="{% url 'dashboard:group_list' %}"
-      class="btn btn-outline-primary btn-sm rounded-pill">
-      <i class="fa fa-user-tag me-1"></i>Cargos
-    </a>
   </div>
 
-  <!-- Busca -->
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-3">
       <form method="get" class="d-flex gap-2">
         <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm"
           placeholder="Buscar por nome ou email...">
-        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">
+        <button class="btn btn-primary btn-sm rounded-pill px-3">
           <i class="fa fa-search me-1"></i>Buscar
         </button>
         {% if q %}
@@ -40,76 +35,77 @@
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
-              <th class="ps-4" style="width:50px;"></th>
-              <th>Usuário</th>
+              <th class="ps-4">Usuário</th>
               <th>Cargos</th>
-              <th>Pedidos</th>
-              <th>Cadastro</th>
               <th>Status</th>
-              <th class="pe-4 text-end">Ações</th>
+              <th>Cadastro</th>
+              <th class="text-end pe-4">Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for u in page_obj %}
             <tr>
               <td class="ps-4">
-                {% if u.avatar %}
-                <img src="{{ u.avatar.url }}" class="rounded-circle"
-                  style="width:36px;height:36px;object-fit:cover;">
-                {% else %}
-                <div class="rounded-circle d-flex align-items-center
-                  justify-content-center bg-light"
-                  style="width:36px;height:36px;">
-                  <i class="fa fa-user text-muted fa-sm"></i>
+                <div class="d-flex align-items-center gap-3">
+                  {% if u.avatar %}
+                  <img src="{{ u.avatar.url }}" class="rounded-circle"
+                    width="36" height="36" style="object-fit:cover;">
+                  {% else %}
+                  <div class="rounded-circle bg-light d-flex align-items-center
+                    justify-content-center" style="width:36px;height:36px;flex-shrink:0;">
+                    <i class="fa fa-user" style="color:var(--primary);font-size:.8rem;"></i>
+                  </div>
+                  {% endif %}
+                  <div>
+                    <div class="fw-600 small">{{ u.get_full_name }}</div>
+                    <div class="text-muted" style="font-size:.72rem;">{{ u.email }}</div>
+                  </div>
                 </div>
-                {% endif %}
               </td>
               <td>
-                <div class="fw-600 small">{{ u.get_full_name }}</div>
-                <div class="text-muted" style="font-size:.72rem;">{{ u.email }}</div>
-              </td>
-              <td>
-                {% for group in u.groups.all %}
+                {% for g in u.groups.all %}
                 <span class="badge rounded-pill me-1"
-                  style="background:var(--primary);color:#fff;font-size:.65rem;">
-                  {{ group.name }}
+                  style="background:var(--primary-bg);color:var(--primary);font-size:.7rem;">
+                  {{ g.name }}
                 </span>
                 {% empty %}
-                <span class="text-muted small">Cliente</span>
+                <span class="text-muted small">—</span>
                 {% endfor %}
+                {% if u.is_superuser %}
+                <span class="badge rounded-pill"
+                  style="background:#dc3545;color:#fff;font-size:.7rem;">
+                  Superusuário
+                </span>
+                {% endif %}
               </td>
-              <td class="text-muted small text-center">
-                {{ u.orders.count }}
-              </td>
-              <td class="text-muted small">{{ u.date_joined|date:"d/m/Y" }}</td>
               <td>
                 {% if u.is_active %}
-                <span class="badge bg-success-subtle text-success" style="font-size:.7rem;">
-                  Ativo
-                </span>
+                <span class="badge bg-success-subtle text-success"
+                  style="font-size:.7rem;">Ativo</span>
                 {% else %}
-                <span class="badge bg-danger-subtle text-danger" style="font-size:.7rem;">
-                  Inativo
-                </span>
-                {% endif %}
-                {% if u.is_staff %}
-                <span class="badge ms-1"
-                  style="background:#2d1b69;color:#fff;font-size:.65rem;">
-                  Staff
-                </span>
+                <span class="badge bg-secondary" style="font-size:.7rem;">Inativo</span>
                 {% endif %}
               </td>
-              <td class="pe-4 text-end">
-                <a href="{% url 'dashboard:user_edit' u.pk %}"
-                  class="btn btn-outline-primary btn-sm rounded-pill"
-                  title="Editar">
-                  <i class="fa fa-edit"></i>
-                </a>
+              <td class="text-muted small">{{ u.date_joined|date:"d/m/Y" }}</td>
+              <td class="text-end pe-4">
+                <div class="d-flex gap-1 justify-content-end">
+                  <a href="{% url 'dashboard:user_edit' u.pk %}"
+                    class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="fa fa-edit me-1"></i>Editar
+                  </a>
+                  {% if not u.is_superuser and u != request.user %}
+                  <a href="{% url 'dashboard:user_delete' u.pk %}"
+                    class="btn btn-outline-danger btn-sm rounded-pill px-2"
+                    onclick="return confirm('Excluir {{ u.get_full_name }} permanentemente?')">
+                    <i class="fa fa-trash"></i>
+                  </a>
+                  {% endif %}
+                </div>
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="7" class="text-center py-5 text-muted">
+              <td colspan="5" class="text-center py-5 text-muted">
                 <i class="fa fa-users fa-3x mb-3 d-block opacity-25"></i>
                 Nenhum usuário encontrado.
               </td>

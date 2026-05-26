@@ -892,3 +892,98 @@ def appointment_update_status(request, pk):
         messages.error(request, 'Status inválido.')
 
     return redirect('dashboard:appointment_list_staff')
+
+# ══════════════════════════════════════════════════════
+# USUÁRIO — DELETE
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente')
+def user_delete(request, pk):
+    from apps.accounts.models import User
+    user = get_object_or_404(User, pk=pk)
+
+    # Impede excluir a si mesmo ou superusuários
+    if user == request.user:
+        messages.error(request, 'Você não pode excluir sua própria conta.')
+        return redirect('dashboard:user_list')
+    if user.is_superuser:
+        messages.error(request, 'Não é possível excluir um superusuário.')
+        return redirect('dashboard:user_list')
+
+    if request.method == 'POST':
+        nome = user.get_full_name()
+        user.delete()
+        messages.success(request, f'Usuário "{nome}" removido.')
+        return redirect('dashboard:user_list')
+
+    return render(request, 'dashboard/management/confirm_delete.html', {
+        'object': user, 'type': 'usuário'
+    })
+
+
+# ══════════════════════════════════════════════════════
+# CARGOS — CREATE / DELETE
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente')
+def group_create(request):
+    from django.contrib.auth.models import Group, Permission
+    from django import forms as dj_forms
+
+    class GroupForm(dj_forms.Form):
+        name = dj_forms.CharField(
+            max_length=150,
+            label='Nome do cargo',
+            widget=dj_forms.TextInput(attrs={'class': 'form-control'}),
+        )
+        permissions = dj_forms.ModelMultipleChoiceField(
+            queryset=Permission.objects.select_related('content_type').order_by(
+                'content_type__app_label', 'codename'
+            ),
+            required=False,
+            label='Permissões',
+            widget=dj_forms.CheckboxSelectMultiple(),
+        )
+
+    if request.method == 'POST':
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            if Group.objects.filter(name=name).exists():
+                form.add_error('name', 'Já existe um cargo com este nome.')
+            else:
+                group = Group.objects.create(name=name)
+                group.permissions.set(form.cleaned_data['permissions'])
+                messages.success(request, f'Cargo "{name}" criado!')
+                return redirect('dashboard:group_list')
+    else:
+        form = GroupForm()
+
+    return render(request, 'dashboard/management/group_form.html', {
+        'form': form, 'action': 'Criar cargo'
+    })
+
+
+@group_required('Gerente')
+def group_delete(request, pk):
+    from django.contrib.auth.models import Group
+    group = get_object_or_404(Group, pk=pk)
+
+    # Protege os grupos base do sistema
+    PROTECTED = {'Gerente', 'Estoquista', 'Atendimento', 'Marketing'}
+    if group.name in PROTECTED:
+        messages.error(
+            request,
+            f'O cargo "{group.name}" é padrão do sistema e não pode ser removido.'
+        )
+        return redirect('dashboard:group_list')
+
+    if request.method == 'POST':
+        name = group.name
+        group.delete()
+        messages.success(request, f'Cargo "{name}" removido.')
+        return redirect('dashboard:group_list')
+
+    return render(request, 'dashboard/management/confirm_delete.html', {
+        'object': group, 'type': 'cargo'
+    })

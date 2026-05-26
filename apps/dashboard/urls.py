@@ -49,4 +49,14 @@ urlpatterns = [
     # ── Agendamentos ─────────────────────────────────────
     path('gestao/agendamentos/',                        mgmt.appointment_list_staff,   name='appointment_list_staff'),
     path('gestao/agendamentos/<int:pk>/status/',        mgmt.appointment_update_status, name='appointment_update_status'),
+
+    # Usuários
+    path('gestao/usuarios/',                  mgmt.user_list,   name='user_list'),
+    path('gestao/usuarios/<int:pk>/editar/',  mgmt.user_edit,   name='user_edit'),
+    path('gestao/usuarios/<int:pk>/excluir/', mgmt.user_delete, name='user_delete'),  # novo
+
+    # Cargos
+    path('gestao/cargos/',                    mgmt.group_list,   name='group_list'),
+    path('gestao/cargos/novo/',               mgmt.group_create, name='group_create'),  # novo
+    path('gestao/cargos/<int:pk>/excluir/',   mgmt.group_delete, name='group_delete'),  # novo
 ]

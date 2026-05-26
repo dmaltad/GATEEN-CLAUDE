@@ -1,55 +1,180 @@
 {% load static %}
-<footer class="footer-gateen mt-5">
+
+<footer style="background:linear-gradient(135deg,#0d0b1e 0%,#1a0f3c 40%,#0d0b1e 100%);margin-top:auto;">
+
+
+
+  <!-- Corpo do footer -->
   <div class="container py-5">
-    <div class="row g-4">
+    <div class="row g-5">
+
+      <!-- Marca e redes sociais -->
       <div class="col-lg-4">
-        <div class="d-flex align-items-center gap-2 mb-3">
-          <img src="{% static 'base/img/logo.svg' %}" alt="Gateen" height="48">
-          <span class="fw-800 fs-3 text-white">Gateen</span>
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <img src="{% static 'base/img/logo.png' %}" alt="Gateen" height="48"
+            style="filter:brightness(0) invert(1);opacity:.9;">
+          <div>
+            <div class="fw-800 text-white" style="font-size:1.2rem;line-height:1.1;">Gateen</div>
+            <div style="color:var(--accent);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;">Petshop</div>
+          </div>
         </div>
-        <p class="text-white-50">Cuidando do seu pet com amor e dedicação. Produtos, planos e serviços pensados para o bem-estar dos seus animais.</p>
-        <div class="d-flex gap-3 mt-3">
-          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-          <a href="#" class="social-icon"><i class="fab fa-facebook"></i></a>
-          <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+        <p style="color:rgba(255,255,255,.5);font-size:.88rem;line-height:1.7;max-width:300px;">
+          Cuidando do seu pet com amor e dedicação desde o primeiro dia.
+          Produtos, planos e serviços pensados para o bem-estar dos seus animais.
+        </p>
+
+        <!-- Redes sociais -->
+        <div class="d-flex gap-2 mt-4">
+          <a href="https://www.facebook.com/share/18fpcGtmCi/"
+            class="social-icon" title="Facebook" target="_blank" rel="noopener">
+            <i class="fab fa-facebook"></i>
+          </a>
+          <a href="https://www.instagram.com/gateen.petshop.pi?igsh=MzU4OHR1OTZ6bnRl"
+            class="social-icon" title="Instagram" target="_blank" rel="noopener">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://youtube.com/@gateenpetshop?si=bvF8vWX1oo2dkJN6"
+            class="social-icon" title="YouTube" target="_blank" rel="noopener">
+            <i class="fab fa-youtube"></i>
+          </a>
+          <a href="https://wa.me/c/5521979953915"
+            class="social-icon" title="WhatsApp" target="_blank" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+          </a>
         </div>
       </div>
-      <div class="col-lg-2 col-md-4">
-        <h6 class="fw-700 text-white mb-3">Navegação</h6>
+
+      <!-- Navegação -->
+      <div class="col-6 col-md-3 col-lg-2">
+        <h6 class="fw-700 text-white mb-4" style="font-size:.8rem;text-transform:uppercase;letter-spacing:1.2px;">
+          Navegação
+        </h6>
         <ul class="list-unstyled footer-links">
-          <li><a href="{% url 'home' %}">Início</a></li>
-          <li><a href="{% url 'catalog:product_list' %}">Produtos</a></li>
-          <li><a href="{% url 'plans:plan_list' %}">Planos</a></li>
-          <li><a href="{% url 'events:event_list' %}">Eventos</a></li>
+          <li><a href="{% url 'home' %}">
+            <i class="fa fa-home me-2" style="width:14px;opacity:.5;"></i>Início
+          </a></li>
+          <li><a href="{% url 'catalog:product_list' %}">
+            <i class="fa fa-box me-2" style="width:14px;opacity:.5;"></i>Produtos
+          </a></li>
+          <li><a href="{% url 'plans:plan_list' %}">
+            <i class="fa fa-star me-2" style="width:14px;opacity:.5;"></i>Planos
+          </a></li>
+          <li><a href="{% url 'events:event_list' %}">
+            <i class="fa fa-calendar me-2" style="width:14px;opacity:.5;"></i>Eventos
+          </a></li>
+          <li><a href="{% url 'appointments:booking' %}">
+            <i class="fa fa-cut me-2" style="width:14px;opacity:.7;"></i>Banho & Tosa
+          </a></li>
         </ul>
       </div>
-      <div class="col-lg-2 col-md-4">
-        <h6 class="fw-700 text-white mb-3">Minha Conta</h6>
+
+      <!-- Minha conta -->
+      <div class="col-6 col-md-3 col-lg-2">
+        <h6 class="fw-700 text-white mb-4" style="font-size:.8rem;text-transform:uppercase;letter-spacing:1.2px;">
+          Minha Conta
+        </h6>
         <ul class="list-unstyled footer-links">
-          <li><a href="{% url 'account_login' %}">Entrar</a></li>
-          <li><a href="{% url 'account_signup' %}">Cadastrar</a></li>
-          <li><a href="{% url 'orders:order_list' %}">Meus Pedidos</a></li>
-          <li><a href="{% url 'accounts:profile' %}">Meu Perfil</a></li>
+          <li><a href="{% url 'account_login' %}">
+            <i class="fa fa-sign-in-alt me-2" style="width:14px;opacity:.5;"></i>Entrar
+          </a></li>
+          <li><a href="{% url 'account_signup' %}">
+            <i class="fa fa-user-plus me-2" style="width:14px;opacity:.5;"></i>Cadastrar
+          </a></li>
+          <li><a href="{% url 'orders:order_list' %}">
+            <i class="fa fa-shopping-bag me-2" style="width:14px;opacity:.5;"></i>Meus Pedidos
+          </a></li>
+          <li><a href="{% url 'accounts:profile' %}">
+            <i class="fa fa-user me-2" style="width:14px;opacity:.5;"></i>Meu Perfil
+          </a></li>
+          <li><a href="{% url 'loyalty:dashboard' %}">
+            <i class="fa fa-gift me-2" style="width:14px;opacity:.5;"></i>Fidelidade
+          </a></li>
         </ul>
       </div>
-      <div class="col-lg-4 col-md-4">
-        <h6 class="fw-700 text-white mb-3">Contato</h6>
-        <ul class="list-unstyled text-white-50">
-          <li class="mb-2"><i class="fa fa-map-marker-alt me-2 text-primary"></i>Rua dos Pets, 123 — Centro</li>
-          <li class="mb-2"><i class="fa fa-phone me-2 text-primary"></i>(86) 99999-9999</li>
-          <li class="mb-2"><i class="fa fa-envelope me-2 text-primary"></i>contato@gateen.com.br</li>
-          <li class="mb-2"><i class="fa fa-clock me-2 text-primary"></i>Seg–Sáb: 8h–18h</li>
-        </ul>
+
+      <!-- Contato e horários -->
+      <div class="col-md-6 col-lg-4">
+        <h6 class="fw-700 text-white mb-4" style="font-size:.8rem;text-transform:uppercase;letter-spacing:1.2px;">
+          Fale Conosco
+        </h6>
+        <div class="d-flex flex-column gap-3">
+          <div class="d-flex align-items-start gap-3">
+            <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 mt-1"
+              style="width:32px;height:32px;background:rgba(138,75,159,.3);">
+              <i class="fa fa-map-marker-alt" style="color:var(--primary-lighter);font-size:.8rem;"></i>
+            </div>
+            <div>
+              <div class="text-white fw-600" style="font-size:.85rem;">Endereço</div>
+              <div style="color:rgba(255,255,255,.5);font-size:.8rem;line-height:1.5;">
+                R. Arlindo Nogueira, 285a<br>Vila Operária, Teresina – PI
+              </div>
+            </div>
+          </div>
+          <div class="d-flex align-items-start gap-3">
+            <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 mt-1"
+              style="width:32px;height:32px;background:rgba(138,75,159,.3);">
+              <i class="fab fa-whatsapp" style="color:var(--primary-lighter);font-size:.9rem;"></i>
+            </div>
+            <div>
+              <div class="text-white fw-600" style="font-size:.85rem;">WhatsApp</div>
+              <a href="https://wa.me/5521979953915"
+                style="color:rgba(255,255,255,.5);font-size:.8rem;text-decoration:none;">
+                (21) 97995-3915
+              </a>
+            </div>
+          </div>
+          <div class="d-flex align-items-start gap-3">
+            <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+              style="width:32px;height:32px;background:rgba(138,75,159,.3);">
+              <i class="fa fa-envelope" style="color:var(--primary-lighter);font-size:.8rem;"></i>
+            </div>
+            <div>
+              <div class="text-white fw-600" style="font-size:.85rem;">E-mail</div>
+              <a href="mailto:contato@gateen.com.br"
+                style="color:rgba(255,255,255,.5);font-size:.8rem;text-decoration:none;">
+                contato@gateen.com.br
+              </a>
+            </div>
+          </div>
+          <!-- Horários -->
+          <div class="rounded-3 p-3 mt-1"
+            style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+            <div class="text-white fw-600 mb-2" style="font-size:.8rem;">
+              <i class="fa fa-clock me-2" style="color:var(--accent);"></i>Horários
+            </div>
+            <div class="d-flex justify-content-between" style="font-size:.78rem;">
+              <span style="color:rgba(255,255,255,.5);">Seg – Sex</span>
+              <span class="text-white fw-600">07h – 17h</span>
+            </div>
+            <div class="d-flex justify-content-between mt-1" style="font-size:.78rem;">
+              <span style="color:rgba(255,255,255,.5);">Sábado</span>
+              <span class="text-white fw-600">07h – 13h</span>
+            </div>
+            <div class="d-flex justify-content-between mt-1" style="font-size:.78rem;">
+              <span style="color:rgba(255,255,255,.5);">Domingo</span>
+              <span style="color:#fca5a5;font-weight:600;">Fechado</span>
+            </div>
+          </div>
+        </div>
       </div>
+
     </div>
-    <hr class="border-secondary mt-4">
-    <div class="row align-items-center">
-      <div class="col-md-6 text-white-50 small">
-        &copy; {% now "Y" %} Gateen Petshop. Todos os direitos reservados.
-      </div>
-      <div class="col-md-6 text-end text-white-50 small">
-        Desenvolvido com <i class="fa fa-heart text-danger"></i> para seu pet
+
+    <!-- Divider -->
+    <div class="mt-5 pt-4" style="border-top:1px solid rgba(255,255,255,.08);">
+      <div class="row align-items-center g-3">
+        <div class="col-md-6">
+          <span style="color:rgba(255,255,255,.3);font-size:.8rem;">
+            © {% now "Y" %} Gateen Petshop · Todos os direitos reservados
+          </span>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <span style="color:rgba(255,255,255,.3);font-size:.8rem;">
+            Desenvolvido com <i class="fa fa-heart" style="color:#e74c3c;"></i> para o seu pet 🐾
+          </span>
+        </div>
       </div>
     </div>
   </div>
+
 </footer>
