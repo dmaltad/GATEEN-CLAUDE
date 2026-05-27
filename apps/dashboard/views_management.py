@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.utils import timezone
 from datetime import timedelta
+from django.http import JsonResponse
 
 
 def group_required(*group_names):
@@ -987,3 +988,270 @@ def group_delete(request, pk):
     return render(request, 'dashboard/management/confirm_delete.html', {
         'object': group, 'type': 'cargo'
     })
+
+# ══════════════════════════════════════════════════════
+# AGENDAMENTO — CRIAÇÃO PELO STAFF
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente', 'Atendimento')
+def appointment_create_staff(request):
+    from apps.accounts.models import User, Pet, Address
+    from apps.appointments.models import Appointment
+    from apps.appointments.services import create_appointment as svc_create
+    from django.utils import timezone
+    from datetime import datetime
+    import uuid
+
+    if request.method == 'POST':
+        client_id     = request.POST.get('client_id', '').strip()
+        pet_id        = request.POST.get('pet_id', '').strip()
+        service       = request.POST.get('service', '').strip()
+        scheduled_str = request.POST.get('scheduled_at', '').strip()
+        notes         = request.POST.get('notes', '').strip()
+
+        # ── Resolve ou cria cliente ───────────────────────────
+        if client_id:
+            try:
+                client = User.objects.get(pk=client_id, is_staff=False)
+            except User.DoesNotExist:
+                messages.error(request, 'Cliente não encontrado.')
+                return redirect('dashboard:appointment_create_staff')
+        else:
+            first_name  = request.POST.get('new_first_name', '').strip()
+            last_name   = request.POST.get('new_last_name', '').strip()
+            phone       = request.POST.get('new_phone', '').strip()
+            email       = request.POST.get('new_email', '').strip()
+            birth_date  = request.POST.get('new_birth_date', '') or None
+            staff_notes = request.POST.get('new_staff_notes', '').strip()
+
+            if not first_name or not last_name:
+                messages.error(request, 'Nome e sobrenome são obrigatórios.')
+                return redirect('dashboard:appointment_create_staff')
+
+            # Valida email se informado
+            if email and User.objects.filter(email=email).exists():
+                messages.error(request, f'Já existe um cadastro com o e-mail "{email}".')
+                return redirect('dashboard:appointment_create_staff')
+
+            # Gera email placeholder se não informado
+            final_email = email if email else (
+                f'walkin_{phone.replace(" ","").replace("-","").replace("(","").replace(")","")}'
+                f'_{uuid.uuid4().hex[:8]}@gateen.internal'
+            )
+
+            client = User(
+                email=final_email,
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                birth_date=birth_date,
+                is_walk_in=True,
+                is_active=True,
+                is_staff=False,
+                staff_notes=staff_notes,
+            )
+            client.set_unusable_password()
+            client.save()
+
+            # Cria endereço se os campos essenciais foram informados
+            cep          = request.POST.get('new_cep', '').strip()
+            street       = request.POST.get('new_street', '').strip()
+            number       = request.POST.get('new_number', '').strip()
+            neighborhood = request.POST.get('new_neighborhood', '').strip()
+            city         = request.POST.get('new_city', '').strip()
+            state        = request.POST.get('new_state', '').strip()
+
+            if cep and street and city:
+                Address.objects.create(
+                    user=client,
+                    label='Principal',
+                    cep=cep,
+                    street=street,
+                    number=number or 'S/N',
+                    complement='',
+                    neighborhood=neighborhood,
+                    city=city,
+                    state=state,
+                    is_default=True,
+                )
+
+        # ── Resolve ou cria pet ───────────────────────────────
+        if pet_id:
+            try:
+                pet = Pet.objects.get(pk=pet_id, owner=client)
+            except Pet.DoesNotExist:
+                messages.error(request, 'Pet não encontrado para este cliente.')
+                return redirect('dashboard:appointment_create_staff')
+        else:
+            pet_name    = request.POST.get('new_pet_name', '').strip()
+            pet_species = request.POST.get('new_pet_species', 'dog')
+            pet_breed   = request.POST.get('new_pet_breed', '').strip()
+            pet_size    = request.POST.get('new_pet_size', '')
+
+            if not pet_name:
+                messages.error(request, 'Nome do pet é obrigatório.')
+                return redirect('dashboard:appointment_create_staff')
+
+            pet = Pet.objects.create(
+                owner=client,
+                name=pet_name,
+                species=pet_species,
+                breed=pet_breed,
+                size=pet_size,
+            )
+
+        # ── Cria o agendamento ────────────────────────────────
+        if not service or not scheduled_str:
+            messages.error(request, 'Serviço e data/hora são obrigatórios.')
+            return redirect('dashboard:appointment_create_staff')
+
+        try:
+            naive_dt     = datetime.fromisoformat(scheduled_str)
+            scheduled_at = timezone.make_aware(naive_dt)
+        except ValueError:
+            messages.error(request, 'Data/hora inválida.')
+            return redirect('dashboard:appointment_create_staff')
+
+        appt, used_plan, plan = svc_create(
+            user=client,
+            pet=pet,
+            service=service,
+            scheduled_at=scheduled_at,
+            notes=notes,
+        )
+
+        msg = (
+            f'Agendamento #{appt.pk} criado para {client.get_full_name()} '
+            f'({pet.name}) em {scheduled_at.strftime("%d/%m/%Y às %H:%M")}!'
+        )
+        if used_plan:
+            msg += f' (1 sessão descontada do plano {plan.plan.name})'
+        messages.success(request, msg)
+        return redirect('dashboard:appointment_list_staff')
+
+    from apps.appointments.models import Appointment
+    return render(request, 'dashboard/management/appointment_create.html', {
+        'service_choices': Appointment.SERVICE_CHOICES,
+        'species_choices': Pet.SPECIES_CHOICES,
+        'size_choices':    Pet.SIZE_CHOICES,
+    })
+
+
+@group_required('Gerente', 'Atendimento')
+def client_search_ajax(request):
+    from apps.accounts.models import User
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return JsonResponse({'results': []})
+
+    qs = User.objects.filter(
+        Q(first_name__icontains=q) |
+        Q(last_name__icontains=q) |
+        Q(email__icontains=q) |
+        Q(phone__icontains=q)
+    ).filter(is_staff=False).prefetch_related('pets')[:10]
+
+    results = []
+    for u in qs:
+        email_display = '' if u.email.endswith('@gateen.internal') else u.email
+        results.append({
+            'id':         u.pk,
+            'name':       u.get_full_name(),
+            'email':      email_display,
+            'phone':      u.phone,
+            'is_walk_in': getattr(u, 'is_walk_in', False),
+            'pet_count':  u.pets.count(),
+        })
+
+    return JsonResponse({'results': results})
+
+
+@group_required('Gerente', 'Atendimento')
+def client_pets_ajax(request, pk):
+    from apps.accounts.models import User
+    try:
+        client = User.objects.prefetch_related('pets').get(pk=pk, is_staff=False)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Cliente não encontrado'}, status=404)
+
+    pets = [{
+        'id':      p.pk,
+        'name':    p.name,
+        'species': p.get_species_display(),
+        'breed':   p.breed or '—',
+        'size':    p.get_size_display() if p.size else '—',
+    } for p in client.pets.all()]
+
+    email_display = '' if client.email.endswith('@gateen.internal') else client.email
+    return JsonResponse({
+        'client_id':   client.pk,
+        'client_name': client.get_full_name(),
+        'client_phone': client.phone,
+        'client_email': email_display,
+        'is_walk_in':  getattr(client, 'is_walk_in', False),
+        'pets':        pets,
+    })
+
+
+@group_required('Gerente', 'Atendimento')
+def client_send_invite(request, pk):
+    from apps.accounts.models import User
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_encode
+    from django.utils.encoding import force_bytes
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+    from django.conf import settings
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+    try:
+        client = User.objects.get(pk=pk, is_staff=False)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Cliente não encontrado'}, status=404)
+
+    if not client.email or client.email.endswith('@gateen.internal'):
+        return JsonResponse(
+            {'error': 'Este cliente não possui e-mail válido cadastrado.'},
+            status=400,
+        )
+
+    uid   = urlsafe_base64_encode(force_bytes(client.pk))
+    token = default_token_generator.make_token(client)
+    invite_url = request.build_absolute_uri(
+        f'/accounts/password/reset/key/{uid}-{token}/'
+    )
+
+    context = {
+        'client_name': client.get_full_name(),
+        'invite_url':  invite_url,
+        'site_name':   'Gateen Petshop',
+    }
+
+    try:
+        html_body = render_to_string(
+            'accounts/email/invite_complete_registration.html', context
+        )
+        text_body = (
+            f'Olá {client.get_full_name()},\n\n'
+            f'Você foi cadastrado na Gateen Petshop.\n'
+            f'Para criar sua senha e acessar sua conta, clique no link abaixo:\n\n'
+            f'{invite_url}\n\n'
+            f'O link é válido por 24 horas.\n\n'
+            f'— Equipe Gateen Petshop'
+        )
+        msg = EmailMultiAlternatives(
+            subject='Complete seu cadastro — Gateen Petshop',
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[client.email],
+        )
+        msg.attach_alternative(html_body, 'text/html')
+        msg.send()
+        return JsonResponse({
+            'success': True,
+            'message': f'Convite enviado para {client.email}'
+        })
+    except Exception as exc:
+        return JsonResponse({'error': f'Falha no envio: {str(exc)}'}, status=500)

@@ -46,6 +46,16 @@ urlpatterns = [
     path('gestao/usuarios/<int:pk>/editar/',  mgmt.user_edit,  name='user_edit'),
     path('gestao/cargos/',                    mgmt.group_list, name='group_list'),
 
+    # ── Agendamentos — criação pelo staff ─────────────────────
+    path('gestao/agendamentos/novo/',
+         mgmt.appointment_create_staff, name='appointment_create_staff'),
+    path('gestao/agendamentos/buscar-cliente/',
+         mgmt.client_search_ajax,       name='client_search_ajax'),
+    path('gestao/agendamentos/cliente/<int:pk>/pets/',
+         mgmt.client_pets_ajax,         name='client_pets_ajax'),
+    path('gestao/agendamentos/cliente/<int:pk>/convite/',
+         mgmt.client_send_invite,       name='client_send_invite'),
+
     # ── Agendamentos ─────────────────────────────────────
     path('gestao/agendamentos/',                        mgmt.appointment_list_staff,   name='appointment_list_staff'),
     path('gestao/agendamentos/<int:pk>/status/',        mgmt.appointment_update_status, name='appointment_update_status'),

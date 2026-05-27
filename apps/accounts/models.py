@@ -30,6 +30,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
+    is_walk_in   = models.BooleanField(default=False, verbose_name='Cadastro rápido (sem senha)')
+    staff_notes  = models.TextField(blank=True, verbose_name='Anotações internas da equipe')
 
     objects = UserManager()
 

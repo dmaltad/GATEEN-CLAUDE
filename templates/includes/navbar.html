@@ -99,7 +99,7 @@
             href="#" data-bs-toggle="dropdown" style="font-size:.85rem;">
             <i class="fa fa-th fa-sm"></i><span>Categorias</span>
           </a>
-          <ul class="dropdown-menu shadow-lg border-0 mt-1" style="border-radius:12px;min-width:180px;">
+          <ul class="dropdown-menu shadow-lg border-0 mt-1" style="border-radius:12px;min-width:190px;">
             <li><a class="dropdown-item py-2" href="{% url 'dashboard:category_list' %}">
               <i class="fa fa-th me-2" style="color:var(--primary);width:16px;"></i>Listar categorias
             </a></li>
@@ -119,12 +119,19 @@
           </a>
         </li>
         <!-- Agendamentos -->
-        <li class="nav-item">
+       <li class="nav-item dropdown">
           <a class="nav-link text-white dropdown-toggle d-flex align-items-center gap-1 px-2 py-2"
-            href="{% url 'dashboard:appointment_list_staff' %}"
-            style="font-size:.85rem;">
+            href="#" data-bs-toggle="dropdown" style="font-size:.85rem;">
             <i class="fa fa-cut fa-sm"></i><span>Agendamentos</span>
           </a>
+          <ul class="dropdown-menu shadow-lg border-0 mt-1" style="border-radius:12px;min-width:230px;">
+            <li><a class="dropdown-item py-2" href="{% url 'dashboard:appointment_list_staff' %}">
+              <i class="fa fa-calendar me-2" style="color:var(--primary);width:16px;"></i>Listar agendamentos
+            </a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'dashboard:appointment_create_staff' %}">
+              <i class="fa fa-plus me-2" style="color:var(--success);width:16px;"></i>Novo agendamento
+            </a></li>
+          </ul>
         </li>
         {% endif %}
 
@@ -135,7 +142,7 @@
             href="#" data-bs-toggle="dropdown" style="font-size:.85rem;">
             <i class="fa fa-calendar fa-sm"></i><span>Eventos</span>
           </a>
-          <ul class="dropdown-menu shadow-lg border-0 mt-1" style="border-radius:12px;min-width:180px;">
+          <ul class="dropdown-menu shadow-lg border-0 mt-1" style="border-radius:12px;min-width:170px;">
             <li><a class="dropdown-item py-2" href="{% url 'dashboard:event_list' %}">
               <i class="fa fa-calendar me-2" style="color:var(--primary);width:16px;"></i>Listar eventos
             </a></li>
@@ -153,7 +160,7 @@
             href="#" data-bs-toggle="dropdown" style="font-size:.85rem;">
             <i class="fa fa-star fa-sm"></i><span>Planos</span>
           </a>
-          <ul class="dropdown-menu shadow-lg border-0 mt-1" style="border-radius:12px;min-width:180px;">
+          <ul class="dropdown-menu shadow-lg border-0 mt-1" style="border-radius:12px;min-width:200px;">
             <li><a class="dropdown-item py-2" href="{% url 'dashboard:plan_list' %}">
               <i class="fa fa-star me-2" style="color:var(--primary);width:16px;"></i>Planos de serviço
             </a></li>
