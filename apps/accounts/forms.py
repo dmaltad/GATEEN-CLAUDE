@@ -89,8 +89,17 @@ class CustomSignupForm(forms.Form):
         }),
     )
 
+    email2 = forms.EmailField(
+        label='Confirmar E-mail',
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'Repita seu e-mail',
+            'autocomplete': 'email',
+        }),
+        error_messages={'required': 'Por favor, confirme seu e-mail.'},
+    )
+
     # A ordem dos campos. O allauth injeta email e senhas automaticamente.
-    field_order = ['first_name', 'last_name', 'phone', 'birth_date', 'cpf']
+    field_order = ['first_name', 'last_name', 'phone', 'birth_date', 'cpf', 'email2']
 
     # ── Validações individuais ────────────────────────────────
 
@@ -127,6 +136,14 @@ class CustomSignupForm(forms.Form):
         if len(name) < 2:
             raise ValidationError('Sobrenome muito curto.')
         return name.title()
+
+    def clean(self):
+            cleaned_data = super().clean()
+            email1 = self.data.get('email', '').strip().lower()
+            email2 = cleaned_data.get('email2', '').strip().lower()
+            if email1 and email2 and email1 != email2:
+                self.add_error('email2', 'Os e-mails não coincidem. Verifique e tente novamente.')
+            return cleaned_data
 
     # ── Salva campos extras no User ───────────────────────────
 

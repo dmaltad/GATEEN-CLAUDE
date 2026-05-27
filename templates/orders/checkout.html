@@ -1,177 +1,415 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
 
-{% block title %}Checkout — Gateen{% endblock %}
+{% block title %}Finalizar Pedido — Gateen Petshop{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Delivery cards ───────────────────────────── */
+.delivery-option { cursor:pointer; }
+.delivery-option input[type="radio"] { display:none; }
+.delivery-card-label {
+  display:block;
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: #fff;
+  height: 100%;
+}
+.delivery-card-label:hover {
+  border-color: var(--primary-lighter);
+  background: var(--primary-bg-soft);
+}
+.delivery-option input[type="radio"]:checked + .delivery-card-label {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+  box-shadow: 0 0 0 3px rgba(138,75,159,.12);
+}
+.delivery-card-label .delivery-icon {
+  font-size: 1.8rem;
+  color: var(--primary);
+  margin-bottom: 8px;
+  display: block;
+}
+.delivery-card-label .delivery-title { font-weight: 700; font-size: .95rem; }
+.delivery-card-label .delivery-sub   { font-size: .78rem; color: var(--muted-text); }
+
+/* ── Address cards ────────────────────────────── */
+.address-option { cursor:pointer; }
+.address-option input[type="radio"] { display:none; }
+.address-card-label {
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: #fff;
+}
+.address-card-label:hover { border-color: var(--primary-lighter); }
+.address-option input[type="radio"]:checked + .address-card-label {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+}
+.address-radio-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  flex-shrink: 0;
+  margin-top: 2px;
+  display:flex; align-items:center; justify-content:center;
+  transition: var(--transition);
+}
+.address-option input[type="radio"]:checked + .address-card-label .address-radio-dot {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+.address-option input[type="radio"]:checked + .address-card-label .address-radio-dot::after {
+  content:'';
+  width:6px; height:6px;
+  border-radius:50%;
+  background:#fff;
+}
+
+/* ── Payment buttons ──────────────────────────── */
+.payment-btn-label {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: #fff;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--dark-text);
+}
+.payment-btn-label:hover { border-color: var(--primary-lighter); }
+.payment-btn-radio { display:none; }
+.payment-btn-radio:checked + .payment-btn-label {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+.payment-btn-label i { font-size: 1.2rem; }
+
+/* ── Summary sticky ───────────────────────────── */
+.summary-sticky {
+  position: sticky;
+  top: 90px;
+}
+
+/* ── Section card ─────────────────────────────── */
+.checkout-section {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(138,75,159,.08);
+  margin-bottom: 20px;
+}
+.checkout-section .card-body { padding: 24px; }
+.checkout-section-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color: var(--dark-text);
+}
+.checkout-section-title i { color: var(--primary); }
+
+/* ── Stripe area ──────────────────────────────── */
+#stripe-card-element {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  min-height: 46px;
+  transition: border-color .2s;
+}
+#stripe-card-element.StripeElement--focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(138,75,159,.15);
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-  <div class="row g-4">
 
-    <!-- FORMULÁRIO -->
-    <div class="col-lg-7">
-      <h3 class="fw-800 mb-4">
-        <i class="fa fa-lock me-2" style="color:var(--primary);"></i>Finalizar Pedido
-      </h3>
+  <h3 class="fw-800 mb-4">
+    <i class="fa fa-lock me-2" style="color:var(--primary);"></i>Finalizar Pedido
+  </h3>
 
-      <form method="post" id="checkoutForm">
+  <div class="row g-4 align-items-start">
+
+    <div class="col-lg-8">
+      <form method="post" id="checkout-form" action="{% url 'orders:checkout' %}">
         {% csrf_token %}
+        <input type="hidden" name="stripe_payment_intent_id" id="stripe-pi-id">
 
-        <!-- TIPO DE ENTREGA -->
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-body p-4">
-            <h5 class="fw-700 mb-3">
-              <i class="fa fa-truck me-2" style="color:var(--primary);"></i>Entrega
-            </h5>
+        <div class="card checkout-section">
+          <div class="card-body">
+            <div class="checkout-section-title">
+              <i class="fa fa-truck"></i>Entrega
+            </div>
             <div class="row g-3">
-              <div class="col-md-6">
-                <label class="w-100 h-100 cursor-pointer">
-                  <input type="radio" name="delivery_type" value="pickup"
-                    class="d-none delivery-radio" checked>
-                  <div class="delivery-card p-3 border rounded-3 text-center h-100 selected">
-                    <i class="fa fa-store fa-2x mb-2 d-block" style="color:var(--primary);"></i>
-                    <div class="fw-700">Retirada na loja</div>
-                    <div class="text-muted small">Grátis • Pronto em até 2h</div>
-                  </div>
+              <div class="col-6 delivery-option">
+                <input type="radio" name="delivery_type" id="pickup"
+                  value="pickup" checked>
+                <label class="delivery-card-label" for="pickup">
+                  <i class="fa fa-store delivery-icon"></i>
+                  <div class="delivery-title">Retirada na loja</div>
+                  <div class="delivery-sub">Grátis &bull; Pronto em até 2h</div>
                 </label>
               </div>
-              <div class="col-md-6">
-                <label class="w-100 h-100 cursor-pointer">
-                  <input type="radio" name="delivery_type" value="delivery"
-                    class="d-none delivery-radio">
-                  <div class="delivery-card p-3 border rounded-3 text-center h-100">
-                    <i class="fa fa-motorcycle fa-2x mb-2 d-block"
-                      style="color:var(--primary);"></i>
-                    <div class="fw-700">Entrega em casa</div>
-                    <div class="text-muted small">+ R$ 10,00 • Até 24h</div>
-                  </div>
+              <div class="col-6 delivery-option">
+                <input type="radio" name="delivery_type" id="delivery"
+                  value="delivery">
+                <label class="delivery-card-label" for="delivery">
+                  <i class="fa fa-motorcycle delivery-icon"></i>
+                  <div class="delivery-title">Entrega em casa</div>
+                  <div class="delivery-sub">+ R$ 10,00 &bull; Até 24h</div>
                 </label>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ENDEREÇOS -->
-        <div class="card border-0 shadow-sm mb-4" id="addressSection"
-          style="display:none;">
-          <div class="card-body p-4">
-            <h5 class="fw-700 mb-3">
-              <i class="fa fa-map-marker-alt me-2"
-                style="color:var(--primary);"></i>Endereço de Entrega
-            </h5>
-            {% if addresses %}
-              {% for address in addresses %}
-              <label class="w-100 mb-3 d-flex align-items-start gap-2 cursor-pointer">
-                <input type="radio" name="address_id" value="{{ address.pk }}"
-                  class="flex-shrink-0 mt-1"
-                  {% if address.is_default %}checked{% endif %}>
-                <div>
-                  <div class="fw-600">{{ address.label }}</div>
-                  <div class="text-muted small">
-                    {{ address.street }}, {{ address.number }}
-                    {% if address.complement %} / {{ address.complement }}{% endif %} —
-                    {{ address.neighborhood }}, {{ address.city }}/{{ address.state }}
-                    (CEP: {{ address.cep }})
+        <div id="address-section" class="card checkout-section" style="display:none;">
+          <div class="card-body">
+            <div class="checkout-section-title">
+              <i class="fa fa-map-marker-alt"></i>Endereço de Entrega
+            </div>
+
+            <div class="d-flex flex-column gap-3" id="address-list">
+              {% for addr in addresses %}
+              <div class="address-option">
+                <input type="radio" name="address_id"
+                  id="addr_{{ addr.pk }}" value="{{ addr.pk }}"
+                  {% if forloop.first %}checked{% endif %}>
+                <label class="address-card-label" for="addr_{{ addr.pk }}">
+                  <div class="address-radio-dot"></div>
+                  <div>
+                    <div class="fw-700 small">{{ addr.label }}</div>
+                    <div class="text-muted" style="font-size:.82rem;">
+                      {{ addr.street }}, {{ addr.number }}
+                      {% if addr.complement %} — {{ addr.complement }}{% endif %}
+                      <br>{{ addr.neighborhood }} &mdash; {{ addr.city }}/{{ addr.state }}
+                      &nbsp;(CEP: {{ addr.cep }})
+                    </div>
                   </div>
-                </div>
-              </label>
+                </label>
+              </div>
+              {% empty %}
+              <p class="text-muted small mb-0">
+                Nenhum endereço cadastrado.
+              </p>
               {% endfor %}
-              <a href="{% url 'accounts:add_address' %}?next={% url 'orders:checkout' %}"
-                class="btn btn-outline-primary btn-sm rounded-pill">
-                <i class="fa fa-plus me-1"></i>Novo endereço
-              </a>
-            {% else %}
-              <p class="text-muted mb-3">Você não tem endereços cadastrados.</p>
-              <a href="{% url 'accounts:add_address' %}?next={% url 'orders:checkout' %}"
-                class="btn btn-primary btn-sm rounded-pill">
-                <i class="fa fa-plus me-1"></i>Adicionar endereço
-              </a>
-            {% endif %}
+            </div>
+
+            <a href="{% url 'accounts:add_address' %}?next={{ request.path }}"
+              class="btn btn-outline-primary btn-sm rounded-pill mt-3">
+              <i class="fa fa-plus me-1"></i>+ Novo endereço
+            </a>
           </div>
         </div>
 
-        <!-- PAGAMENTO -->
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-body p-4">
-            <h5 class="fw-700 mb-3">
-              <i class="fa fa-credit-card me-2" style="color:var(--primary);"></i>
-              Forma de Pagamento
-            </h5>
-            <div class="row g-2">
-              {% for value, label, icon in payment_methods %}
+        <div class="card checkout-section">
+          <div class="card-body">
+            <div class="checkout-section-title">
+              <i class="fa fa-credit-card"></i>Forma de Pagamento
+            </div>
+
+            <div class="row g-2 mb-3">
               <div class="col-6 col-md-3">
-                <label class="w-100 cursor-pointer">
-                  <input type="radio" name="payment_method" value="{{ value }}"
-                    class="d-none payment-radio"
-                    {% if forloop.first %}checked{% endif %}>
-                  <div class="payment-card p-3 border rounded-3 text-center
-                    {% if forloop.first %}selected{% endif %}">
-                    <i class="fa {{ icon }} fa-lg mb-1 d-block"
-                      style="color:var(--primary);"></i>
-                    <div class="small fw-600">{{ label }}</div>
-                  </div>
+                <input type="radio" class="payment-btn-radio"
+                  name="payment_method" id="pm_credit_card"
+                  value="credit_card" checked>
+                <label class="payment-btn-label" for="pm_credit_card">
+                  <i class="fa fa-credit-card"></i>Cartão de Crédito
                 </label>
               </div>
-              {% endfor %}
+              <div class="col-6 col-md-3">
+                <input type="radio" class="payment-btn-radio"
+                  name="payment_method" id="pm_debit_card"
+                  value="debit_card">
+                <label class="payment-btn-label" for="pm_debit_card">
+                  <i class="fa fa-credit-card"></i>Cartão de Débito
+                </label>
+              </div>
+              <div class="col-6 col-md-3">
+                <input type="radio" class="payment-btn-radio"
+                  name="payment_method" id="pm_pix"
+                  value="pix">
+                <label class="payment-btn-label" for="pm_pix">
+                  <i class="fa fa-qrcode"></i>PIX
+                </label>
+              </div>
+              <div class="col-6 col-md-3">
+                <input type="radio" class="payment-btn-radio"
+                  name="payment_method" id="pm_cash"
+                  value="cash">
+                <label class="payment-btn-label" for="pm_cash">
+                  <i class="fa fa-money-bill-wave"></i>Dinheiro
+                </label>
+              </div>
             </div>
+
+            <div id="card-section">
+              <div class="rounded-3 p-3 mb-3"
+                style="background:#f0f4ff;border:1px solid #c7d2fe;">
+                <div class="fw-600 mb-1" style="font-size:.82rem;color:#3730a3;">
+                  <i class="fa fa-flask me-1"></i>Modo simulação — use os dados de teste abaixo
+                </div>
+                <div style="font-size:.78rem;color:#4338ca;line-height:1.8;">
+                  Nº do cartão: <code>4242 4242 4242 4242</code><br>
+                  Validade: qualquer data futura &nbsp;|&nbsp; CVC: qualquer 3 dígitos
+                </div>
+              </div>
+              <label class="form-label fw-600 small">Dados do cartão</label>
+              <div id="stripe-card-element"></div>
+              <div id="stripe-card-errors" class="text-danger small mt-1"></div>
+            </div>
+
+            <div id="pix-section" style="display:none;">
+              <div class="rounded-3 p-4 text-center"
+                style="background:#f0fdf4;border:1.5px dashed #16a34a;">
+                <div class="fw-700 mb-2" style="color:#15803d;">
+                  <i class="fa fa-qrcode me-2"></i>PIX — Simulação
+                </div>
+                <div id="pix-qrcode" class="d-flex justify-content-center mb-3"></div>
+                <div class="rounded-2 px-3 py-2 d-inline-block mb-3"
+                  style="background:#dcfce7;border:1px solid #86efac;">
+                  <span class="fw-700 text-success" style="font-size:.85rem;">
+                    gateen@petshop.com.br
+                  </span>
+                </div>
+                <div class="text-muted small">
+                  Chave PIX &bull; Expira em
+                  <span id="pix-timer" class="fw-700 text-danger">10:00</span>
+                </div>
+              </div>
+              <div class="alert alert-info small mt-3 mb-0 rounded-3">
+                <i class="fa fa-info-circle me-1"></i>
+                Simulação: clique em <strong>"Confirmar Pedido"</strong> para prosseguir.
+              </div>
+            </div>
+
+            <div id="cash-section" style="display:none;">
+              <div class="rounded-3 p-3"
+                style="background:#fffbeb;border:1.5px solid #fcd34d;">
+                <div class="fw-700 mb-1" style="color:#92400e;">
+                  <i class="fa fa-money-bill-wave me-2"></i>Pagamento em dinheiro
+                </div>
+                <p class="text-muted small mb-2">
+                  Pague no ato da retirada ou entrega.
+                </p>
+                <label class="form-label fw-600 small">Troco para (opcional)</label>
+                <div class="input-group" style="max-width:200px;">
+                  <span class="input-group-text">R$</span>
+                  <input type="number" name="change_for"
+                    class="form-control" placeholder="0,00"
+                    step="0.01" min="0">
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- OBSERVAÇÕES -->
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-body p-4">
-            <h5 class="fw-700 mb-3">
-              <i class="fa fa-comment me-2" style="color:var(--primary);"></i>
-              Observações
-            </h5>
+        <div class="card checkout-section">
+          <div class="card-body">
+            <div class="checkout-section-title">
+              <i class="fa fa-comment"></i>Observações
+            </div>
             <textarea name="notes" class="form-control" rows="2"
-              placeholder="Alguma instrução especial?"></textarea>
+              placeholder="Alguma instrução especial? (opcional)"></textarea>
           </div>
         </div>
 
-        <button type="submit"
-          class="btn btn-primary btn-lg w-100 rounded-pill fw-700">
-          <i class="fa fa-check-circle me-2"></i>Confirmar Pedido
+        <button type="submit" id="checkout-btn"
+          class="btn btn-primary btn-lg w-100 rounded-pill fw-700 py-3">
+          <i class="fa fa-check-circle me-2"></i>
+          <span id="checkout-btn-text">Confirmar Pedido</span>
         </button>
+        <p class="text-center text-muted small mt-2">
+          <i class="fa fa-shield-alt me-1"></i>
+          Pagamento seguro &bull; Stripe Test Mode
+        </p>
+
       </form>
     </div>
 
-    <!-- RESUMO -->
-    <div class="col-lg-5">
-      <div class="card border-0 shadow-sm sticky-top" style="top:80px;">
-        <div class="card-body p-4">
-          <h5 class="fw-700 mb-4">Resumo</h5>
-          {% for item in cart.items.all %}
-          <div class="d-flex align-items-center mb-3">
-            {% if item.product.image %}
-            <img src="{{ item.product.image.url }}" class="rounded-3 me-3"
-              style="width:48px;height:48px;object-fit:cover;">
-            {% endif %}
-            <div class="flex-grow-1">
-              <div class="fw-600 small">{{ item.product.name|truncatechars:30 }}</div>
-              <div class="text-muted small">
-                {{ item.quantity }}x R$ {{ item.product.current_price }}
+    <div class="col-lg-4">
+      <div class="card checkout-section summary-sticky">
+        <div class="card-body">
+          <div class="checkout-section-title">
+            <i class="fa fa-shopping-cart"></i>Resumo
+          </div>
+
+          <div style="max-height:320px;overflow-y:auto;">
+            {% for item in cart.items.all %}
+            <div class="d-flex align-items-center gap-3 py-2
+              {% if not forloop.last %}border-bottom{% endif %}">
+              {% if item.product.image and item.product.image.name %}
+              <img src="{{ item.product.image.url }}"
+                alt="{{ item.product.name }}"
+                class="rounded-2 flex-shrink-0"
+                style="width:48px;height:48px;object-fit:cover;">
+              {% else %}
+              <div class="rounded-2 flex-shrink-0 d-flex align-items-center
+                justify-content-center"
+                style="width:48px;height:48px;background:var(--primary-bg);">
+                <i class="fa fa-box" style="color:var(--primary);font-size:.85rem;"></i>
+              </div>
+              {% endif %}
+              <div class="flex-grow-1" style="min-width:0;">
+                <div class="fw-600 text-truncate" style="font-size:.85rem;">
+                  {{ item.product.name }}
+                </div>
+                <div class="text-muted" style="font-size:.78rem;">
+                  {{ item.quantity }}× R$ {{ item.product.current_price|floatformat:2 }}
+                </div>
+              </div>
+              <div class="fw-700 flex-shrink-0"
+                style="font-size:.88rem;color:var(--primary);">
+                R$ {{ item.subtotal|floatformat:2 }}
               </div>
             </div>
-            <div class="fw-700 small" style="color:var(--primary);">
-              R$ {{ item.subtotal }}
+            {% endfor %}
+          </div>
+
+          <div class="mt-3 pt-3 border-top">
+            <div class="d-flex justify-content-between text-muted small mb-1">
+              <span>Subtotal</span>
+              <span>R$ {{ cart.total|floatformat:2 }}</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mb-1"
+              id="fee-row" style="display:none !important;">
+              <span>Frete</span>
+              <span id="fee-val" class="text-danger fw-600">+ R$ 10,00</span>
+            </div>
+            <div class="d-flex justify-content-between fw-800 mt-2"
+              style="font-size:1.05rem;">
+              <span>Total</span>
+              <span id="total-val" style="color:var(--primary);">
+                R$ {{ cart.total|floatformat:2 }}
+              </span>
             </div>
           </div>
-          {% endfor %}
-          <hr>
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted">Subtotal</span>
-            <span class="fw-600">R$ {{ cart.total }}</span>
-          </div>
-          <div class="d-flex justify-content-between mb-2" id="deliveryFeeRow"
-            style="display:none!important;">
-            <span class="text-muted">Frete</span>
-            <span class="fw-600 text-danger">+ R$ 10,00</span>
-          </div>
-          <hr>
-          <div class="d-flex justify-content-between">
-            <span class="fw-700 fs-5">Total</span>
-            <span class="fw-800 fs-5" style="color:var(--primary);"
-              id="orderTotal">R$ {{ cart.total }}</span>
+
+          <div class="mt-3 rounded-3 p-3 d-flex align-items-center gap-2"
+            style="background:var(--light-bg);font-size:.74rem;color:var(--muted-text);">
+            <i class="fa fa-shield-alt" style="color:var(--success);font-size:1rem;"></i>
+            Pagamentos processados com segurança via Stripe (modo teste).
           </div>
         </div>
       </div>
@@ -182,68 +420,189 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
-(function () {
-  var cartTotal = parseFloat('{{ cart.total }}'.replace(',', '.'));
+var STRIPE_PK          = '{{ stripe_pk }}';
+var CART_TOTAL         = parseFloat('{{ cart.total|floatformat:2 }}'.replace(',', '.'));
+var CSRF_TOKEN         = '{{ csrf_token }}';
 
-  // ── Entrega ─────────────────────────────────────────
-  document.querySelectorAll('.delivery-radio').forEach(function (radio) {
-    radio.addEventListener('change', function () {
-      // Remove seleção visual
-      document.querySelectorAll('.delivery-card').forEach(function (c) {
-        c.classList.remove('selected');
+/* Importante: Certifique-se de que o app_name do seu urls.py seja 'orders' ou ajuste aqui */
+var CREATE_INTENT_URL  = '{% url "orders:create_payment_intent" %}';
+
+var stripe     = Stripe(STRIPE_PK);
+var elements   = stripe.elements();
+var cardEl     = null;
+var pixDone    = false;
+var pixTimer   = null;
+
+/* ── Stripe Card Element ──────────────── */
+function mountCard() {
+  if (cardEl) return;
+  cardEl = elements.create('card', {
+    disableLink: true,
+    style: {
+      base: {
+        fontFamily: "'Poppins', sans-serif",
+        fontSize: '15px',
+        color: '#1E1B2E',
+        '::placeholder': { color: '#9ca3af' },
+      },
+      invalid: { color: '#e74c3c' },
+    },
+    hidePostalCode: true,
+  });
+  cardEl.mount('#stripe-card-element');
+  cardEl.on('change', function (e) {
+    document.getElementById('stripe-card-errors').textContent =
+      e.error ? e.error.message : '';
+  });
+}
+
+/* ── PIX QR Code ──────────────────────── */
+function setupPix() {
+  if (pixDone) return;
+  pixDone = true;
+  var amount = (CART_TOTAL + (isDelivery() ? 10 : 0)).toFixed(2);
+  var txid   = 'GATEEN' + Date.now().toString().slice(-8);
+  var payload =
+    '00020126360014BR.GOV.BCB.PIX0114gateen@petshop' +
+    '520400005303986' +
+    '54' + String(amount.length).padStart(2,'0') + amount +
+    '5802BR5910GateenPet6009Teresina' +
+    '62' + String(7 + txid.length).toString().padStart(2,'0') +
+    '05' + String(txid.length).toString().padStart(2,'0') + txid +
+    '6304ABCD';
+
+  document.getElementById('pix-qrcode').innerHTML = '';
+  new QRCode(document.getElementById('pix-qrcode'), {
+    text: payload, width: 160, height: 160,
+    colorDark: '#065f46', colorLight: '#f0fdf4',
+  });
+
+  clearInterval(pixTimer);
+  var secs = 600;
+  pixTimer = setInterval(function () {
+    secs--;
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    var el = document.getElementById('pix-timer');
+    if (el) el.textContent = m + ':' + String(s).padStart(2,'0');
+    if (secs <= 0) clearInterval(pixTimer);
+  }, 1000);
+}
+
+/* ── Helpers ──────────────────────────── */
+function isDelivery() {
+  var r = document.querySelector('input[name="delivery_type"]:checked');
+  return r && r.value === 'delivery';
+}
+
+function updateTotal() {
+  var fee     = isDelivery() ? 10 : 0;
+  var total   = CART_TOTAL + fee;
+  var feeRow  = document.getElementById('fee-row');
+  var totalEl = document.getElementById('total-val');
+  feeRow.style.display  = fee ? 'flex' : 'none';
+  totalEl.textContent   = 'R$ ' + total.toFixed(2).replace('.', ',');
+}
+
+/* ── Troca de método de pagamento ──────── */
+function showPaymentSection(method) {
+  ['card-section','pix-section','cash-section'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  var labels = {
+    credit_card: 'card-section',
+    debit_card:  'card-section',
+    pix:         'pix-section',
+    cash:        'cash-section',
+  };
+  var target = document.getElementById(labels[method] || 'card-section');
+  if (target) target.style.display = '';
+
+  if (method === 'credit_card' || method === 'debit_card') mountCard();
+  if (method === 'pix') setupPix();
+
+  var texts = {
+    credit_card: '<i class="fa fa-lock me-2"></i> Pagar com Cartão',
+    debit_card:  '<i class="fa fa-lock me-2"></i> Pagar com Débito',
+    pix:         '<i class="fa fa-qrcode me-2"></i> Confirmar Pedido (PIX)',
+    cash:        '<i class="fa fa-check-circle me-2"></i> Confirmar Pedido',
+  };
+  document.getElementById('checkout-btn').innerHTML = texts[method] || '<i class="fa fa-check-circle me-2"></i> Confirmar Pedido';
+}
+
+/* ── Listeners ────────────────────────── */
+document.querySelectorAll('input[name="delivery_type"]').forEach(function(r){
+  r.addEventListener('change', function(){
+    var isD = this.value === 'delivery';
+    var addrSec = document.getElementById('address-section');
+    if (addrSec) addrSec.style.display = isD ? '' : 'none';
+    updateTotal();
+    pixDone = false; // força re-geração com novo total
+  });
+});
+
+document.querySelectorAll('input[name="payment_method"]').forEach(function(r){
+  r.addEventListener('change', function(){
+    showPaymentSection(this.value);
+  });
+});
+
+/* ── Submit ───────────────────────────── */
+document.getElementById('checkout-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  
+  var method = document.querySelector('input[name="payment_method"]:checked');
+  if (!method) return;
+  var pm  = method.value;
+  
+  var btn = document.getElementById('checkout-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Processando…';
+
+  try {
+    if (pm === 'credit_card' || pm === 'debit_card') {
+      var total = CART_TOTAL + (isDelivery() ? 10 : 0);
+      var resp  = await fetch(CREATE_INTENT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ amount: total, payment_method: pm }),
       });
-      // Marca o card correto
-      this.closest('label').querySelector('.delivery-card').classList.add('selected');
+      var data = await resp.json();
+      if (data.error) throw new Error(data.error);
 
-      var addressSection = document.getElementById('addressSection');
-      var deliveryFeeRow = document.getElementById('deliveryFeeRow');
-      var orderTotal     = document.getElementById('orderTotal');
-
-      if (this.value === 'delivery') {
-        addressSection.style.display = 'block';
-        deliveryFeeRow.style.setProperty('display', 'flex', 'important');
-        orderTotal.textContent = 'R$ ' + (cartTotal + 10)
-          .toFixed(2).replace('.', ',');
-      } else {
-        addressSection.style.display = 'none';
-        deliveryFeeRow.style.setProperty('display', 'none', 'important');
-        orderTotal.textContent = 'R$ ' + cartTotal
-          .toFixed(2).replace('.', ',');
-      }
-    });
-  });
-
-  // Clique no card também dispara o radio
-  document.querySelectorAll('.delivery-card').forEach(function (card) {
-    card.addEventListener('click', function () {
-      var radio = this.closest('label').querySelector('input[type="radio"]');
-      if (radio && !radio.checked) {
-        radio.checked = true;
-        radio.dispatchEvent(new Event('change'));
-      }
-    });
-  });
-
-  // ── Pagamento ────────────────────────────────────────
-  document.querySelectorAll('.payment-radio').forEach(function (radio) {
-    radio.addEventListener('change', function () {
-      document.querySelectorAll('.payment-card').forEach(function (c) {
-        c.classList.remove('selected');
+      var result = await stripe.confirmCardPayment(data.client_secret, {
+        payment_method: { card: cardEl },
       });
-      this.closest('label').querySelector('.payment-card').classList.add('selected');
-    });
-  });
+      if (result.error) throw new Error(result.error.message);
+      
+      document.getElementById('stripe-pi-id').value = result.paymentIntent.id;
+    }
+    
+    // Envia o form de forma nativa e segura
+    HTMLFormElement.prototype.submit.call(this);
+    
+  } catch(err) {
+    // Em caso de erro, restaura o botão e exibe a mensagem
+    btn.disabled = false;
+    showPaymentSection(pm); // Restaura o texto original da aba
+    
+    var errEl = document.getElementById('stripe-card-errors');
+    if (errEl) errEl.textContent = err.message;
+    else alert(err.message);
+  }
+});
 
-  document.querySelectorAll('.payment-card').forEach(function (card) {
-    card.addEventListener('click', function () {
-      var radio = this.closest('label').querySelector('input[type="radio"]');
-      if (radio && !radio.checked) {
-        radio.checked = true;
-        radio.dispatchEvent(new Event('change'));
-      }
-    });
-  });
-})();
+/* ── Init ─────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function(){
+  var initial = document.querySelector('input[name="payment_method"]:checked');
+  if (initial) showPaymentSection(initial.value);
+  updateTotal();
+});
 </script>
 {% endblock %}

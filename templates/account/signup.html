@@ -49,6 +49,16 @@
                 {% endif %}
               </div>
 
+               <!-- Confirmar e-mail -->
+              <div class="mb-3">
+                <label class="form-label fw-600 small">Confirmar E-mail *</label>
+                {{ form.email2 }}
+                {% if form.email2.errors %}
+                <div class="invalid-feedback d-block">{{ form.email2.errors|join:", " }}</div>
+                {% endif %}
+                <div class="form-text">Digite o mesmo e-mail informado acima.</div>
+              </div
+
               <!-- Telefone e Data de Nascimento -->
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
@@ -199,6 +209,50 @@ input:focus {
   });
 })();
 
+/* Confirmação de e-mail em tempo real */
+(function () {
+  var email1 = document.querySelector('input[name="email"]');
+  var email2 = document.querySelector('input[name="email2"]');
+  if (!email1 || !email2) return;
+
+  function checkMatch() {
+    var fb = email2.nextElementSibling;
+    if (!fb || !fb.classList.contains('match-feedback')) {
+      fb = document.createElement('div');
+      fb.className = 'match-feedback';
+      fb.style.cssText = 'font-size:.78rem;margin-top:4px;';
+      email2.parentNode.insertBefore(fb, email2.nextSibling);
+    }
+    var v1 = email1.value.trim().toLowerCase();
+    var v2 = email2.value.trim().toLowerCase();
+    if (!v2) { fb.textContent = ''; return; }
+    if (v1 === v2) {
+      fb.textContent = 'E-mails coincidem.';
+      fb.style.color = 'var(--success)';
+      email2.style.borderColor = 'var(--success)';
+    } else {
+      fb.textContent = 'Os e-mails não coincidem.';
+      fb.style.color = 'var(--danger)';
+      email2.style.borderColor = 'var(--danger)';
+    }
+  }
+
+  email2.addEventListener('input', checkMatch);
+  email1.addEventListener('input', checkMatch);
+
+  var form = email2.closest('form');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      var v1 = email1.value.trim().toLowerCase();
+      var v2 = email2.value.trim().toLowerCase();
+      if (v1 !== v2) {
+        e.preventDefault();
+        email2.focus();
+      }
+    });
+  }
+})();
+
 /* Validação de e-mail em tempo real */
 (function () {
   var emailInput = document.querySelector('input[name="email"], input[type="email"]');
@@ -238,7 +292,7 @@ input:focus {
     var domain = val.split('@')[1];
     if (COMMON_TYPOS[domain]) {
       feedback.innerHTML =
-        '💡 Você quis dizer <strong>' + val.split('@')[0] + '@' + COMMON_TYPOS[domain] + '</strong>?';
+        'Você quis dizer <strong>' + val.split('@')[0] + '@' + COMMON_TYPOS[domain] + '</strong>?';
       emailInput.style.borderColor = 'var(--warning)';
       return;
     }

@@ -13,4 +13,5 @@ urlpatterns = [
     # Aceita tanto pk (inteiro) quanto order_number (string) — mantém compatibilidade
     path('pedido/<int:pk>/',                 views.order_detail_by_pk,   name='order_detail_pk'),
     path('pedido/<str:order_number>/',       views.order_detail,         name='order_detail'),
+    path('criar-intent/', views.create_payment_intent, name='create_payment_intent'),
 ]

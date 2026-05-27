@@ -119,12 +119,28 @@ def checkout_view(request):
     addresses = Address.objects.filter(user=request.user)
 
     if request.method == 'POST':
-        delivery_type  = request.POST.get('delivery_type', 'pickup')
-        payment_method = request.POST.get('payment_method', 'pix')
-        address_id     = request.POST.get('address_id')
-        notes          = request.POST.get('notes', '').strip()
+        delivery_type   = request.POST.get('delivery_type', 'pickup')
+        payment_method  = request.POST.get('payment_method', 'pix')
+        address_id      = request.POST.get('address_id')
+        notes           = request.POST.get('notes', '').strip()
+        stripe_pi_id    = request.POST.get('stripe_payment_intent_id', '').strip()
 
         address = None
+
+        # Valida PaymentIntent do Stripe para cartões
+        if payment_method in ('credit_card', 'debit_card') and stripe_pi_id:
+            import stripe as stripe_lib
+            from django.conf import settings
+            stripe_lib.api_key = settings.STRIPE_SECRET_KEY
+            try:
+                intent = stripe_lib.PaymentIntent.retrieve(stripe_pi_id)
+                if intent.status not in ('succeeded', 'requires_capture'):
+                    messages.error(request, 'Pagamento não confirmado pelo Stripe. Tente novamente.')
+                    return redirect('orders:checkout')
+            except Exception:
+                messages.error(request, 'Erro ao verificar pagamento. Tente novamente.')
+                return redirect('orders:checkout')
+
         if delivery_type == 'delivery' and address_id:
             try:
                 address = Address.objects.get(pk=address_id, user=request.user)
@@ -184,11 +200,13 @@ def checkout_view(request):
             messages.error(request, "Ocorreu um erro inesperado ao processar o seu pedido. Tente novamente.")
             return redirect('orders:checkout')
 
+    from django.conf import settings
     return render(request, 'orders/checkout.html', {
-        'cart': cart,
-        'addresses': addresses,
+        'cart':            cart,
+        'addresses':       addresses,
         'payment_methods': PAYMENT_METHODS,
-        'has_addresses': addresses.exists(),
+        'has_addresses':   addresses.exists(),
+        'stripe_pk':       settings.STRIPE_PUBLIC_KEY,
     })
 
 
@@ -244,3 +262,29 @@ def order_detail_by_pk(request, pk):
     from django.shortcuts import redirect
     order = get_object_or_404(Order, pk=pk, user=request.user)
     return redirect('orders:order_detail', order_number=order.order_number, permanent=True)
+
+# ── Stripe Payment Intent ─────────────────────────────────────
+
+@login_required
+@require_POST
+def create_payment_intent(request):
+    import stripe, json
+    from django.conf import settings
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    try:
+        data        = json.loads(request.body)
+        amount_brl  = float(data.get('amount', 0))
+        amount_cent = max(50, int(round(amount_brl * 100)))   # mínimo Stripe: 50 centavos
+
+        intent = stripe.PaymentIntent.create(
+            amount   = amount_cent,
+            currency = 'brl',
+            payment_method_types = ['card'],
+            metadata = {'user_id': str(request.user.id)},
+        )
+        return JsonResponse({'client_secret': intent.client_secret})
+
+    except Exception as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
