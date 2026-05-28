@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from .models import Address, Pet
+from .models import Address, Pet, User
 from .forms import ProfileForm, AddressForm, PetForm
 
 
