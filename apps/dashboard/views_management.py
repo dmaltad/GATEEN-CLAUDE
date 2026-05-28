@@ -995,12 +995,18 @@ def group_delete(request, pk):
 
 @group_required('Gerente', 'Atendimento')
 def appointment_create_staff(request):
-    from apps.accounts.models import User, Pet, Address
+    from apps.accounts.models import User, Pet
     from apps.appointments.models import Appointment
     from apps.appointments.services import create_appointment as svc_create
+    from apps.appointments.views import build_week
     from django.utils import timezone
-    from datetime import datetime
-    import uuid
+    from datetime import datetime, timedelta
+
+    today       = timezone.localdate()
+    week_offset = int(request.GET.get('week', 0))
+    base_date   = today + timedelta(weeks=week_offset)
+    base_date  -= timedelta(days=base_date.weekday())
+    week_days   = build_week(base_date)
 
     if request.method == 'POST':
         client_id     = request.POST.get('client_id', '').strip()
@@ -1009,133 +1015,70 @@ def appointment_create_staff(request):
         scheduled_str = request.POST.get('scheduled_at', '').strip()
         notes         = request.POST.get('notes', '').strip()
 
-        # ── Resolve ou cria cliente ───────────────────────────
-        if client_id:
-            try:
-                client = User.objects.get(pk=client_id, is_staff=False)
-            except User.DoesNotExist:
-                messages.error(request, 'Cliente não encontrado.')
-                return redirect('dashboard:appointment_create_staff')
-        else:
-            first_name  = request.POST.get('new_first_name', '').strip()
-            last_name   = request.POST.get('new_last_name', '').strip()
-            phone       = request.POST.get('new_phone', '').strip()
-            email       = request.POST.get('new_email', '').strip()
-            birth_date  = request.POST.get('new_birth_date', '') or None
-            staff_notes = request.POST.get('new_staff_notes', '').strip()
+        if not client_id:
+            messages.error(request, 'Selecione um cliente.')
+            return redirect('dashboard:appointment_create_staff')
 
-            if not first_name or not last_name:
-                messages.error(request, 'Nome e sobrenome são obrigatórios.')
-                return redirect('dashboard:appointment_create_staff')
+        try:
+            client = User.objects.get(pk=client_id, is_staff=False)
+        except User.DoesNotExist:
+            messages.error(request, 'Cliente não encontrado.')
+            return redirect('dashboard:appointment_create_staff')
 
-            # Valida email se informado
-            if email and User.objects.filter(email=email).exists():
-                messages.error(request, f'Já existe um cadastro com o e-mail "{email}".')
-                return redirect('dashboard:appointment_create_staff')
-
-            # Gera email placeholder se não informado
-            final_email = email if email else (
-                f'walkin_{phone.replace(" ","").replace("-","").replace("(","").replace(")","")}'
-                f'_{uuid.uuid4().hex[:8]}@gateen.internal'
-            )
-
-            client = User(
-                email=final_email,
-                first_name=first_name,
-                last_name=last_name,
-                phone=phone,
-                birth_date=birth_date,
-                is_walk_in=True,
-                is_active=True,
-                is_staff=False,
-                staff_notes=staff_notes,
-            )
-            client.set_unusable_password()
-            client.save()
-
-            # Cria endereço se os campos essenciais foram informados
-            cep          = request.POST.get('new_cep', '').strip()
-            street       = request.POST.get('new_street', '').strip()
-            number       = request.POST.get('new_number', '').strip()
-            neighborhood = request.POST.get('new_neighborhood', '').strip()
-            city         = request.POST.get('new_city', '').strip()
-            state        = request.POST.get('new_state', '').strip()
-
-            if cep and street and city:
-                Address.objects.create(
-                    user=client,
-                    label='Principal',
-                    cep=cep,
-                    street=street,
-                    number=number or 'S/N',
-                    complement='',
-                    neighborhood=neighborhood,
-                    city=city,
-                    state=state,
-                    is_default=True,
-                )
-
-        # ── Resolve ou cria pet ───────────────────────────────
+        # Pet — existente ou novo
         if pet_id:
             try:
                 pet = Pet.objects.get(pk=pet_id, owner=client)
             except Pet.DoesNotExist:
-                messages.error(request, 'Pet não encontrado para este cliente.')
+                messages.error(request, 'Pet não encontrado.')
                 return redirect('dashboard:appointment_create_staff')
         else:
-            pet_name    = request.POST.get('new_pet_name', '').strip()
-            pet_species = request.POST.get('new_pet_species', 'dog')
-            pet_breed   = request.POST.get('new_pet_breed', '').strip()
-            pet_size    = request.POST.get('new_pet_size', '')
-
+            pet_name = request.POST.get('new_pet_name', '').strip()
             if not pet_name:
                 messages.error(request, 'Nome do pet é obrigatório.')
                 return redirect('dashboard:appointment_create_staff')
-
             pet = Pet.objects.create(
                 owner=client,
                 name=pet_name,
-                species=pet_species,
-                breed=pet_breed,
-                size=pet_size,
+                species=request.POST.get('new_pet_species', 'dog'),
+                breed=request.POST.get('new_pet_breed', '').strip(),
+                size=request.POST.get('new_pet_size', ''),
             )
 
-        # ── Cria o agendamento ────────────────────────────────
         if not service or not scheduled_str:
-            messages.error(request, 'Serviço e data/hora são obrigatórios.')
+            messages.error(request, 'Serviço e horário são obrigatórios.')
             return redirect('dashboard:appointment_create_staff')
 
         try:
-            naive_dt     = datetime.fromisoformat(scheduled_str)
-            scheduled_at = timezone.make_aware(naive_dt)
+            scheduled_at = timezone.make_aware(datetime.fromisoformat(scheduled_str))
         except ValueError:
             messages.error(request, 'Data/hora inválida.')
             return redirect('dashboard:appointment_create_staff')
 
         appt, used_plan, plan = svc_create(
-            user=client,
-            pet=pet,
-            service=service,
-            scheduled_at=scheduled_at,
-            notes=notes,
+            user=client, pet=pet, service=service,
+            scheduled_at=scheduled_at, notes=notes,
         )
-
         msg = (
             f'Agendamento #{appt.pk} criado para {client.get_full_name()} '
             f'({pet.name}) em {scheduled_at.strftime("%d/%m/%Y às %H:%M")}!'
         )
         if used_plan:
-            msg += f' (1 sessão descontada do plano {plan.plan.name})'
+            msg += f' (1 sessão do plano {plan.plan.name} descontada)'
         messages.success(request, msg)
         return redirect('dashboard:appointment_list_staff')
 
-    from apps.appointments.models import Appointment
     return render(request, 'dashboard/management/appointment_create.html', {
         'service_choices': Appointment.SERVICE_CHOICES,
         'species_choices': Pet.SPECIES_CHOICES,
         'size_choices':    Pet.SIZE_CHOICES,
+        'week_days':       week_days,
+        'week_offset':     week_offset,
+        'prev_week':       week_offset - 1,
+        'next_week':       week_offset + 1,
+        'base_date':       base_date,
+        'today':           today,
     })
-
 
 @group_required('Gerente', 'Atendimento')
 def client_search_ajax(request):
@@ -1416,3 +1359,123 @@ def product_search_staff_ajax(request):
         })
 
     return JsonResponse({'results': results})
+
+# ══════════════════════════════════════════════════════
+# USUÁRIOS — CRIAÇÃO MANUAL
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente')
+def user_create_staff(request):
+    from apps.accounts.models import User, Address
+    from django.contrib.auth.models import Group
+    import uuid
+
+    all_groups = Group.objects.all()
+
+    if request.method == 'POST':
+        first_name  = request.POST.get('first_name', '').strip()
+        last_name   = request.POST.get('last_name', '').strip()
+        phone       = request.POST.get('phone', '').strip()
+        email       = request.POST.get('email', '').strip()
+        birth_date  = request.POST.get('birth_date', '') or None
+        staff_notes = request.POST.get('staff_notes', '').strip()
+        make_staff  = request.POST.get('make_staff') == 'on'
+        groups_ids  = request.POST.getlist('groups')
+
+        if not first_name or not last_name:
+            messages.error(request, 'Nome e sobrenome são obrigatórios.')
+            return render(request, 'dashboard/management/user_create.html', {
+                'all_groups': all_groups, 'form_data': request.POST,
+            })
+
+        if email and User.objects.filter(email=email).exists():
+            messages.error(request, f'Já existe uma conta com o e-mail "{email}".')
+            return render(request, 'dashboard/management/user_create.html', {
+                'all_groups': all_groups, 'form_data': request.POST,
+            })
+
+        # Gera email placeholder se não informado
+        final_email = email if email else (
+            f'walkin_{phone.replace(" ","").replace("-","").replace("(","").replace(")","")}'
+            f'_{uuid.uuid4().hex[:8]}@gateen.internal'
+        )
+
+        user = User(
+            email=final_email,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            birth_date=birth_date,
+            is_walk_in=not bool(email),
+            is_active=True,
+            is_staff=make_staff,
+            staff_notes=staff_notes,
+        )
+        user.set_unusable_password()
+        user.save()
+
+        if groups_ids:
+            user.groups.set(Group.objects.filter(pk__in=groups_ids))
+
+        # Endereço (opcional)
+        cep   = request.POST.get('cep', '').strip()
+        street= request.POST.get('street', '').strip()
+        city  = request.POST.get('city', '').strip()
+        if cep and street and city:
+            Address.objects.create(
+                user=user, label='Principal',
+                cep=cep, street=street,
+                number=request.POST.get('number', 'S/N').strip() or 'S/N',
+                complement='',
+                neighborhood=request.POST.get('neighborhood', '').strip(),
+                city=city, state=request.POST.get('state', '').strip(),
+                is_default=True,
+            )
+
+        messages.success(request, f'Usuário "{user.get_full_name()}" cadastrado!')
+        return redirect('dashboard:user_list')
+
+    return render(request, 'dashboard/management/user_create.html', {
+        'all_groups': all_groups,
+    })
+
+
+# ══════════════════════════════════════════════════════
+# AGENDAMENTOS — SLOTS AJAX (navegação de semana)
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente', 'Atendimento')
+def appointment_slots_ajax(request):
+    from apps.appointments.views import build_week
+    from django.utils import timezone
+    from datetime import timedelta
+
+    today       = timezone.localdate()
+    week_offset = int(request.GET.get('week', 0))
+    base_date   = today + timedelta(weeks=week_offset)
+    base_date  -= timedelta(days=base_date.weekday())
+    week_days   = build_week(base_date)
+
+    DAY_NAMES = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+
+    data = []
+    for day in week_days:
+        data.append({
+            'date':         day['date'].strftime('%Y-%m-%d'),
+            'date_display': day['date'].strftime('%d/%m'),
+            'weekday':      DAY_NAMES[day['date'].weekday()],
+            'is_today':     day['date'] == today,
+            'is_open':      day['is_open'],
+            'slots': [{
+                'label':    slot['label'],
+                'datetime': slot['time'].strftime('%Y-%m-%dT%H:%M'),
+                'booked':   slot['booked'],
+                'past':     slot['past'],
+            } for slot in day['slots']],
+        })
+
+    return JsonResponse({
+        'week_days':   data,
+        'week_offset': week_offset,
+        'base_date':   base_date.strftime('%d/%m'),
+    })

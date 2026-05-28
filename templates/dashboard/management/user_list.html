@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container-fluid py-4 px-4">
+
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
       <h4 class="fw-800 mb-0">
@@ -11,13 +12,19 @@
       </h4>
       <p class="text-muted mb-0">{{ page_obj.paginator.count }} usuário(s)</p>
     </div>
+    <a href="{% url 'dashboard:user_create_staff' %}"
+      class="btn btn-primary rounded-pill fw-700">
+      <i class="fa fa-user-plus me-2"></i>Novo usuário
+    </a>
   </div>
 
+  <!-- Busca -->
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-3">
       <form method="get" class="d-flex gap-2">
-        <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm"
-          placeholder="Buscar por nome ou email...">
+        <input type="text" name="q" value="{{ q }}"
+          class="form-control form-control-sm"
+          placeholder="Buscar por nome ou e-mail...">
         <button class="btn btn-primary btn-sm rounded-pill px-3">
           <i class="fa fa-search me-1"></i>Buscar
         </button>
@@ -29,6 +36,7 @@
     </div>
   </div>
 
+  <!-- Tabela -->
   <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -47,21 +55,43 @@
             <tr>
               <td class="ps-4">
                 <div class="d-flex align-items-center gap-3">
-                  {% if u.avatar %}
+                  {% if u.avatar and u.avatar.name %}
                   <img src="{{ u.avatar.url }}" class="rounded-circle"
-                    width="36" height="36" style="object-fit:cover;">
+                    width="36" height="36" style="object-fit:cover;flex-shrink:0;">
                   {% else %}
                   <div class="rounded-circle bg-light d-flex align-items-center
-                    justify-content-center" style="width:36px;height:36px;flex-shrink:0;">
+                    justify-content-center flex-shrink-0"
+                    style="width:36px;height:36px;">
                     <i class="fa fa-user" style="color:var(--primary);font-size:.8rem;"></i>
                   </div>
                   {% endif %}
                   <div>
-                    <div class="fw-600 small">{{ u.get_full_name }}</div>
-                    <div class="text-muted" style="font-size:.72rem;">{{ u.email }}</div>
+                    <div class="fw-600 small">
+                      {{ u.get_full_name }}
+                      {% if u.is_walk_in %}
+                      <span class="badge rounded-pill ms-1"
+                        style="background:#fff3cd;color:#856404;font-size:.62rem;
+                        border:1px solid #ffc107;">
+                        <i class="fa fa-clock me-1"></i>Incompleto
+                      </span>
+                      {% endif %}
+                    </div>
+                    <div class="text-muted" style="font-size:.72rem;">
+                      {% if u.email and not u.email|slice:"-15:" == "@gateen.internal" %}
+                        {{ u.email }}
+                      {% else %}
+                        <span class="text-muted fst-italic">sem e-mail</span>
+                      {% endif %}
+                    </div>
+                    {% if u.phone %}
+                    <div class="text-muted" style="font-size:.7rem;">
+                      <i class="fa fa-phone me-1"></i>{{ u.phone }}
+                    </div>
+                    {% endif %}
                   </div>
                 </div>
               </td>
+
               <td>
                 {% for g in u.groups.all %}
                 <span class="badge rounded-pill me-1"
@@ -72,12 +102,12 @@
                 <span class="text-muted small">—</span>
                 {% endfor %}
                 {% if u.is_superuser %}
-                <span class="badge rounded-pill"
-                  style="background:#dc3545;color:#fff;font-size:.7rem;">
+                <span class="badge rounded-pill bg-danger" style="font-size:.7rem;">
                   Superusuário
                 </span>
                 {% endif %}
               </td>
+
               <td>
                 {% if u.is_active %}
                 <span class="badge bg-success-subtle text-success"
@@ -86,20 +116,36 @@
                 <span class="badge bg-secondary" style="font-size:.7rem;">Inativo</span>
                 {% endif %}
               </td>
+
               <td class="text-muted small">{{ u.date_joined|date:"d/m/Y" }}</td>
+
               <td class="text-end pe-4">
-                <div class="d-flex gap-1 justify-content-end">
+                <div class="d-flex gap-1 justify-content-end align-items-center">
+
+                  {% if u.is_walk_in and not u.email|slice:"-15:" == "@gateen.internal" %}
+                  <button type="button"
+                    class="btn btn-outline-warning btn-sm rounded-pill px-2"
+                    style="font-size:.72rem;"
+                    onclick="sendInvite({{ u.pk }}, this)"
+                    title="Enviar link para completar cadastro">
+                    <i class="fa fa-envelope me-1"></i>Convidar
+                  </button>
+                  {% endif %}
+
                   <a href="{% url 'dashboard:user_edit' u.pk %}"
                     class="btn btn-outline-primary btn-sm rounded-pill px-3">
                     <i class="fa fa-edit me-1"></i>Editar
                   </a>
+
                   {% if not u.is_superuser and u != request.user %}
-                  <a href="{% url 'dashboard:user_delete' u.pk %}"
+                  <button type="button"
                     class="btn btn-outline-danger btn-sm rounded-pill px-2"
-                    onclick="return confirm('Excluir {{ u.get_full_name }} permanentemente?')">
+                    onclick="confirmDelete('{% url 'dashboard:user_delete' u.pk %}', '{{ u.get_full_name }}')"
+                    title="Excluir usuário">
                     <i class="fa fa-trash"></i>
-                  </a>
+                  </button>
                   {% endif %}
+
                 </div>
               </td>
             </tr>
@@ -144,4 +190,61 @@
   {% endif %}
 
 </div>
+
+<!-- Modal de confirmação de exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body p-4 text-center">
+        <i class="fa fa-exclamation-triangle fa-2x mb-3" style="color:#dc3545;"></i>
+        <h6 class="fw-700 mb-1">Excluir usuário?</h6>
+        <p class="text-muted small mb-3" id="delete-modal-name"></p>
+        <form method="post" id="delete-form">
+          {% csrf_token %}
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary rounded-pill flex-grow-1"
+              data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger rounded-pill flex-grow-1">Excluir</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CSRF = '{{ csrf_token }}';
+
+function confirmDelete(url, name) {
+  document.getElementById('delete-form').action = url;
+  document.getElementById('delete-modal-name').textContent = name;
+  new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function sendInvite(pk, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Enviando…';
+  fetch('/dashboard/gestao/usuarios/' + pk + '/convite/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.success) {
+      btn.innerHTML = '<i class="fa fa-check me-1"></i>Enviado!';
+      btn.className = 'btn btn-success btn-sm rounded-pill px-2';
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-envelope me-1"></i>Convidar';
+      alert(d.error || 'Erro ao enviar convite.');
+    }
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa fa-envelope me-1"></i>Convidar';
+  });
+}
+</script>
 {% endblock %}

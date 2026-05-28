@@ -5,201 +5,106 @@
 
 {% block extra_css %}
 <style>
-/* ── Steps ──────────────────────────────────── */
-.step-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 32px;
-}
-.step-dot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  position: relative;
-}
+.step-indicator { display:flex; align-items:center; margin-bottom:28px; }
+.step-dot { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; }
 .step-dot:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  width: 100%;
-  height: 2px;
-  background: var(--border-color);
-  z-index: 0;
+  content:''; position:absolute; top:18px; left:50%; width:100%; height:2px;
+  background:var(--border-color); z-index:0;
 }
-.step-dot.done:not(:last-child)::after   { background: var(--primary); }
-.step-dot.active:not(:last-child)::after { background: var(--primary-lighter); }
+.step-dot.done:not(:last-child)::after   { background:var(--primary); }
+.step-dot.active:not(:last-child)::after { background:var(--primary-lighter); }
 .step-circle {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700;
-  font-size: .85rem;
-  border: 2px solid var(--border-color);
-  background: #fff;
-  color: var(--muted-text);
-  position: relative;
-  z-index: 1;
-  transition: all .3s;
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:.85rem;
+  border:2px solid var(--border-color); background:#fff; color:var(--muted-text);
+  position:relative; z-index:1; transition:all .3s;
 }
-.step-dot.active .step-circle {
-  border-color: var(--primary);
-  background: var(--primary-bg);
-  color: var(--primary);
-}
-.step-dot.done .step-circle {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: #fff;
-}
-.step-label {
-  font-size: .72rem;
-  font-weight: 600;
-  color: var(--muted-text);
-  margin-top: 6px;
-  text-align: center;
-  white-space: nowrap;
-}
-.step-dot.active .step-label { color: var(--primary); }
-.step-dot.done   .step-label { color: var(--primary-dark); }
+.step-dot.active .step-circle { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
+.step-dot.done   .step-circle { border-color:var(--primary); background:var(--primary); color:#fff; }
+.step-label { font-size:.72rem; font-weight:600; color:var(--muted-text); margin-top:6px; text-align:center; }
+.step-dot.active .step-label { color:var(--primary); }
+.step-dot.done   .step-label { color:var(--primary-dark); }
 
-/* ── Search ─────────────────────────────────── */
-.client-search-wrap { position: relative; }
-.search-results {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0; right: 0;
-  background: #fff;
-  border: 1.5px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.1);
-  z-index: 999;
-  max-height: 320px;
-  overflow-y: auto;
-  display: none;
+/* Search */
+.search-wrap { position:relative; }
+.search-results-drop {
+  position:absolute; top:calc(100% + 4px); left:0; right:0;
+  background:#fff; border:1.5px solid var(--border-color); border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.1); z-index:999; max-height:280px;
+  overflow-y:auto; display:none;
 }
-.search-results.show { display: block; }
-.search-result-item {
-  padding: 12px 16px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border-color);
-  transition: background .15s;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.search-results-drop.show { display:block; }
+.srd-item {
+  padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border-color);
+  display:flex; align-items:center; gap:10px; transition:background .15s;
 }
-.search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: var(--primary-bg-soft); }
-.result-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: var(--primary-bg);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.result-avatar i { color: var(--primary); font-size: .85rem; }
+.srd-item:last-child { border-bottom:none; }
+.srd-item:hover { background:var(--primary-bg-soft); }
 
-/* ── Client card (selected) ─────────────────── */
-.selected-client-card {
-  background: var(--primary-bg-soft);
-  border: 1.5px solid var(--primary-lighter);
-  border-radius: 14px;
-  padding: 16px 20px;
-}
-.walk-in-badge {
-  background: #fff3cd;
-  color: #856404;
-  font-size: .68rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 50px;
-  border: 1px solid #ffc107;
+/* Selected card */
+.selected-card {
+  background:var(--primary-bg-soft);
+  border:1.5px solid var(--primary-lighter);
+  border-radius:12px; padding:14px 18px;
 }
 
-/* ── Pet cards ──────────────────────────────── */
+/* Pet cards */
 .pet-option-card {
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  border:2px solid var(--border-color); border-radius:12px; padding:10px 12px;
+  cursor:pointer; transition:var(--transition); display:flex; align-items:center; gap:8px;
 }
-.pet-option-card:hover { border-color: var(--primary-lighter); }
-.pet-option-card.selected {
-  border-color: var(--primary);
-  background: var(--primary-bg);
-}
-.pet-icon-sm {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  background: var(--primary-bg);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.pet-icon-sm i { color: var(--primary); }
+.pet-option-card:hover { border-color:var(--primary-lighter); }
+.pet-option-card.selected { border-color:var(--primary); background:var(--primary-bg); }
 
-/* ── Service cards ──────────────────────────── */
-.service-option { cursor: pointer; }
-.service-option input[type="radio"] { display: none; }
-.service-card-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px 8px;
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: center;
-  font-weight: 600;
-  font-size: .82rem;
+/* Service cards */
+.svc-opt input[type="radio"] { display:none; }
+.svc-lbl {
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  border:2px solid var(--border-color); border-radius:12px; padding:14px 8px;
+  cursor:pointer; font-weight:600; font-size:.82rem; text-align:center;
+  transition:var(--transition);
 }
-.service-card-label:hover { border-color: var(--primary-lighter); }
-.service-option input[type="radio"]:checked + .service-card-label {
-  border-color: var(--primary);
-  background: var(--primary-bg);
-  color: var(--primary);
+.svc-lbl:hover { border-color:var(--primary-lighter); }
+.svc-lbl i { font-size:1.3rem; color:var(--primary); }
+.svc-opt input[type="radio"]:checked + .svc-lbl {
+  border-color:var(--primary); background:var(--primary-bg); color:var(--primary);
 }
-.service-card-label i { font-size: 1.4rem; color: var(--primary); }
 
-/* ── Section card ───────────────────────────── */
+/* Calendar */
+.cal-header-cell {
+  text-align:center; padding:8px 4px; font-size:.78rem; font-weight:700;
+  color:var(--muted-text); min-width:90px;
+}
+.cal-header-cell.today-col { color:var(--primary); }
+.slot-btn {
+  display:block; width:100%; margin-bottom:3px; border:1.5px solid #e0d6eb;
+  border-radius:8px; padding:5px 2px; font-size:.75rem; font-weight:600;
+  cursor:pointer; transition:all .15s; background:#f9f5fc; color:var(--primary);
+  text-align:center;
+}
+.slot-btn:hover:not(:disabled) { background:var(--primary-bg); border-color:var(--primary); }
+.slot-btn.selected { background:var(--primary); color:#fff; border-color:var(--primary-dark); }
+.slot-btn.booked   { background:#fde8e8; color:#c0392b; border-color:#f5c6c6; cursor:not-allowed; font-size:.7rem; }
+.slot-btn.past     { background:#f5f5f5; color:#aaa; border-color:#e8e8e8; cursor:default; }
+.cal-closed-col    { text-align:center; padding:20px 4px; color:var(--muted-text); font-size:.78rem; }
+
 .form-section {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 16px rgba(138,75,159,.08);
-  padding: 24px;
-  margin-bottom: 20px;
+  background:#fff; border-radius:16px;
+  box-shadow:0 2px 16px rgba(138,75,159,.08); padding:24px; margin-bottom:20px;
 }
 .form-section-title {
-  font-weight: 700;
-  font-size: .95rem;
-  margin-bottom: 18px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--dark-text);
+  font-weight:700; font-size:.95rem; margin-bottom:16px;
+  display:flex; align-items:center; gap:8px; color:var(--dark-text);
 }
-.form-section-title i { color: var(--primary); }
-
-/* ── Disabled overlay ───────────────────────── */
-.section-disabled {
-  opacity: .45;
-  pointer-events: none;
-  user-select: none;
-}
+.form-section-title i { color:var(--primary); }
+.section-disabled { opacity:.45; pointer-events:none; user-select:none; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4 px-4" style="max-width:900px;">
+<div class="container-fluid py-4 px-4" style="max-width:960px;">
 
-  <!-- Header -->
   <div class="d-flex align-items-center gap-3 mb-4">
     <a href="{% url 'dashboard:appointment_list_staff' %}"
       class="btn btn-outline-secondary btn-sm rounded-pill">
@@ -210,8 +115,12 @@
         <i class="fa fa-calendar-plus me-2" style="color:var(--primary);"></i>
         Novo Agendamento
       </h4>
-      <p class="text-muted mb-0" style="font-size:.82rem;">
-        Crie um agendamento para um cliente existente ou cadastre um novo cliente.
+      <p class="text-muted mb-0 small">
+        Busque o cliente, selecione o pet e escolha o horário.
+        Para cadastrar um novo cliente,
+        <a href="{% url 'dashboard:user_create_staff' %}" style="color:var(--primary);">
+          acesse Usuários → Novo usuário
+        </a>.
       </p>
     </div>
   </div>
@@ -228,267 +137,89 @@
     </div>
     <div class="step-dot" id="step-dot-3">
       <div class="step-circle">3</div>
-      <div class="step-label">Agendamento</div>
+      <div class="step-label">Horário & Serviço</div>
     </div>
   </div>
 
-  <form method="post" id="appointment-form">
+  <form method="post" id="appt-form">
     {% csrf_token %}
-    <input type="hidden" name="client_id" id="hidden-client-id">
-    <input type="hidden" name="pet_id"    id="hidden-pet-id">
+    <input type="hidden" name="client_id"    id="hidden-client-id">
+    <input type="hidden" name="pet_id"       id="hidden-pet-id">
+    <input type="hidden" name="scheduled_at" id="hidden-scheduled">
 
-    <!-- ══ SEÇÃO 1 — CLIENTE ══════════════════════════════════ -->
-    <div class="form-section" id="section-client">
+    <!-- ─── SEÇÃO 1: CLIENTE ─────────────────────────── -->
+    <div class="form-section" id="sec-client">
       <div class="form-section-title">
-        <i class="fa fa-user"></i>1. Selecione ou cadastre o cliente
+        <i class="fa fa-user"></i>1. Selecione o cliente
       </div>
 
-      <!-- Search -->
       <div id="client-search-area">
-        <div class="client-search-wrap mb-2">
+        <div class="search-wrap mb-2">
           <div class="input-group">
             <span class="input-group-text bg-white">
               <i class="fa fa-search" style="color:var(--muted-text);"></i>
             </span>
-            <input type="text" id="client-search-input"
+            <input type="text" id="client-search"
               class="form-control border-start-0"
               placeholder="Buscar por nome, telefone ou e-mail..."
               autocomplete="off">
           </div>
-          <div class="search-results" id="search-results"></div>
+          <div class="search-results-drop" id="client-results"></div>
         </div>
-        <div class="text-muted small mb-3">
-          Digite pelo menos 2 caracteres para buscar.
-        </div>
-
-        <!-- Divider -->
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <hr class="flex-grow-1 m-0">
-          <span class="text-muted small fw-600">OU</span>
-          <hr class="flex-grow-1 m-0">
-        </div>
-
-        <button type="button" class="btn btn-outline-primary rounded-pill btn-sm"
-          id="btn-new-client">
-          <i class="fa fa-user-plus me-1"></i>Cadastrar novo cliente
-        </button>
-      </div>
-
-      <!-- Selected client card -->
-      <div id="selected-client-display" style="display:none;">
-        <div class="selected-client-card">
-          <div class="d-flex align-items-start justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-              <div class="rounded-circle d-flex align-items-center justify-content-center"
-                style="width:44px;height:44px;background:var(--primary-bg);flex-shrink:0;">
-                <i class="fa fa-user" style="color:var(--primary);"></i>
-              </div>
-              <div>
-                <div class="fw-700" id="sc-name"></div>
-                <div class="text-muted small" id="sc-contact"></div>
-                <div id="sc-walk-in-badge" class="mt-1" style="display:none;">
-                  <span class="walk-in-badge">
-                    <i class="fa fa-user-clock me-1"></i>Cadastro rápido (sem senha)
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="d-flex gap-2 align-items-start">
-              <button type="button" id="btn-send-invite"
-                class="btn btn-outline-primary btn-sm rounded-pill"
-                style="display:none;font-size:.75rem;">
-                <i class="fa fa-envelope me-1"></i>Enviar convite
-              </button>
-              <button type="button" id="btn-change-client"
-                class="btn btn-outline-secondary btn-sm rounded-pill"
-                style="font-size:.75rem;">
-                <i class="fa fa-times me-1"></i>Trocar
-              </button>
-            </div>
-          </div>
+        <div class="text-muted small">
+          Digite pelo menos 2 caracteres. Clientes sem cadastro completo?
+          <a href="{% url 'dashboard:user_create_staff' %}" style="color:var(--primary);">
+            Cadastre em Usuários
+          </a>.
         </div>
       </div>
 
-      <!-- New client form -->
-      <div id="new-client-form" style="display:none;">
-        <div class="rounded-3 p-4 mt-3"
-          style="background:var(--light-bg);border:1.5px solid var(--border-color);">
-          <div class="fw-700 mb-3 small text-uppercase"
-            style="color:var(--primary);letter-spacing:1px;">
-            <i class="fa fa-user-plus me-1"></i>Novo cliente
-          </div>
-
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label small fw-600">Nome *</label>
-              <input type="text" name="new_first_name" class="form-control"
-                placeholder="Nome" id="new_first_name">
+      <div id="selected-client" style="display:none;">
+        <div class="selected-card d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+              style="width:40px;height:40px;background:var(--primary-bg);flex-shrink:0;">
+              <i class="fa fa-user" style="color:var(--primary);"></i>
             </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-600">Sobrenome *</label>
-              <input type="text" name="new_last_name" class="form-control"
-                placeholder="Sobrenome">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-600">Telefone</label>
-              <input type="text" name="new_phone" class="form-control"
-                placeholder="(86) 99999-9999" id="input-phone">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-600">Data de Nascimento</label>
-              <input type="date" name="new_birth_date" class="form-control">
-            </div>
-            <div class="col-12">
-              <label class="form-label small fw-600">
-                E-mail
-                <span class="text-muted fw-400">(opcional — para finalizar cadastro)</span>
-              </label>
-              <input type="email" name="new_email" class="form-control"
-                placeholder="cliente@email.com">
-              <div class="form-text">
-                <i class="fa fa-info-circle me-1" style="color:var(--primary);"></i>
-                Se informado, o cliente poderá receber um link para criar senha e
-                acessar o site.
-              </div>
+            <div>
+              <div class="fw-700" id="sc-name"></div>
+              <div class="text-muted small" id="sc-contact"></div>
             </div>
           </div>
-
-          <!-- Endereço (colapsável) -->
-          <div class="mt-3">
-            <button type="button"
-              class="btn btn-link p-0 text-decoration-none fw-600 small"
-              id="btn-toggle-address" style="color:var(--primary);">
-              <i class="fa fa-map-marker-alt me-1"></i>
-              + Adicionar endereço (opcional)
-            </button>
-            <div id="address-fields" class="mt-3" style="display:none;">
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <label class="form-label small fw-600">CEP</label>
-                  <input type="text" name="new_cep" class="form-control"
-                    placeholder="00000-000" id="new-cep-input" maxlength="9">
-                </div>
-                <div class="col-md-8">
-                  <label class="form-label small fw-600">Rua</label>
-                  <input type="text" name="new_street" class="form-control"
-                    placeholder="Nome da rua" id="new-street">
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small fw-600">Número</label>
-                  <input type="text" name="new_number" class="form-control" placeholder="123">
-                </div>
-                <div class="col-md-5">
-                  <label class="form-label small fw-600">Bairro</label>
-                  <input type="text" name="new_neighborhood" class="form-control"
-                    placeholder="Bairro" id="new-neighborhood">
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small fw-600">Cidade</label>
-                  <input type="text" name="new_city" class="form-control"
-                    id="new-city" placeholder="Cidade">
-                </div>
-                <div class="col-md-1">
-                  <label class="form-label small fw-600">UF</label>
-                  <input type="text" name="new_state" class="form-control"
-                    id="new-state" maxlength="2" placeholder="PI">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Anotações internas -->
-          <div class="mt-3">
-            <label class="form-label small fw-600">
-              Anotações internas
-              <span class="text-muted fw-400">(visível apenas para a equipe)</span>
-            </label>
-            <textarea name="new_staff_notes" class="form-control" rows="2"
-              placeholder="Ex: cliente indicado por fulano, preferências especiais..."></textarea>
-          </div>
-
-          <!-- Pet inline -->
-          <div class="mt-4 pt-3 border-top">
-            <div class="fw-700 mb-3 small text-uppercase"
-              style="color:var(--primary);letter-spacing:1px;">
-              <i class="fa fa-paw me-1"></i>Pet do novo cliente
-            </div>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label small fw-600">Nome do pet *</label>
-                <input type="text" name="new_pet_name" class="form-control"
-                  placeholder="Ex: Bob, Luna...">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-600">Espécie</label>
-                <select name="new_pet_species" class="form-select">
-                  {% for val, label in species_choices %}
-                  <option value="{{ val }}">{{ label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-600">Porte</label>
-                <select name="new_pet_size" class="form-select">
-                  <option value="">— Não informado</option>
-                  {% for val, label in size_choices %}
-                  <option value="{{ val }}">{{ label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label small fw-600">Raça (opcional)</label>
-                <input type="text" name="new_pet_breed" class="form-control"
-                  placeholder="Ex: Golden Retriever, SRD...">
-              </div>
-            </div>
-          </div>
-
-          <!-- Ações do novo cliente form -->
-          <div class="d-flex gap-2 mt-4">
-            <button type="button" id="btn-confirm-new-client"
-              class="btn btn-primary rounded-pill fw-700 px-4">
-              <i class="fa fa-check me-1"></i>Confirmar cadastro
-            </button>
-            <button type="button" id="btn-cancel-new-client"
-              class="btn btn-outline-secondary rounded-pill px-4">
-              Cancelar
-            </button>
-          </div>
+          <button type="button" id="btn-clear-client"
+            class="btn btn-outline-secondary btn-sm rounded-pill"
+            style="font-size:.75rem;">
+            <i class="fa fa-times me-1"></i>Trocar
+          </button>
         </div>
       </div>
-
     </div>
 
-    <!-- ══ SEÇÃO 2 — PET ══════════════════════════════════════ -->
-    <div class="form-section section-disabled" id="section-pet">
+    <!-- ─── SEÇÃO 2: PET ─────────────────────────────── -->
+    <div class="form-section section-disabled" id="sec-pet">
       <div class="form-section-title">
-        <i class="fa fa-paw"></i>2. Selecione o pet
-        <span class="text-muted fw-400" style="font-size:.8rem;" id="pet-section-subtitle">
+        <i class="fa fa-paw"></i>2. Pet
+        <span class="text-muted fw-400 small" id="pet-subtitle">
           — selecione um cliente primeiro
         </span>
       </div>
 
-      <!-- Lista de pets existentes -->
-      <div id="existing-pets-list" class="row g-2 mb-3"></div>
+      <div id="pet-cards" class="row g-2 mb-2"></div>
 
-      <!-- Botão novo pet (para clientes já existentes) -->
-      <div id="btn-new-pet-wrap" style="display:none;">
-        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill mt-1"
-          id="btn-new-pet">
-          <i class="fa fa-plus me-1"></i>Novo pet para este cliente
-        </button>
-      </div>
+      <button type="button" id="btn-new-pet"
+        class="btn btn-outline-primary btn-sm rounded-pill mt-2"
+        style="display:none;">
+        <i class="fa fa-plus me-1"></i>Novo pet
+      </button>
 
-      <!-- Inline new pet (clientes existentes) -->
-      <div id="new-pet-inline" style="display:none;" class="mt-3">
-        <div class="rounded-3 p-3"
-          style="background:var(--light-bg);border:1.5px solid var(--border-color);">
+      <div id="new-pet-form" style="display:none;" class="mt-3">
+        <div class="rounded-3 p-3" style="background:var(--light-bg);border:1.5px solid var(--border-color);">
           <div class="fw-700 mb-3 small">Novo pet</div>
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label small fw-600">Nome *</label>
               <input type="text" name="new_pet_name" class="form-control"
-                placeholder="Nome do pet" id="existing-new-pet-name">
+                placeholder="Nome do pet" id="new-pet-name">
             </div>
             <div class="col-md-3">
               <label class="form-label small fw-600">Espécie</label>
@@ -501,24 +232,19 @@
             <div class="col-md-3">
               <label class="form-label small fw-600">Porte</label>
               <select name="new_pet_size" class="form-select">
-                <option value="">— Não informado</option>
+                <option value="">—</option>
                 {% for val, label in size_choices %}
                 <option value="{{ val }}">{{ label }}</option>
                 {% endfor %}
               </select>
             </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-600">Raça</label>
-              <input type="text" name="new_pet_breed" class="form-control"
-                placeholder="SRD, Golden...">
-            </div>
           </div>
           <div class="d-flex gap-2 mt-3">
-            <button type="button" id="btn-confirm-new-pet"
+            <button type="button" id="btn-confirm-pet"
               class="btn btn-primary btn-sm rounded-pill fw-700 px-3">
-              <i class="fa fa-check me-1"></i>Confirmar pet
+              <i class="fa fa-check me-1"></i>Confirmar
             </button>
-            <button type="button" id="btn-cancel-new-pet"
+            <button type="button" id="btn-cancel-pet"
               class="btn btn-outline-secondary btn-sm rounded-pill px-3">
               Cancelar
             </button>
@@ -526,100 +252,140 @@
         </div>
       </div>
 
-      <!-- Selected pet card -->
-      <div id="selected-pet-display" style="display:none;" class="mt-2">
-        <div class="selected-client-card">
-          <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-              <div class="rounded-circle d-flex align-items-center justify-content-center"
-                style="width:38px;height:38px;background:var(--primary-bg);flex-shrink:0;">
-                <i class="fa fa-paw" style="color:var(--primary);"></i>
-              </div>
-              <div>
-                <div class="fw-700" id="sp-name"></div>
-                <div class="text-muted small" id="sp-detail"></div>
-              </div>
+      <div id="selected-pet-card" style="display:none;" class="mt-2">
+        <div class="selected-card d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+              style="width:36px;height:36px;background:var(--primary-bg);flex-shrink:0;">
+              <i class="fa fa-paw" style="color:var(--primary);font-size:.8rem;"></i>
             </div>
-            <button type="button" id="btn-change-pet"
-              class="btn btn-outline-secondary btn-sm rounded-pill"
-              style="font-size:.75rem;">
-              <i class="fa fa-times me-1"></i>Trocar
-            </button>
+            <div>
+              <div class="fw-700 small" id="sp-name"></div>
+              <div class="text-muted" style="font-size:.72rem;" id="sp-detail"></div>
+            </div>
           </div>
+          <button type="button" id="btn-change-pet"
+            class="btn btn-outline-secondary btn-sm rounded-pill"
+            style="font-size:.75rem;">
+            <i class="fa fa-times me-1"></i>Trocar
+          </button>
         </div>
       </div>
-
     </div>
 
-    <!-- ══ SEÇÃO 3 — AGENDAMENTO ══════════════════════════════ -->
-    <div class="form-section section-disabled" id="section-appointment">
+    <!-- ─── SEÇÃO 3: HORÁRIO + SERVIÇO ──────────────── -->
+    <div class="form-section section-disabled" id="sec-appt">
       <div class="form-section-title">
-        <i class="fa fa-calendar-alt"></i>3. Detalhes do agendamento
+        <i class="fa fa-calendar-alt"></i>3. Horário e serviço
+      </div>
+
+      <!-- Calendário -->
+      <div class="mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+          <div>
+            <div class="fw-700" style="color:var(--primary);" id="cal-week-label">
+              Semana de {{ base_date|date:"d/m" }}
+            </div>
+            <div class="text-muted small">Clique num horário disponível para selecionar</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+              id="btn-prev-week">‹ Anterior</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+              id="btn-next-week">Próxima ›</button>
+          </div>
+        </div>
+
+        <div class="overflow-auto pb-1">
+          <div id="cal-grid" class="d-flex gap-2" style="min-width:640px;">
+            {% for day in week_days %}
+            <div class="flex-fill" style="min-width:88px;">
+              <div class="text-center mb-2 pb-1" style="border-bottom:2px solid var(--border-color);">
+                <div class="small text-muted fw-700 text-uppercase"
+                  style="font-size:.7rem;letter-spacing:.5px;">
+                  {{ day.date|date:"D"|upper|slice:":3" }}
+                </div>
+                <div class="fw-800"
+                  style="font-size:.88rem;{% if day.date == today %}color:var(--primary);{% endif %}">
+                  {{ day.date|date:"d/m" }}
+                </div>
+              </div>
+              {% if day.is_open %}
+                {% for slot in day.slots %}
+                <button type="button"
+                  class="slot-btn {% if slot.booked %}booked{% elif slot.past %}past{% endif %}"
+                  {% if not slot.booked %}
+                  data-dt="{{ slot.time|date:'Y-m-d' }}T{{ slot.label }}:00"
+                  {% else %}disabled{% endif %}>
+                  {{ slot.label }}
+                  {% if slot.booked %}<br><span style="font-size:.62rem;">Ocupado</span>{% endif %}
+                </button>
+                {% endfor %}
+              {% else %}
+              <div class="cal-closed-col">Fechado</div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Legenda -->
+        <div class="d-flex flex-wrap gap-3 mt-3" style="font-size:.75rem;">
+          <span><span style="display:inline-block;width:14px;height:14px;border-radius:4px;
+            background:#f9f5fc;border:1.5px solid #e0d6eb;vertical-align:middle;"></span>
+            &nbsp;Disponível</span>
+          <span><span style="display:inline-block;width:14px;height:14px;border-radius:4px;
+            background:var(--primary);vertical-align:middle;"></span>
+            &nbsp;Selecionado</span>
+          <span><span style="display:inline-block;width:14px;height:14px;border-radius:4px;
+            background:#fde8e8;border:1.5px solid #f5c6c6;vertical-align:middle;"></span>
+            &nbsp;Ocupado</span>
+          <span><span style="display:inline-block;width:14px;height:14px;border-radius:4px;
+            background:#f5f5f5;border:1.5px solid #e8e8e8;vertical-align:middle;"></span>
+            &nbsp;Passado</span>
+        </div>
+
+        <!-- Horário selecionado -->
+        <div id="selected-time-display" class="mt-3" style="display:none;">
+          <div class="rounded-3 px-3 py-2 d-inline-flex align-items-center gap-2"
+            style="background:var(--primary-bg);border:1.5px solid var(--primary);">
+            <i class="fa fa-clock" style="color:var(--primary);"></i>
+            <span class="fw-700 small" id="selected-time-text"></span>
+            <button type="button" class="btn-close btn-close-sm ms-1"
+              onclick="clearTime()" style="font-size:.6rem;"></button>
+          </div>
+        </div>
       </div>
 
       <!-- Serviço -->
       <label class="form-label small fw-600 mb-2">Serviço *</label>
       <div class="row g-2 mb-4">
         {% for val, label in service_choices %}
-        <div class="col-4 service-option">
+        <div class="col-4 svc-opt">
           <input type="radio" name="service" id="svc_{{ val }}" value="{{ val }}"
             {% if forloop.first %}checked{% endif %}>
-          <label class="service-card-label" for="svc_{{ val }}">
-            {% if val == 'bath' %}
-              <i class="fa fa-shower"></i>
-            {% elif val == 'grooming' %}
-              <i class="fa fa-cut"></i>
-            {% else %}
-              <i class="fa fa-star"></i>
-            {% endif %}
+          <label class="svc-lbl" for="svc_{{ val }}">
+            {% if val == 'bath' %}<i class="fa fa-shower"></i>
+            {% elif val == 'grooming' %}<i class="fa fa-cut"></i>
+            {% else %}<i class="fa fa-star"></i>{% endif %}
             {{ label }}
           </label>
         </div>
         {% endfor %}
       </div>
 
-      <!-- Data e hora -->
-      <div class="row g-3 mb-3">
-        <div class="col-md-6">
-          <label class="form-label small fw-600">Data e hora *</label>
-          <input type="datetime-local" name="scheduled_at"
-            class="form-control" id="scheduled-at-input">
-          <div class="form-text">
-            <i class="fa fa-info-circle me-1" style="color:var(--primary);"></i>
-            Funcionamento: Seg–Sex 07h–17h · Sáb 07h–13h
-          </div>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-600">Observações</label>
-          <textarea name="notes" class="form-control" rows="3"
-            placeholder="Instruções especiais, alergias, comportamento..."></textarea>
-        </div>
-      </div>
-
-      <!-- Confirmação -->
-      <div id="booking-summary" class="rounded-3 p-3 mb-4"
-        style="background:var(--primary-bg);border:1.5px solid var(--primary-lighter);
-        display:none;">
-        <div class="fw-700 small mb-2" style="color:var(--primary);">
-          <i class="fa fa-check-circle me-1"></i>Resumo do agendamento
-        </div>
-        <div class="row g-1" style="font-size:.85rem;">
-          <div class="col-6"><span class="text-muted">Cliente:</span>
-            <span class="fw-600" id="summary-client"></span></div>
-          <div class="col-6"><span class="text-muted">Pet:</span>
-            <span class="fw-600" id="summary-pet"></span></div>
-          <div class="col-6"><span class="text-muted">Serviço:</span>
-            <span class="fw-600" id="summary-service"></span></div>
-          <div class="col-6"><span class="text-muted">Data/hora:</span>
-            <span class="fw-600" id="summary-date"></span></div>
-        </div>
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-700 px-5">
-        <i class="fa fa-calendar-check me-2"></i>Criar Agendamento
-      </button>
+      <!-- Observações -->
+      <label class="form-label small fw-600">Observações</label>
+      <textarea name="notes" class="form-control" rows="2"
+        placeholder="Instruções especiais, alergias..."></textarea>
 
     </div>
+
+    <!-- Submit -->
+    <button type="submit" id="btn-submit"
+      class="btn btn-primary btn-lg w-100 rounded-pill fw-700 py-3" disabled>
+      <i class="fa fa-calendar-check me-2"></i>Criar Agendamento
+    </button>
 
   </form>
 </div>
@@ -628,383 +394,266 @@
 {% block extra_js %}
 <script>
 var CLIENT_SEARCH_URL = '{% url "dashboard:client_search_ajax" %}';
-var CLIENT_PETS_URL   = '/dashboard/gestao/agendamentos/cliente/{pk}/pets/';
-var CLIENT_INVITE_URL = '/dashboard/gestao/agendamentos/cliente/{pk}/convite/';
+var CLIENT_PETS_URL   = '{% url "dashboard:client_pets_ajax" pk=1 %}'.replace('/1/', '/{pk}/');
+var SLOTS_URL         = '{% url "dashboard:appointment_slots_ajax" %}';
 var CSRF_TOKEN        = '{{ csrf_token }}';
 
-var selectedClient = null;  // { id, name, email, phone, is_walk_in }
-var selectedPet    = null;  // { id, name, species, breed, size } or {new: true}
-var usingNewClient = false;
+var selectedClient  = null;
+var selectedPet     = null;
+var selectedTime    = null;
+var currentWeek     = {{ week_offset }};
 
-/* ── Helpers ──────────────────────────────────── */
-function url(tpl, pk) { return tpl.replace('{pk}', pk); }
-
-function setStep(step) {
-  [1, 2, 3].forEach(function (i) {
-    var dot = document.getElementById('step-dot-' + i);
-    dot.classList.remove('active', 'done');
-    if (i < step) dot.classList.add('done');
-    else if (i === step) dot.classList.add('active');
+/* ── Steps ──────────────────────────────────── */
+function setStep(n) {
+  [1,2,3].forEach(function(i){
+    var d = document.getElementById('step-dot-'+i);
+    d.classList.remove('active','done');
+    if(i < n) d.classList.add('done');
+    else if(i === n) d.classList.add('active');
   });
-  ['section-client', 'section-pet', 'section-appointment'].forEach(function (id, idx) {
-    var sec = document.getElementById(id);
-    sec.classList.toggle('section-disabled', idx + 1 > step);
+  ['sec-client','sec-pet','sec-appt'].forEach(function(id,idx){
+    document.getElementById(id).classList.toggle('section-disabled', idx+1 > n);
   });
 }
 
-function updateSummary() {
-  if (!selectedClient || !selectedPet) return;
-  var svc   = document.querySelector('input[name="service"]:checked');
-  var dt    = document.getElementById('scheduled-at-input').value;
-  document.getElementById('summary-client').textContent  = selectedClient.name;
-  document.getElementById('summary-pet').textContent     = selectedPet.name;
-  document.getElementById('summary-service').textContent =
-    svc ? svc.parentElement.querySelector('label').textContent.trim() : '—';
-  if (dt) {
-    var d = new Date(dt);
-    document.getElementById('summary-date').textContent =
-      d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-  }
-  document.getElementById('booking-summary').style.display = '';
-}
-
-/* ── Step dot click on "done" steps ─────────── */
-document.getElementById('step-dot-1').addEventListener('click', function () {
-  // allow going back to step 1 at any time
-});
-
-/* ── Client search ───────────────────────────── */
-var searchTimeout;
-document.getElementById('client-search-input').addEventListener('input', function () {
+/* ── Client search ──────────────────────────── */
+var csTimer;
+document.getElementById('client-search').addEventListener('input', function(){
   var q = this.value.trim();
-  clearTimeout(searchTimeout);
-  var resultsEl = document.getElementById('search-results');
-  if (q.length < 2) { resultsEl.classList.remove('show'); return; }
-  searchTimeout = setTimeout(function () {
-    fetch(CLIENT_SEARCH_URL + '?q=' + encodeURIComponent(q), {
-      headers: { 'X-CSRFToken': CSRF_TOKEN }
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      renderSearchResults(data.results);
-    });
+  clearTimeout(csTimer);
+  var el = document.getElementById('client-results');
+  if(q.length < 2){ el.classList.remove('show'); return; }
+  csTimer = setTimeout(function(){
+    fetch(CLIENT_SEARCH_URL+'?q='+encodeURIComponent(q))
+      .then(r=>r.json()).then(d=>renderClientResults(d.results));
   }, 300);
 });
 
-function renderSearchResults(results) {
-  var el = document.getElementById('search-results');
-  if (!results.length) {
-    el.innerHTML =
-      '<div class="search-result-item text-muted">' +
-      '<i class="fa fa-search me-2"></i>Nenhum cliente encontrado.</div>';
-    el.classList.add('show');
-    return;
+function renderClientResults(results){
+  var el = document.getElementById('client-results');
+  if(!results.length){
+    el.innerHTML='<div class="srd-item text-muted"><i class="fa fa-search me-2"></i>Nenhum cliente encontrado.</div>';
+    el.classList.add('show'); return;
   }
-  el.innerHTML = results.map(function (r) {
-    var badge = r.is_walk_in
-      ? '<span style="font-size:.65rem;background:#fff3cd;color:#856404;padding:1px 6px;border-radius:50px;border:1px solid #ffc107;">rápido</span>'
-      : '';
+  el.innerHTML = results.map(r=>{
     var contact = r.email || r.phone || '—';
-    return (
-      '<div class="search-result-item" data-id="' + r.id + '">' +
-        '<div class="result-avatar"><i class="fa fa-user"></i></div>' +
-        '<div class="flex-grow-1">' +
-          '<div class="fw-600 small">' + r.name + ' ' + badge + '</div>' +
-          '<div class="text-muted" style="font-size:.75rem;">' + contact +
-            ' &bull; ' + r.pet_count + ' pet(s)</div>' +
-        '</div>' +
-        '<i class="fa fa-chevron-right text-muted" style="font-size:.7rem;"></i>' +
-      '</div>'
-    );
+    var badge = r.is_walk_in ? '<span style="font-size:.62rem;background:#fff3cd;color:#856404;padding:1px 5px;border-radius:50px;border:1px solid #ffc107;">incompleto</span>' : '';
+    return '<div class="srd-item" data-id="'+r.id+'">' +
+      '<div style="width:32px;height:32px;border-radius:50%;background:var(--primary-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa fa-user" style="color:var(--primary);font-size:.75rem;"></i></div>' +
+      '<div><div class="fw-600 small">'+r.name+' '+badge+'</div>' +
+      '<div class="text-muted" style="font-size:.72rem;">'+contact+' &bull; '+r.pet_count+' pet(s)</div></div>' +
+      '</div>';
   }).join('');
   el.classList.add('show');
-
-  el.querySelectorAll('.search-result-item[data-id]').forEach(function (item) {
-    item.addEventListener('click', function () {
-      selectClientById(parseInt(this.dataset.id));
-    });
+  el.querySelectorAll('.srd-item[data-id]').forEach(function(item){
+    item.addEventListener('click', function(){ selectClient(parseInt(this.dataset.id)); });
   });
 }
 
-function selectClientById(id) {
-  fetch(url(CLIENT_PETS_URL, id))
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      selectedClient = {
-        id:         data.client_id,
-        name:       data.client_name,
-        phone:      data.client_phone,
-        email:      data.client_email,
-        is_walk_in: data.is_walk_in,
-      };
-      document.getElementById('hidden-client-id').value = data.client_id;
-      showSelectedClient();
-      loadPetCards(data.pets);
+function selectClient(id){
+  fetch(CLIENT_PETS_URL.replace('{pk}', id))
+    .then(r=>r.json()).then(function(d){
+      selectedClient = {id: d.client_id, name: d.client_name};
+      document.getElementById('hidden-client-id').value = d.client_id;
+      document.getElementById('sc-name').textContent = d.client_name;
+      var contact = [d.client_phone, d.client_email].filter(Boolean).join(' · ');
+      document.getElementById('sc-contact').textContent = contact || '—';
+      document.getElementById('client-search-area').style.display = 'none';
+      document.getElementById('selected-client').style.display = '';
+      document.getElementById('client-results').classList.remove('show');
+      renderPetCards(d.pets);
       setStep(2);
+      checkSubmit();
     });
 }
 
-function showSelectedClient() {
-  document.getElementById('search-results').classList.remove('show');
-  document.getElementById('client-search-area').style.display = 'none';
-  document.getElementById('new-client-form').style.display    = 'none';
-
-  document.getElementById('sc-name').textContent = selectedClient.name;
-  var contact = [selectedClient.phone, selectedClient.email].filter(Boolean).join(' · ');
-  document.getElementById('sc-contact').textContent = contact || '—';
-
-  var wiBadge = document.getElementById('sc-walk-in-badge');
-  wiBadge.style.display = selectedClient.is_walk_in ? '' : 'none';
-
-  var inviteBtn = document.getElementById('btn-send-invite');
-  inviteBtn.style.display = (selectedClient.is_walk_in && selectedClient.email) ? '' : 'none';
-  inviteBtn.dataset.clientId = selectedClient.id;
-
-  document.getElementById('selected-client-display').style.display = '';
-}
-
-document.getElementById('btn-change-client').addEventListener('click', function () {
-  resetClient();
-});
-
-function resetClient() {
-  selectedClient = null; selectedPet = null;
+document.getElementById('btn-clear-client').addEventListener('click', function(){
+  selectedClient = selectedPet = selectedTime = null;
   document.getElementById('hidden-client-id').value = '';
   document.getElementById('hidden-pet-id').value = '';
-  document.getElementById('selected-client-display').style.display = 'none';
+  document.getElementById('hidden-scheduled').value = '';
+  document.getElementById('selected-client').style.display = 'none';
   document.getElementById('client-search-area').style.display = '';
-  document.getElementById('client-search-input').value = '';
-  document.getElementById('existing-pets-list').innerHTML = '';
-  document.getElementById('selected-pet-display').style.display = 'none';
-  document.getElementById('btn-new-pet-wrap').style.display = 'none';
-  document.getElementById('booking-summary').style.display = 'none';
-  setStep(1);
-}
-
-/* ── New client form ─────────────────────────── */
-document.getElementById('btn-new-client').addEventListener('click', function () {
-  document.getElementById('client-search-area').style.display = 'none';
-  document.getElementById('new-client-form').style.display = '';
-  usingNewClient = true;
+  document.getElementById('client-search').value = '';
+  clearPetUI(); clearTimeUI(); setStep(1); checkSubmit();
 });
 
-document.getElementById('btn-cancel-new-client').addEventListener('click', function () {
-  document.getElementById('new-client-form').style.display = 'none';
-  document.getElementById('client-search-area').style.display = '';
-  usingNewClient = false;
-});
-
-document.getElementById('btn-confirm-new-client').addEventListener('click', function () {
-  var fname = document.getElementById('new_first_name').value.trim();
-  var lname = document.querySelector('[name="new_last_name"]').value.trim();
-  var petName = document.querySelector('[name="new_pet_name"]').value.trim();
-  if (!fname || !lname) { alert('Nome e sobrenome são obrigatórios.'); return; }
-  if (!petName) { alert('Informe o nome do pet.'); return; }
-
-  // Marca como "novo cliente" — sem pet_id, sem client_id
-  document.getElementById('hidden-client-id').value = '';
-  document.getElementById('hidden-pet-id').value = '';
-
-  selectedClient = { id: null, name: fname + ' ' + lname, is_walk_in: true, new: true };
-  selectedPet    = { id: null, name: petName, new: true };
-
-  // Mostra card selecionado
-  document.getElementById('sc-name').textContent = selectedClient.name;
-  document.getElementById('sc-contact').textContent = '(novo cadastro)';
-  document.getElementById('sc-walk-in-badge').style.display = '';
-  document.getElementById('btn-send-invite').style.display = 'none';
-  document.getElementById('selected-client-display').style.display = '';
-  document.getElementById('new-client-form').style.display = 'none';
-
-  // Mostra pet
-  document.getElementById('sp-name').textContent = petName;
-  document.getElementById('sp-detail').textContent =
-    document.querySelector('[name="new_pet_species"] option:checked').textContent;
-  document.getElementById('selected-pet-display').style.display = '';
-  document.getElementById('existing-pets-list').innerHTML = '';
-  document.getElementById('btn-new-pet-wrap').style.display = 'none';
-
-  setStep(3);
-  updateSummary();
-});
-
-/* ── Address toggle ──────────────────────────── */
-document.getElementById('btn-toggle-address').addEventListener('click', function () {
-  var af = document.getElementById('address-fields');
-  var showing = af.style.display !== 'none';
-  af.style.display = showing ? 'none' : '';
-  this.innerHTML = showing
-    ? '<i class="fa fa-map-marker-alt me-1"></i>+ Adicionar endereço (opcional)'
-    : '<i class="fa fa-chevron-up me-1"></i>- Ocultar endereço';
-});
-
-/* ── CEP lookup ──────────────────────────────── */
-document.getElementById('new-cep-input').addEventListener('blur', function () {
-  var cep = this.value.replace(/\D/g, '');
-  if (cep.length !== 8) return;
-  fetch('https://viacep.com.br/ws/' + cep + '/json/')
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      if (!d.erro) {
-        document.getElementById('new-street').value       = d.logradouro || '';
-        document.getElementById('new-neighborhood').value = d.bairro     || '';
-        document.getElementById('new-city').value         = d.localidade || '';
-        document.getElementById('new-state').value        = d.uf         || '';
-      }
-    }).catch(function(){});
-});
-
-/* ── Pet cards ───────────────────────────────── */
-function loadPetCards(pets) {
-  var el = document.getElementById('existing-pets-list');
+/* ── Pets ───────────────────────────────────── */
+function renderPetCards(pets){
+  var el = document.getElementById('pet-cards');
   el.innerHTML = '';
-  document.getElementById('pet-section-subtitle').textContent = '';
-  document.getElementById('btn-new-pet-wrap').style.display = '';
-  document.getElementById('selected-pet-display').style.display = 'none';
+  document.getElementById('pet-subtitle').textContent = '';
+  document.getElementById('btn-new-pet').style.display = '';
+  document.getElementById('selected-pet-card').style.display = 'none';
 
-  if (!pets.length) {
-    el.innerHTML =
-      '<div class="col-12 text-muted small">' +
-      '<i class="fa fa-paw me-1"></i>Este cliente não tem pets cadastrados. ' +
-      'Cadastre um abaixo.</div>';
+  if(!pets.length){
+    el.innerHTML='<div class="col-12 text-muted small"><i class="fa fa-paw me-1"></i>Sem pets cadastrados. Adicione um novo pet.</div>';
     return;
   }
-
-  pets.forEach(function (p) {
+  pets.forEach(function(p){
     var col = document.createElement('div');
     col.className = 'col-12 col-md-6';
-    col.innerHTML =
-      '<div class="pet-option-card" data-id="' + p.id + '" ' +
-          'data-name="' + p.name + '" data-species="' + p.species + '" ' +
-          'data-breed="' + p.breed + '" data-size="' + p.size + '">' +
-        '<div class="pet-icon-sm"><i class="fa fa-paw"></i></div>' +
-        '<div>' +
-          '<div class="fw-700 small">' + p.name + '</div>' +
-          '<div class="text-muted" style="font-size:.75rem;">' +
-            p.species + (p.breed !== '—' ? ' · ' + p.breed : '') +
-          '</div>' +
-        '</div>' +
-      '</div>';
+    col.innerHTML = '<div class="pet-option-card" data-id="'+p.id+'" data-name="'+p.name+'" data-species="'+p.species+'">' +
+      '<div style="width:34px;height:34px;border-radius:50%;background:var(--primary-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa fa-paw" style="color:var(--primary);font-size:.75rem;"></i></div>' +
+      '<div><div class="fw-700 small">'+p.name+'</div>' +
+      '<div class="text-muted" style="font-size:.72rem;">'+p.species+'</div></div></div>';
     el.appendChild(col);
   });
-
-  el.querySelectorAll('.pet-option-card').forEach(function (card) {
-    card.addEventListener('click', function () {
-      el.querySelectorAll('.pet-option-card').forEach(function (c) {
-        c.classList.remove('selected');
-      });
+  el.querySelectorAll('.pet-option-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      el.querySelectorAll('.pet-option-card').forEach(c=>c.classList.remove('selected'));
       this.classList.add('selected');
-      selectedPet = {
-        id:      parseInt(this.dataset.id),
-        name:    this.dataset.name,
-        species: this.dataset.species,
-        breed:   this.dataset.breed,
-      };
+      selectedPet = {id: parseInt(this.dataset.id), name: this.dataset.name};
       document.getElementById('hidden-pet-id').value = selectedPet.id;
-      document.getElementById('sp-name').textContent   = selectedPet.name;
-      document.getElementById('sp-detail').textContent =
-        selectedPet.species + (selectedPet.breed !== '—' ? ' · ' + selectedPet.breed : '');
-      document.getElementById('selected-pet-display').style.display = '';
-      document.getElementById('new-pet-inline').style.display = 'none';
-      setStep(3);
-      updateSummary();
+      showSelectedPet(selectedPet.name, this.dataset.species);
+      setStep(3); checkSubmit();
     });
   });
 }
 
-/* ── New pet (existing client) ───────────────── */
-document.getElementById('btn-new-pet').addEventListener('click', function () {
-  document.getElementById('new-pet-inline').style.display = '';
+function showSelectedPet(name, species){
+  document.getElementById('sp-name').textContent = name;
+  document.getElementById('sp-detail').textContent = species;
+  document.getElementById('selected-pet-card').style.display = '';
+  document.getElementById('new-pet-form').style.display = 'none';
+  document.getElementById('btn-new-pet').style.display = '';
+}
+
+function clearPetUI(){
+  document.getElementById('pet-cards').innerHTML = '';
+  document.getElementById('selected-pet-card').style.display = 'none';
+  document.getElementById('new-pet-form').style.display = 'none';
+  document.getElementById('btn-new-pet').style.display = 'none';
+  document.getElementById('pet-subtitle').textContent = '— selecione um cliente primeiro';
+}
+
+document.getElementById('btn-change-pet').addEventListener('click', function(){
+  selectedPet = null;
+  document.getElementById('hidden-pet-id').value = '';
+  document.getElementById('selected-pet-card').style.display = 'none';
+  clearTimeUI(); setStep(2); checkSubmit();
+});
+
+document.getElementById('btn-new-pet').addEventListener('click', function(){
+  document.getElementById('new-pet-form').style.display = '';
   this.style.display = 'none';
 });
 
-document.getElementById('btn-cancel-new-pet').addEventListener('click', function () {
-  document.getElementById('new-pet-inline').style.display = 'none';
-  document.getElementById('btn-new-pet-wrap').style.display = '';
+document.getElementById('btn-cancel-pet').addEventListener('click', function(){
+  document.getElementById('new-pet-form').style.display = 'none';
+  document.getElementById('btn-new-pet').style.display = '';
 });
 
-document.getElementById('btn-confirm-new-pet').addEventListener('click', function () {
-  var petName = document.getElementById('existing-new-pet-name').value.trim();
-  if (!petName) { alert('Informe o nome do pet.'); return; }
+document.getElementById('btn-confirm-pet').addEventListener('click', function(){
+  var name = document.getElementById('new-pet-name').value.trim();
+  if(!name){ alert('Informe o nome do pet.'); return; }
+  selectedPet = {id: null, name: name};
   document.getElementById('hidden-pet-id').value = '';
-  selectedPet = { id: null, name: petName, new: true };
-  document.getElementById('sp-name').textContent   = petName;
-  document.getElementById('sp-detail').textContent = '(novo pet)';
-  document.getElementById('selected-pet-display').style.display = '';
-  document.getElementById('new-pet-inline').style.display = 'none';
-  setStep(3);
-  updateSummary();
+  showSelectedPet(name, 'Novo pet');
+  setStep(3); checkSubmit();
 });
 
-document.getElementById('btn-change-pet').addEventListener('click', function () {
-  selectedPet = null;
-  document.getElementById('hidden-pet-id').value = '';
-  document.getElementById('selected-pet-display').style.display = 'none';
-  document.getElementById('btn-new-pet-wrap').style.display = '';
-  document.getElementById('booking-summary').style.display = 'none';
-  setStep(2);
-});
-
-/* ── Send invite ─────────────────────────────── */
-document.getElementById('btn-send-invite').addEventListener('click', function () {
-  var clientId = this.dataset.clientId;
-  var btn = this;
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Enviando…';
-
-  fetch(url(CLIENT_INVITE_URL, clientId), {
-    method: 'POST',
-    headers: { 'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json' },
-  })
-  .then(function (r) { return r.json(); })
-  .then(function (data) {
-    if (data.success) {
-      btn.innerHTML = '<i class="fa fa-check me-1"></i>Enviado!';
-      btn.className = 'btn btn-success btn-sm rounded-pill';
-    } else {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-envelope me-1"></i>Enviar convite';
-      alert(data.error || 'Erro ao enviar convite.');
-    }
-  })
-  .catch(function () {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa fa-envelope me-1"></i>Enviar convite';
+/* ── Calendar ───────────────────────────────── */
+function bindSlotClicks(){
+  document.querySelectorAll('.slot-btn:not(.booked):not(.past)').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.slot-btn').forEach(b=>b.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedTime = this.dataset.dt;
+      document.getElementById('hidden-scheduled').value = selectedTime;
+      // Format display
+      var d = new Date(selectedTime);
+      var opts = {weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'};
+      document.getElementById('selected-time-text').textContent =
+        d.toLocaleString('pt-BR', opts).replace(',','');
+      document.getElementById('selected-time-display').style.display = '';
+      checkSubmit();
+    });
   });
+}
+bindSlotClicks();
+
+function clearTime(){
+  selectedTime = null;
+  document.getElementById('hidden-scheduled').value = '';
+  document.getElementById('selected-time-display').style.display = 'none';
+  document.querySelectorAll('.slot-btn').forEach(b=>b.classList.remove('selected'));
+  checkSubmit();
+}
+function clearTimeUI(){ clearTime(); }
+
+/* ── Week navigation (AJAX) ─────────────────── */
+function loadWeek(offset){
+  fetch(SLOTS_URL+'?week='+offset)
+    .then(r=>r.json())
+    .then(function(data){
+      currentWeek = data.week_offset;
+      document.getElementById('cal-week-label').textContent = 'Semana de '+data.base_date;
+      // Rebuild calendar
+      var grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+      data.week_days.forEach(function(day){
+        var col = document.createElement('div');
+        col.className = 'flex-fill';
+        col.style.minWidth = '88px';
+        var isToday = day.is_today;
+        col.innerHTML =
+          '<div class="text-center mb-2 pb-1" style="border-bottom:2px solid var(--border-color);">' +
+            '<div class="small text-muted fw-700 text-uppercase" style="font-size:.7rem;letter-spacing:.5px;">'+day.weekday+'</div>' +
+            '<div class="fw-800" style="font-size:.88rem;'+(isToday?'color:var(--primary);':'')+'">' + day.date_display + '</div>' +
+          '</div>';
+        if(day.is_open){
+          day.slots.forEach(function(slot){
+            var cls = 'slot-btn';
+            if(slot.booked) cls += ' booked';
+            else if(slot.past) cls += ' past';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = cls;
+            btn.textContent = slot.label;
+            if(slot.booked){
+              btn.disabled = true;
+              btn.innerHTML = slot.label + '<br><span style="font-size:.62rem;">Ocupado</span>';
+            } else {
+              btn.dataset.dt = slot.datetime;
+            }
+            col.appendChild(btn);
+          });
+        } else {
+          var closed = document.createElement('div');
+          closed.className = 'cal-closed-col';
+          closed.textContent = 'Fechado';
+          col.appendChild(closed);
+        }
+        grid.appendChild(col);
+      });
+      bindSlotClicks();
+      selectedTime = null;
+      document.getElementById('hidden-scheduled').value = '';
+      document.getElementById('selected-time-display').style.display = 'none';
+      checkSubmit();
+    });
+}
+
+document.getElementById('btn-prev-week').addEventListener('click', function(){ loadWeek(currentWeek - 1); });
+document.getElementById('btn-next-week').addEventListener('click', function(){ loadWeek(currentWeek + 1); });
+
+/* ── Submit guard ───────────────────────────── */
+function checkSubmit(){
+  var ok = selectedClient && selectedPet && selectedTime;
+  document.getElementById('btn-submit').disabled = !ok;
+}
+
+document.getElementById('appt-form').addEventListener('submit', function(e){
+  if(!selectedClient){ e.preventDefault(); alert('Selecione um cliente.'); return; }
+  if(!selectedPet)   { e.preventDefault(); alert('Selecione um pet.'); return; }
+  if(!selectedTime)  { e.preventDefault(); alert('Selecione um horário.'); return; }
 });
 
-/* ── Summary update on date change ──────────── */
-document.getElementById('scheduled-at-input').addEventListener('change', updateSummary);
-document.querySelectorAll('input[name="service"]').forEach(function (r) {
-  r.addEventListener('change', updateSummary);
-});
-
-/* ── Form submit guard ───────────────────────── */
-document.getElementById('appointment-form').addEventListener('submit', function (e) {
-  var dt = document.getElementById('scheduled-at-input').value;
-  if (!dt) {
-    e.preventDefault();
-    alert('Informe a data e hora do agendamento.');
-    return;
-  }
-  if (!usingNewClient && !document.getElementById('hidden-client-id').value) {
-    e.preventDefault();
-    alert('Selecione ou cadastre um cliente.');
-    return;
-  }
-});
-
-/* ── Init ────────────────────────────────────── */
-// Define datetime mínimo como agora
-var now = new Date();
-now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-document.getElementById('scheduled-at-input').min =
-  now.toISOString().slice(0, 16);
-
-// Fecha search results ao clicar fora
-document.addEventListener('click', function (e) {
-  if (!e.target.closest('.client-search-wrap')) {
-    document.getElementById('search-results').classList.remove('show');
+/* Close dropdowns on outside click */
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.search-wrap')){
+    document.getElementById('client-results').classList.remove('show');
   }
 });
 </script>

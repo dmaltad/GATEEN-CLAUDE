@@ -5,6 +5,7 @@
 
 {% block content %}
 <div class="container-fluid py-4 px-4">
+  <!-- Substitua o cabeçalho atual por este: -->
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
       <h4 class="fw-800 mb-0">
@@ -12,6 +13,10 @@
       </h4>
       <p class="text-muted mb-0">{{ page_obj.paginator.count }} pedido(s)</p>
     </div>
+    <a href="{% url 'dashboard:order_create_staff' %}"
+      class="btn btn-primary rounded-pill fw-700">
+      <i class="fa fa-plus me-2"></i>Novo Pedido
+    </a>
   </div>
 
   <div class="card border-0 shadow-sm mb-4">

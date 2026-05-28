@@ -6,70 +6,61 @@ app_name = 'dashboard'
 urlpatterns = [
     path('', mgmt.dashboard_home, name='home'),
 
-    # ── Produtos ────────────────────────────────────────
+    # ── Produtos ────────────────────────────────────────────
     path('gestao/produtos/',                     mgmt.product_list,    name='product_list'),
     path('gestao/produtos/novo/',                mgmt.product_create,  name='product_create'),
     path('gestao/produtos/<int:pk>/editar/',     mgmt.product_edit,    name='product_edit'),
     path('gestao/produtos/<int:pk>/excluir/',    mgmt.product_delete,  name='product_delete'),
 
-    # ── Categorias ──────────────────────────────────────
+    # ── Categorias ──────────────────────────────────────────
     path('gestao/categorias/',                   mgmt.category_list,   name='category_list'),
     path('gestao/categorias/nova/',              mgmt.category_create, name='category_create'),
     path('gestao/categorias/<int:pk>/editar/',   mgmt.category_edit,   name='category_edit'),
     path('gestao/categorias/<int:pk>/excluir/',  mgmt.category_delete, name='category_delete'),
 
-    # ── Pedidos ─────────────────────────────────────────
-    path('gestao/pedidos/',                      mgmt.order_list_staff,   name='order_list_staff'),
-    # ── Pedidos — criação manual pelo staff ──────────────────
-    path('gestao/pedidos/novo/',                 mgmt.order_create_staff, name='order_create_staff'),
+    # ── Pedidos (novo/ antes de <str:> para não colidir) ────
+    path('gestao/pedidos/',                      mgmt.order_list_staff,          name='order_list_staff'),
+    path('gestao/pedidos/novo/',                 mgmt.order_create_staff,        name='order_create_staff'),
     path('gestao/pedidos/buscar-produto/',       mgmt.product_search_staff_ajax, name='product_search_staff_ajax'),
-    path('gestao/pedidos/<str:order_number>/',   mgmt.order_detail_staff, name='order_detail_staff'),
+    path('gestao/pedidos/<str:order_number>/',   mgmt.order_detail_staff,        name='order_detail_staff'),
 
-    # ── Eventos ─────────────────────────────────────────
+    # ── Eventos ─────────────────────────────────────────────
     path('gestao/eventos/',                  mgmt.event_list,   name='event_list'),
     path('gestao/eventos/novo/',             mgmt.event_create, name='event_create'),
     path('gestao/eventos/<int:pk>/editar/',  mgmt.event_edit,   name='event_edit'),
 
-    # ── Planos ──────────────────────────────────────────
+    # ── Planos ──────────────────────────────────────────────
     path('gestao/planos/',                   mgmt.plan_list,     name='plan_list'),
     path('gestao/planos/novo/',              mgmt.plan_create,   name='plan_create'),
+    path('gestao/planos/ativos/',            mgmt.userplan_list, name='userplan_list'),
     path('gestao/planos/<int:pk>/editar/',   mgmt.plan_edit,     name='plan_edit'),
     path('gestao/planos/<int:pk>/excluir/',  mgmt.plan_delete,   name='plan_delete'),
-    path('gestao/planos/ativos/',            mgmt.userplan_list, name='userplan_list'),
 
-    # ── Fidelidade ──────────────────────────────────────
+    # ── Fidelidade ──────────────────────────────────────────
     path('gestao/fidelidade/',                         mgmt.loyalty_list,        name='loyalty_list'),
     path('gestao/fidelidade/regras/',                  mgmt.loyalty_rule_list,   name='loyalty_rule_list'),
     path('gestao/fidelidade/regras/nova/',             mgmt.loyalty_rule_create, name='loyalty_rule_create'),
     path('gestao/fidelidade/regras/<int:pk>/editar/',  mgmt.loyalty_rule_edit,   name='loyalty_rule_edit'),
     path('gestao/fidelidade/regras/<int:pk>/excluir/', mgmt.loyalty_rule_delete, name='loyalty_rule_delete'),
 
-    # ── Usuários ─────────────────────────────────────────
-    path('gestao/usuarios/',                  mgmt.user_list,  name='user_list'),
-    path('gestao/usuarios/<int:pk>/editar/',  mgmt.user_edit,  name='user_edit'),
-    path('gestao/cargos/',                    mgmt.group_list, name='group_list'),
+    # ── Usuários ─────────────────────────────────────────────
+    path('gestao/usuarios/',                   mgmt.user_list,         name='user_list'),
+    path('gestao/usuarios/novo/',              mgmt.user_create_staff, name='user_create_staff'),
+    path('gestao/usuarios/<int:pk>/editar/',   mgmt.user_edit,         name='user_edit'),
+    path('gestao/usuarios/<int:pk>/excluir/',  mgmt.user_delete,       name='user_delete'),
+    path('gestao/usuarios/<int:pk>/convite/',  mgmt.client_send_invite, name='user_send_invite'),
 
-    # ── Agendamentos — criação pelo staff ─────────────────────
-    path('gestao/agendamentos/novo/',
-         mgmt.appointment_create_staff, name='appointment_create_staff'),
-    path('gestao/agendamentos/buscar-cliente/',
-         mgmt.client_search_ajax,       name='client_search_ajax'),
-    path('gestao/agendamentos/cliente/<int:pk>/pets/',
-         mgmt.client_pets_ajax,         name='client_pets_ajax'),
-    path('gestao/agendamentos/cliente/<int:pk>/convite/',
-         mgmt.client_send_invite,       name='client_send_invite'),
-
-    # ── Agendamentos ─────────────────────────────────────
-    path('gestao/agendamentos/',                        mgmt.appointment_list_staff,   name='appointment_list_staff'),
-    path('gestao/agendamentos/<int:pk>/status/',        mgmt.appointment_update_status, name='appointment_update_status'),
-
-    # Usuários
-    path('gestao/usuarios/',                  mgmt.user_list,   name='user_list'),
-    path('gestao/usuarios/<int:pk>/editar/',  mgmt.user_edit,   name='user_edit'),
-    path('gestao/usuarios/<int:pk>/excluir/', mgmt.user_delete, name='user_delete'),  # novo
-
-    # Cargos
+    # ── Cargos ──────────────────────────────────────────────
     path('gestao/cargos/',                    mgmt.group_list,   name='group_list'),
-    path('gestao/cargos/novo/',               mgmt.group_create, name='group_create'),  # novo
-    path('gestao/cargos/<int:pk>/excluir/',   mgmt.group_delete, name='group_delete'),  # novo
+    path('gestao/cargos/novo/',               mgmt.group_create, name='group_create'),
+    path('gestao/cargos/<int:pk>/excluir/',   mgmt.group_delete, name='group_delete'),
+
+    # ── Agendamentos ─────────────────────────────────────────
+    path('gestao/agendamentos/',                          mgmt.appointment_list_staff,    name='appointment_list_staff'),
+    path('gestao/agendamentos/novo/',                     mgmt.appointment_create_staff,  name='appointment_create_staff'),
+    path('gestao/agendamentos/slots/',                    mgmt.appointment_slots_ajax,    name='appointment_slots_ajax'),
+    path('gestao/agendamentos/buscar-cliente/',           mgmt.client_search_ajax,        name='client_search_ajax'),
+    path('gestao/agendamentos/cliente/<int:pk>/pets/',    mgmt.client_pets_ajax,          name='client_pets_ajax'),
+    path('gestao/agendamentos/cliente/<int:pk>/convite/', mgmt.client_send_invite,        name='client_send_invite'),
+    path('gestao/agendamentos/<int:pk>/status/',          mgmt.appointment_update_status, name='appointment_update_status'),
 ]
