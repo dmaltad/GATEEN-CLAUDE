@@ -19,8 +19,11 @@ urlpatterns = [
     path('gestao/categorias/<int:pk>/excluir/',  mgmt.category_delete, name='category_delete'),
 
     # ── Pedidos ─────────────────────────────────────────
-    path('gestao/pedidos/',                        mgmt.order_list_staff,   name='order_list_staff'),
-    path('gestao/pedidos/<str:order_number>/',     mgmt.order_detail_staff, name='order_detail_staff'),
+    path('gestao/pedidos/',                      mgmt.order_list_staff,   name='order_list_staff'),
+    # ── Pedidos — criação manual pelo staff ──────────────────
+    path('gestao/pedidos/novo/',                 mgmt.order_create_staff, name='order_create_staff'),
+    path('gestao/pedidos/buscar-produto/',       mgmt.product_search_staff_ajax, name='product_search_staff_ajax'),
+    path('gestao/pedidos/<str:order_number>/',   mgmt.order_detail_staff, name='order_detail_staff'),
 
     # ── Eventos ─────────────────────────────────────────
     path('gestao/eventos/',                  mgmt.event_list,   name='event_list'),

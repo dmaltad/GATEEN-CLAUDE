@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#f0ecf8; font-family:'Segoe UI',Arial,sans-serif; -webkit-text-size-adjust:100%; }
+  .wrapper { max-width:580px; margin:32px auto; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(138,75,159,.15); }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #8A4B9F 0%, #6B3A7D 100%);
+    padding: 36px 40px 30px;
+    text-align: center;
+  }
+  .header-logo { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:16px; }
+  .header-paw  { font-size:32px; }
+  .header-brand { color:#fff; font-size:22px; font-weight:800; letter-spacing:.5px; }
+  .header-sub   { color:rgba(255,255,255,.7); font-size:11px; letter-spacing:2px; text-transform:uppercase; }
+  .header-title { color:#fff; font-size:20px; font-weight:700; margin-top:8px; }
+
+  /* Icon badge */
+  .icon-badge {
+    width:64px; height:64px; border-radius:50%;
+    background:rgba(255,255,255,.15);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 12px;
+    font-size:28px;
+  }
+
+  /* Body */
+  .body { background:#fff; padding:36px 40px; }
+  .greeting { font-size:18px; font-weight:700; color:#1E1B2E; margin-bottom:8px; }
+  .text { color:#555; font-size:15px; line-height:1.7; margin-bottom:16px; }
+
+  /* Info card */
+  .info-card {
+    background:#faf5fc; border:1.5px solid #e8def0;
+    border-radius:12px; padding:20px 24px; margin:20px 0;
+  }
+  .info-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #ede5f5; }
+  .info-row:last-child { border-bottom:none; }
+  .info-label { color:#6c757d; font-size:13px; }
+  .info-value { color:#1E1B2E; font-size:14px; font-weight:600; text-align:right; }
+
+  /* Status badge */
+  .status-badge {
+    display:inline-block; padding:4px 16px; border-radius:50px;
+    font-size:13px; font-weight:700;
+  }
+  .status-pending   { background:#f3e8ff; color:#6B3A7D; }
+  .status-confirmed { background:#d1fae5; color:#065f46; }
+  .status-preparing { background:#dbeafe; color:#1e40af; }
+  .status-ready     { background:#d1fae5; color:#065f46; }
+  .status-shipped   { background:#e2d9f3; color:#432874; }
+  .status-delivered { background:#d1fae5; color:#065f46; }
+  .status-cancelled { background:#fee2e2; color:#dc2626; }
+  .status-done      { background:#d1fae5; color:#065f46; }
+
+  /* CTA Button */
+  .btn-cta {
+    display:inline-block;
+    background:linear-gradient(135deg,#8A4B9F,#6B3A7D);
+    color:#fff !important; text-decoration:none;
+    padding:14px 36px; border-radius:50px;
+    font-size:15px; font-weight:700;
+    margin:8px 0;
+  }
+  .btn-center { text-align:center; margin:24px 0; }
+
+  /* Highlight box */
+  .highlight {
+    background:linear-gradient(135deg,#faf5fc,#f0e8f8);
+    border-left:4px solid #8A4B9F;
+    border-radius:0 12px 12px 0;
+    padding:14px 18px; margin:16px 0;
+  }
+  .highlight-green {
+    background:#f0fdf4; border-left:4px solid #16a34a;
+    border-radius:0 12px 12px 0; padding:14px 18px; margin:16px 0;
+  }
+  .highlight-red {
+    background:#fff1f2; border-left:4px solid #dc2626;
+    border-radius:0 12px 12px 0; padding:14px 18px; margin:16px 0;
+  }
+  .highlight-yellow {
+    background:#fffbeb; border-left:4px solid #f4b942;
+    border-radius:0 12px 12px 0; padding:14px 18px; margin:16px 0;
+  }
+
+  /* Footer */
+  .footer { background:#f0ecf8; padding:24px 40px; text-align:center; }
+  .footer p { color:#9ca3af; font-size:12px; line-height:1.6; }
+  .footer a { color:#8A4B9F; text-decoration:none; }
+  .social-row { margin-top:12px; }
+  .social-row a { display:inline-block; margin:0 6px; color:#8A4B9F; font-size:12px; text-decoration:none; }
+
+  @media (max-width:600px) {
+    .wrapper { margin:0; border-radius:0; }
+    .header, .body, .footer { padding:24px 20px; }
+    .info-row { flex-direction:column; align-items:flex-start; gap:4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  {% block content %}{% endblock %}
+  <div class="footer">
+    <p>
+      © {% now "Y" %} Gateen Petshop · Todos os direitos reservados<br>
+      R. Arlindo Nogueira, 285a — Vila Operária, Teresina – PI<br>
+      <a href="mailto:contato@gateenpetshop.com.br">contato@gateenpetshop.com.br</a>
+      &nbsp;|&nbsp;
+      <a href="{{ site_url }}">gateenpetshop.com.br</a>
+    </p>
+    <div class="social-row">
+      <a href="https://www.facebook.com/share/18fpcGtmCi/">Facebook</a>
+      <a href="https://www.instagram.com/gateen.petshop.pi">Instagram</a>
+      <a href="https://youtube.com/@gateenpetshop">YouTube</a>
+    </div>
+    <p style="margin-top:12px;font-size:11px;">
+      Você está recebendo este e-mail porque possui uma conta na Gateen Petshop.
+    </p>
+  </div>
+</div>
+</body>
+</html>

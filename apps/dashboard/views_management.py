@@ -1216,11 +1216,13 @@ def client_send_invite(request, pk):
             {'error': 'Este cliente não possui e-mail válido cadastrado.'},
             status=400,
         )
-
+    
+    from django.urls import reverse
     uid   = urlsafe_base64_encode(force_bytes(client.pk))
     token = default_token_generator.make_token(client)
     invite_url = request.build_absolute_uri(
-        f'/accounts/password/reset/key/{uid}-{token}/'
+        reverse('accounts:complete_registration',
+                kwargs={'uidb64': uid, 'token': token})
     )
 
     context = {
@@ -1255,3 +1257,162 @@ def client_send_invite(request, pk):
         })
     except Exception as exc:
         return JsonResponse({'error': f'Falha no envio: {str(exc)}'}, status=500)
+    
+# ══════════════════════════════════════════════════════
+# PEDIDOS — CRIAÇÃO PELO STAFF
+# ══════════════════════════════════════════════════════
+
+@group_required('Gerente', 'Atendimento')
+def order_create_staff(request):
+    from apps.accounts.models import User, Address
+    from apps.catalog.models import Product
+    from apps.orders.models import Order, OrderItem
+    from django.db import transaction as db_transaction
+    from django.db.models import F as Fexpr
+    import json
+
+    if request.method == 'POST':
+        client_id      = request.POST.get('client_id', '').strip()
+        items_json     = request.POST.get('items_json', '[]').strip()
+        delivery_type  = request.POST.get('delivery_type', 'pickup')
+        payment_method = request.POST.get('payment_method', 'cash')
+        address_id     = request.POST.get('address_id', '').strip()
+        notes          = request.POST.get('notes', '').strip()
+        discount_str   = request.POST.get('discount', '0').strip()
+
+        # ── Resolve cliente ─────────────────────────────────
+        if not client_id:
+            messages.error(request, 'Selecione um cliente.')
+            return redirect('dashboard:order_create_staff')
+
+        try:
+            client = User.objects.get(pk=client_id, is_staff=False)
+        except User.DoesNotExist:
+            messages.error(request, 'Cliente não encontrado.')
+            return redirect('dashboard:order_create_staff')
+
+        # ── Parse itens ──────────────────────────────────────
+        try:
+            items_data = json.loads(items_json)
+        except (json.JSONDecodeError, ValueError):
+            messages.error(request, 'Erro ao processar os produtos do pedido.')
+            return redirect('dashboard:order_create_staff')
+
+        if not items_data:
+            messages.error(request, 'Adicione pelo menos um produto ao pedido.')
+            return redirect('dashboard:order_create_staff')
+
+        # ── Parse desconto ───────────────────────────────────
+        try:
+            discount = max(0.0, float(discount_str))
+        except ValueError:
+            discount = 0.0
+
+        # ── Resolve endereço ─────────────────────────────────
+        address = None
+        if delivery_type == 'delivery' and address_id:
+            try:
+                address = Address.objects.get(pk=address_id, user=client)
+            except Address.DoesNotExist:
+                pass
+
+        # ── Resolve produtos e calcula subtotal ──────────────
+        resolved_items = []
+        subtotal = 0
+
+        for row in items_data:
+            try:
+                product = Product.objects.select_related('stock').get(
+                    pk=row['product_id'], is_active=True
+                )
+                qty   = max(1, int(row.get('quantity', 1)))
+                price = product.current_price
+                subtotal += price * qty
+                resolved_items.append((product, qty, price))
+            except (Product.DoesNotExist, KeyError, ValueError, TypeError):
+                messages.error(request, 'Um ou mais produtos são inválidos.')
+                return redirect('dashboard:order_create_staff')
+
+        delivery_fee = 10 if delivery_type == 'delivery' else 0
+        discount     = min(discount, float(subtotal))
+        total        = float(subtotal) + delivery_fee - discount
+
+        # ── Cria o pedido ────────────────────────────────────
+        try:
+            with db_transaction.atomic():
+                order = Order.objects.create(
+                    user=client,
+                    delivery_type=delivery_type,
+                    payment_method=payment_method,
+                    address=address,
+                    subtotal=subtotal,
+                    discount=discount,
+                    delivery_fee=delivery_fee,
+                    total=total,
+                    notes=notes,
+                    status='confirmed',   # pedidos manuais já confirmados
+                )
+
+                for product, qty, price in resolved_items:
+                    if product.stock.quantity < qty:
+                        raise ValueError(
+                            f'Estoque insuficiente para "{product.name}" '
+                            f'({product.stock.quantity} un. disponíveis).'
+                        )
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=qty,
+                        unit_price=price,
+                    )
+                    product.stock.quantity = Fexpr('quantity') - qty
+                    product.stock.save(update_fields=['quantity'])
+
+            messages.success(
+                request,
+                f'Pedido #{order.order_number} criado para '
+                f'{client.get_full_name()} · Total: R$ {total:.2f}'
+            )
+            return redirect('dashboard:order_detail_staff',
+                            order_number=order.order_number)
+
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect('dashboard:order_create_staff')
+        except Exception:
+            messages.error(request, 'Erro inesperado. Tente novamente.')
+            return redirect('dashboard:order_create_staff')
+
+    return render(request, 'dashboard/management/order_create.html', {
+        'payment_choices':  Order.PAYMENT_CHOICES,
+        'delivery_choices': Order.DELIVERY_CHOICES,
+    })
+
+
+@group_required('Gerente', 'Atendimento')
+def product_search_staff_ajax(request):
+    from apps.catalog.models import Product
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return JsonResponse({'results': []})
+
+    products = Product.objects.filter(
+        Q(name__icontains=q) | Q(brand__name__icontains=q),
+        is_active=True,
+    ).select_related('brand', 'category', 'stock')[:12]
+
+    results = []
+    for p in products:
+        stock_qty = p.stock.quantity if hasattr(p, 'stock') and p.stock else 0
+        results.append({
+            'id':       p.pk,
+            'name':     p.name,
+            'brand':    p.brand.name if p.brand else '',
+            'category': p.category.name,
+            'price':    float(p.current_price),
+            'price_display': f'R$ {p.current_price:.2f}'.replace('.', ','),
+            'stock':    stock_qty,
+            'image':    p.image.url if p.image and p.image.name else None,
+        })
+
+    return JsonResponse({'results': results})

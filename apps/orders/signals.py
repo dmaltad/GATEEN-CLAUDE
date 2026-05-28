@@ -1,5 +1,5 @@
 """
-Signal de fidelidade: credita pontos após criação/entrega de um pedido.
+Signal de fidelidade + notificações por e-mail para pedidos.
 """
 import logging
 from django.db.models.signals import post_save
@@ -12,19 +12,57 @@ from .models import Order
 logger = logging.getLogger(__name__)
 
 
+# ── Loyalty signal ────────────────────────────────────────────
+
 @receiver(post_save, sender=Order)
 def process_loyalty_on_order_save(sender, instance, created, **kwargs):
     if created:
-        db_transaction.on_commit(lambda: _credit_points(instance))
+        db_transaction.on_commit(lambda: _on_order_created(instance))
         return
 
-    # Também credita quando o status muda para 'delivered' (se ainda não creditou)
     if instance.status == 'delivered':
         from apps.loyalty.models import LoyaltyTransaction
         already = LoyaltyTransaction.objects.filter(order=instance).exists()
         if not already:
             db_transaction.on_commit(lambda: _credit_points(instance))
 
+    # E-mail de mudança de status (exceto na criação)
+    db_transaction.on_commit(lambda: _email_order_status(instance))
+
+
+def _on_order_created(order):
+    _credit_points(order)
+    _email_order_created(order)
+
+
+# ── E-mail: pedido criado ─────────────────────────────────────
+
+def _email_order_created(order):
+    from apps.core_app.email_utils import send_gateen_email
+    send_gateen_email(
+        to_email      = order.user.email,
+        subject       = f'Pedido #{order.order_number} recebido!',
+        template_name = 'order_created',
+        context       = {'order': order, 'user': order.user},
+    )
+
+
+# ── E-mail: status do pedido mudou ────────────────────────────
+
+def _email_order_status(order):
+    # Não envia e-mail para o status inicial 'pending' (já enviado em _on_order_created)
+    if order.status == 'pending':
+        return
+    from apps.core_app.email_utils import send_gateen_email
+    send_gateen_email(
+        to_email      = order.user.email,
+        subject       = f'Pedido #{order.order_number} — {order.get_status_display()}',
+        template_name = 'order_status_changed',
+        context       = {'order': order, 'user': order.user},
+    )
+
+
+# ── Fidelidade ────────────────────────────────────────────────
 
 def _credit_points(order):
     from apps.loyalty.models import LoyaltyAccount, LoyaltyRule, LoyaltyTransaction
@@ -36,8 +74,6 @@ def _credit_points(order):
     )
 
     today = timezone.now().date()
-
-    # ── Q objects diretos — sem helper quebrado ──────────────────
     rules = LoyaltyRule.objects.filter(
         is_active=True,
         reward_type='loyalty_points',
@@ -56,7 +92,6 @@ def _credit_points(order):
             total_earned += pts
             rule_log.append(f'{rule.name}: +{pts}')
 
-    # Fallback: 1 ponto por R$1 se nenhuma regra disparou
     if total_earned == 0 and order.total:
         total_earned = max(1, int(order.total))
         rule_log.append(f'Base R${order.total}: +{total_earned}')
@@ -73,19 +108,12 @@ def _credit_points(order):
         account=account,
         transaction_type='earn',
         points=total_earned,
-        description=(
-            f'Pedido #{order.order_number} | ' + ' | '.join(rule_log)
-        )[:300],
+        description=(f'Pedido #{order.order_number} | ' + ' | '.join(rule_log))[:300],
         order=order,
     )
 
-    logger.info(
-        '[Fidelidade] %s | +%d pts | %s | saldo: %d',
-        order.order_number, total_earned, order.user.email, account.points
-    )
+    logger.info('[Fidelidade] %s | +%d pts | %s', order.order_number, total_earned, order.user.email)
 
-
-# ── Avaliadores ───────────────────────────────────────────────────
 
 def _apply_rule(rule, order):
     fn = {
@@ -96,14 +124,12 @@ def _apply_rule(rule, order):
     }.get(rule.rule_type)
     return fn(rule, order) if fn else 0
 
-
 def _rule_amount_spent(rule, order):
     if not rule.trigger_amount or rule.trigger_amount <= 0:
         return 0
     if order.total < rule.trigger_amount:
         return 0
     return int(order.total / rule.trigger_amount) * rule.reward_points
-
 
 def _rule_brand_purchase(rule, order):
     if not rule.trigger_brand_id:
@@ -115,17 +141,14 @@ def _rule_brand_purchase(rule, order):
     )
     return rule.reward_points if qty >= rule.trigger_quantity else 0
 
-
 def _rule_product_purchase(rule, order):
     if not rule.trigger_product_id:
         return 0
     qty = sum(
-        item.quantity
-        for item in order.items.all()
+        item.quantity for item in order.items.all()
         if item.product_id == rule.trigger_product_id
     )
     return rule.reward_points if qty >= rule.trigger_quantity else 0
-
 
 def _rule_category_purchase(rule, order):
     if not rule.trigger_product_id:

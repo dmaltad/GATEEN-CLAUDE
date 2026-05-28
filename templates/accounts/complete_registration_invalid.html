@@ -1,0 +1,22 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Link inválido — Gateen Petshop{% endblock %}
+
+{% block content %}
+<div class="min-vh-75 d-flex align-items-center justify-content-center py-5">
+  <div class="col-lg-5 col-md-7 col-11 text-center">
+    <div class="auth-header-icon mb-3 mx-auto"
+      style="background:#fef2f2;">
+      <i class="fa fa-exclamation-triangle fa-lg" style="color:#dc3545;"></i>
+    </div>
+    <h3 class="fw-800 mb-2">Link inválido ou expirado</h3>
+    <p class="text-muted mb-4">
+      Este link de convite não é mais válido. Links expiram em 3 dias.<br>
+      Solicite um novo convite à equipe da Gateen Petshop.
+    </p>
+    <a href="{% url 'home' %}" class="btn btn-primary rounded-pill fw-700 px-4">
+      <i class="fa fa-home me-2"></i>Voltar ao início
+    </a>
+  </div>
+</div>
+{% endblock %}

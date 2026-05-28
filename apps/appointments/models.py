@@ -50,3 +50,7 @@ class Appointment(models.Model):
     @property
     def is_upcoming(self):
         return self.scheduled_at > timezone.now()
+    
+    reminder_sent = models.BooleanField(
+        default=False, verbose_name='Lembrete enviado'
+    )

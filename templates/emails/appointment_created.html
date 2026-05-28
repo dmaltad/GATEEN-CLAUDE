@@ -1,0 +1,81 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+<div class="header" style="background:linear-gradient(135deg,#00695C,#004D40);">
+  <div class="header-logo">
+    <span class="header-paw">🐾</span>
+    <div>
+      <div class="header-brand">Gateen Petshop</div>
+      <div class="header-sub">Banho & Tosa</div>
+    </div>
+  </div>
+  <div class="icon-badge">✂️</div>
+  <div class="header-title">Agendamento confirmado!</div>
+</div>
+
+<div class="body">
+  <div class="greeting">Olá, {{ user.first_name }}! 🐶</div>
+  <p class="text">
+    O agendamento de <strong>{{ appt.get_service_display }}</strong> para
+    <strong>{{ appt.pet.name }}</strong> foi realizado com sucesso.
+    Estamos ansiosos para recebê-los!
+  </p>
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Serviço</span>
+      <span class="info-value">{{ appt.get_service_display }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Pet</span>
+      <span class="info-value">{{ appt.pet.name }} ({{ appt.pet.get_species_display }})</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Data</span>
+      <span class="info-value">{{ appt.scheduled_at|date:"d/m/Y" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Horário</span>
+      <span class="info-value">{{ appt.scheduled_at|date:"H:i" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Status</span>
+      <span class="info-value">
+        <span class="status-badge status-{{ appt.status }}">{{ appt.get_status_display }}</span>
+      </span>
+    </div>
+    {% if appt.used_plan_session and appt.user_plan %}
+    <div class="info-row">
+      <span class="info-label">Pagamento</span>
+      <span class="info-value" style="color:#065f46;">✅ Incluso no {{ appt.user_plan.plan.name }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="highlight-yellow">
+    <p style="color:#92400e;font-weight:600;font-size:14px;margin-bottom:4px;">
+      📍 Local do atendimento
+    </p>
+    <p style="color:#78350f;font-size:13px;">
+      Gateen Petshop — R. Arlindo Nogueira, 285a, Vila Operária, Teresina – PI<br>
+      <strong>Horário de funcionamento:</strong> Seg–Sex 07h–17h · Sáb 07h–13h
+    </p>
+  </div>
+
+  {% if appt.notes %}
+  <div class="highlight" style="margin-top:12px;">
+    <p style="color:#4E2B5C;font-size:13px;"><strong>Observações:</strong> {{ appt.notes }}</p>
+  </div>
+  {% endif %}
+
+  <div class="btn-center">
+    <a href="{{ site_url }}/agendamento/meus/" class="btn-cta" style="background:linear-gradient(135deg,#00897B,#00695C);">
+      Ver meus agendamentos
+    </a>
+  </div>
+
+  <p class="text" style="font-size:13px;color:#9ca3af;text-align:center;">
+    Precisa cancelar? Acesse sua conta com até 2 horas de antecedência.
+  </p>
+</div>
+{% endblock %}

@@ -137,3 +137,58 @@ def delete_pet(request, pk):
         messages.success(request, f'{name} removido.')
         return redirect('accounts:profile')
     return render(request, 'accounts/pet_confirm_delete.html', {'pet': pet})
+
+def complete_registration(request, uidb64, token):
+    """
+    Rota própria para walk-in clients completarem o cadastro via link de convite.
+    Não depende do fluxo interno do allauth.
+    """
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_decode
+    from django.utils.encoding import force_str
+
+    # Decodifica UID e busca o usuário
+    user = None
+    try:
+        uid  = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        pass
+
+    token_valid = user is not None and default_token_generator.check_token(user, token)
+
+    if not token_valid:
+        return render(request, 'accounts/complete_registration_invalid.html')
+
+    if request.method == 'POST':
+        p1 = request.POST.get('password1', '').strip()
+        p2 = request.POST.get('password2', '').strip()
+
+        if not p1:
+            messages.error(request, 'Informe uma senha.')
+        elif p1 != p2:
+            messages.error(request, 'As senhas não conferem.')
+        elif len(p1) < 8:
+            messages.error(request, 'A senha deve ter pelo menos 8 caracteres.')
+        else:
+            user.set_password(p1)
+            if hasattr(user, 'is_walk_in'):
+                user.is_walk_in = False
+            user.save()
+
+            from django.contrib.auth import login as auth_login
+            auth_login(
+                request, user,
+                backend='django.contrib.auth.backends.ModelBackend',
+            )
+            messages.success(
+                request,
+                f'Bem-vindo(a), {user.first_name}! 🐾 Seu cadastro está completo.'
+            )
+            return redirect('home')
+
+    return render(request, 'accounts/complete_registration.html', {
+        'target_user': user,
+        'uidb64':      uidb64,
+        'token':       token,
+    })

@@ -47,6 +47,24 @@ def subscribe_plan(request, slug):
             end_date=(timezone.now() + timedelta(days=30)).date(),
         )
         messages.success(request, f'Plano {plan.name} contratado com sucesso!')
+
+        # E-mail de confirmação do plano
+        try:
+            from apps.core_app.email_utils import send_gateen_email
+            send_gateen_email(
+                to_email      = request.user.email,
+                subject       = f'Bem-vindo ao {plan.name}! 🐾',
+                template_name = 'plan_subscribed',
+                context       = {
+                    'user':      request.user,
+                    'plan':      plan,
+                    'user_plan': UserPlan.objects.filter(
+                        user=request.user, plan=plan
+                    ).order_by('-created_at').first(),
+                },
+            )
+        except Exception:
+            pass
         return redirect('accounts:profile')
 
     return render(request, 'plans/subscribe.html', {

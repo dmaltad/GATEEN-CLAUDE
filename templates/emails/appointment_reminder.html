@@ -1,0 +1,63 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+<div class="header" style="background:linear-gradient(135deg,#f4b942,#d49a1e);">
+  <div class="header-logo">
+    <span class="header-paw">🐾</span>
+    <div>
+      <div class="header-brand" style="color:#1E1B2E;">Gateen Petshop</div>
+      <div class="header-sub" style="color:rgba(0,0,0,.6);">Lembrete de agendamento</div>
+    </div>
+  </div>
+  <div class="icon-badge" style="background:rgba(0,0,0,.1);">⏰</div>
+  <div class="header-title" style="color:#1E1B2E;">Daqui 1 hora — Banho de {{ appt.pet.name }}!</div>
+</div>
+
+<div class="body">
+  <div class="greeting">Olá, {{ user.first_name }}! ⏰</div>
+  <p class="text">
+    Este é um lembrete de que o agendamento de <strong>{{ appt.get_service_display }}</strong>
+    para <strong>{{ appt.pet.name }}</strong> começa em aproximadamente <strong>1 hora</strong>.
+  </p>
+
+  <div class="info-card" style="background:#fffbeb;border-color:#fcd34d;">
+    <div class="info-row">
+      <span class="info-label">Pet</span>
+      <span class="info-value">{{ appt.pet.name }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Serviço</span>
+      <span class="info-value">{{ appt.get_service_display }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Hoje às</span>
+      <span class="info-value" style="color:#d97706;font-size:18px;font-weight:800;">
+        {{ appt.scheduled_at|date:"H:i" }}
+      </span>
+    </div>
+  </div>
+
+  <div class="highlight-yellow">
+    <p style="color:#92400e;font-weight:600;font-size:14px;margin-bottom:6px;">
+      📍 Como chegar
+    </p>
+    <p style="color:#78350f;font-size:13px;">
+      <strong>Gateen Petshop</strong><br>
+      R. Arlindo Nogueira, 285a — Vila Operária<br>
+      Teresina – PI, 64002-390<br><br>
+      <strong>Não se atrase!</strong> Caso precise cancelar, entre em contato o quanto antes.
+    </p>
+  </div>
+
+  <div class="btn-center">
+    <a href="{{ site_url }}/agendamento/meus/"
+      class="btn-cta" style="background:linear-gradient(135deg,#d97706,#b45309);">
+      Ver meus agendamentos
+    </a>
+  </div>
+
+  <p class="text" style="font-size:13px;color:#9ca3af;text-align:center;">
+    Dica: chegue alguns minutinhos antes para que {{ appt.pet.name }} possa se ambientar 🐾
+  </p>
+</div>
+{% endblock %}

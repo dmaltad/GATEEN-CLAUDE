@@ -1,0 +1,734 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Novo Pedido — Gestão{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-section {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(138,75,159,.08);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.form-section-title {
+  font-weight: 700;
+  font-size: .95rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dark-text);
+}
+.form-section-title i { color: var(--primary); }
+
+/* Search */
+.search-wrap { position: relative; }
+.search-results-drop {
+  position: absolute;
+  top: calc(100% + 4px); left: 0; right: 0;
+  background: #fff;
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  z-index: 999;
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+}
+.search-results-drop.show { display: block; }
+.srd-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  display: flex; align-items: center; gap: 10px;
+  transition: background .15s;
+}
+.srd-item:last-child { border-bottom: none; }
+.srd-item:hover { background: var(--primary-bg-soft); }
+.srd-thumb {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--primary-bg);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.srd-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--primary-bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.srd-icon i { color: var(--primary); font-size: .8rem; }
+
+/* Selected client */
+.selected-card {
+  background: var(--primary-bg-soft);
+  border: 1.5px solid var(--primary-lighter);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+/* Order cart */
+.cart-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.cart-item-row:last-child { border-bottom: none; }
+.cart-qty-input {
+  width: 60px;
+  text-align: center;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 700;
+}
+
+/* Delivery cards */
+.delivery-opt input[type="radio"] { display: none; }
+.delivery-lbl {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: .82rem;
+  text-align: center;
+  transition: var(--transition);
+}
+.delivery-lbl:hover { border-color: var(--primary-lighter); }
+.delivery-lbl i { font-size: 1.3rem; color: var(--primary); }
+.delivery-opt input[type="radio"]:checked + .delivery-lbl {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+/* Payment btns */
+.pay-opt input[type="radio"] { display: none; }
+.pay-lbl {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 5px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: .75rem;
+  text-align: center;
+  transition: var(--transition);
+}
+.pay-lbl:hover { border-color: var(--primary-lighter); }
+.pay-lbl i { font-size: 1.1rem; color: var(--primary); }
+.pay-opt input[type="radio"]:checked + .pay-lbl {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+/* Summary sticky */
+.order-summary-sticky { position: sticky; top: 90px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4" style="max-width:1100px;">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{% url 'dashboard:order_list_staff' %}"
+      class="btn btn-outline-secondary btn-sm rounded-pill">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <div>
+      <h4 class="fw-800 mb-0">
+        <i class="fa fa-plus-circle me-2" style="color:var(--primary);"></i>
+        Novo Pedido Manual
+      </h4>
+      <p class="text-muted mb-0" style="font-size:.82rem;">
+        Crie um pedido para um cliente existente.
+      </p>
+    </div>
+  </div>
+
+  <form method="post" id="order-form">
+    {% csrf_token %}
+    <input type="hidden" name="client_id"   id="hidden-client-id">
+    <input type="hidden" name="items_json"  id="hidden-items-json" value="[]">
+
+    <div class="row g-4 align-items-start">
+
+      <!-- ══ COLUNA ESQUERDA ══════════════════════════ -->
+      <div class="col-lg-7">
+
+        <!-- CLIENTE -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <i class="fa fa-user"></i>1. Cliente
+          </div>
+
+          <div id="client-search-area">
+            <div class="search-wrap mb-2">
+              <div class="input-group">
+                <span class="input-group-text bg-white">
+                  <i class="fa fa-search" style="color:var(--muted-text);"></i>
+                </span>
+                <input type="text" id="client-search"
+                  class="form-control border-start-0"
+                  placeholder="Buscar cliente por nome, telefone ou e-mail…"
+                  autocomplete="off">
+              </div>
+              <div class="search-results-drop" id="client-results"></div>
+            </div>
+            <div class="text-muted small">Digite pelo menos 2 caracteres.</div>
+          </div>
+
+          <div id="selected-client" style="display:none;">
+            <div class="selected-card d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                  style="width:40px;height:40px;background:var(--primary-bg);flex-shrink:0;">
+                  <i class="fa fa-user" style="color:var(--primary);"></i>
+                </div>
+                <div>
+                  <div class="fw-700" id="sc-name"></div>
+                  <div class="text-muted small" id="sc-contact"></div>
+                </div>
+              </div>
+              <button type="button" id="btn-clear-client"
+                class="btn btn-outline-secondary btn-sm rounded-pill"
+                style="font-size:.75rem;">
+                <i class="fa fa-times me-1"></i>Trocar
+              </button>
+            </div>
+
+            <!-- Endereços do cliente (entrega) -->
+            <div id="client-addresses" class="mt-3" style="display:none;">
+              <label class="form-label small fw-600">Endereço de entrega</label>
+              <select name="address_id" class="form-select form-select-sm"
+                id="address-select">
+                <option value="">Selecione…</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRODUTOS -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <i class="fa fa-box"></i>2. Produtos
+          </div>
+
+          <!-- Busca de produto -->
+          <div class="search-wrap mb-3">
+            <div class="input-group">
+              <span class="input-group-text bg-white">
+                <i class="fa fa-search" style="color:var(--muted-text);"></i>
+              </span>
+              <input type="text" id="product-search"
+                class="form-control border-start-0"
+                placeholder="Buscar produto por nome ou marca…"
+                autocomplete="off">
+            </div>
+            <div class="search-results-drop" id="product-results"></div>
+          </div>
+
+          <!-- Carrinho -->
+          <div id="cart-empty" class="text-center py-4 text-muted">
+            <i class="fa fa-shopping-basket fa-2x mb-2 d-block opacity-50"></i>
+            <div class="small">Nenhum produto adicionado.</div>
+          </div>
+
+          <div id="cart-list" style="display:none;">
+            <div id="cart-items"></div>
+          </div>
+        </div>
+
+        <!-- ENTREGA E PAGAMENTO -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <i class="fa fa-truck"></i>3. Entrega e pagamento
+          </div>
+
+          <!-- Delivery -->
+          <label class="form-label small fw-600 mb-2">Tipo de entrega</label>
+          <div class="row g-2 mb-4">
+            <div class="col-6 delivery-opt">
+              <input type="radio" name="delivery_type" id="dt_pickup"
+                value="pickup" checked>
+              <label class="delivery-lbl" for="dt_pickup">
+                <i class="fa fa-store"></i>
+                Retirada na loja<br>
+                <span class="text-muted fw-400" style="font-size:.72rem;">Grátis</span>
+              </label>
+            </div>
+            <div class="col-6 delivery-opt">
+              <input type="radio" name="delivery_type" id="dt_delivery"
+                value="delivery">
+              <label class="delivery-lbl" for="dt_delivery">
+                <i class="fa fa-motorcycle"></i>
+                Entrega<br>
+                <span class="text-muted fw-400" style="font-size:.72rem;">+ R$ 10,00</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <label class="form-label small fw-600 mb-2">Forma de pagamento</label>
+          <div class="row g-2 mb-4">
+            {% for val, label in payment_choices %}
+            <div class="col pay-opt">
+              <input type="radio" name="payment_method"
+                id="pm_{{ val }}" value="{{ val }}"
+                {% if val == 'cash' %}checked{% endif %}>
+              <label class="pay-lbl" for="pm_{{ val }}">
+                {% if val == 'credit_card' %}<i class="fa fa-credit-card"></i>
+                {% elif val == 'debit_card' %}<i class="fa fa-credit-card"></i>
+                {% elif val == 'pix' %}<i class="fa fa-qrcode"></i>
+                {% elif val == 'cash' %}<i class="fa fa-money-bill-wave"></i>
+                {% else %}<i class="fa fa-wallet"></i>{% endif %}
+                <span>{{ label }}</span>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Discount -->
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-600">Desconto (R$)</label>
+              <div class="input-group">
+                <span class="input-group-text">R$</span>
+                <input type="number" name="discount" id="discount-input"
+                  class="form-control" value="0" min="0" step="0.01">
+              </div>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small fw-600">Observações</label>
+              <textarea name="notes" class="form-control" rows="2"
+                placeholder="Instruções, observações do atendente…"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ COLUNA DIREITA — RESUMO ══════════════════ -->
+      <div class="col-lg-5">
+        <div class="form-section order-summary-sticky">
+          <div class="form-section-title">
+            <i class="fa fa-receipt"></i>Resumo do pedido
+          </div>
+
+          <div id="summary-empty" class="text-center py-3 text-muted small">
+            Adicione produtos para ver o resumo.
+          </div>
+
+          <div id="summary-content" style="display:none;">
+
+            <div id="summary-items" class="mb-3"
+              style="max-height:260px;overflow-y:auto;"></div>
+
+            <div class="border-top pt-3">
+              <div class="d-flex justify-content-between text-muted small mb-1">
+                <span>Subtotal</span>
+                <span id="s-subtotal">R$ 0,00</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted small mb-1"
+                id="s-fee-row" style="display:none !important;">
+                <span>Frete</span>
+                <span class="text-danger fw-600">+ R$ 10,00</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted small mb-1"
+                id="s-disc-row" style="display:none !important;">
+                <span>Desconto</span>
+                <span class="text-success fw-600" id="s-discount">- R$ 0,00</span>
+              </div>
+              <div class="d-flex justify-content-between fw-800 mt-2"
+                style="font-size:1.1rem;">
+                <span>Total</span>
+                <span id="s-total" style="color:var(--primary);">R$ 0,00</span>
+              </div>
+            </div>
+
+            <div class="mt-3 p-3 rounded-3 small" id="summary-meta"
+              style="background:var(--light-bg);">
+              <div class="mb-1">
+                <i class="fa fa-user me-1" style="color:var(--primary);"></i>
+                Cliente: <span class="fw-600" id="s-client">—</span>
+              </div>
+              <div class="mb-1">
+                <i class="fa fa-truck me-1" style="color:var(--primary);"></i>
+                Entrega: <span class="fw-600" id="s-delivery">Retirada</span>
+              </div>
+              <div>
+                <i class="fa fa-credit-card me-1" style="color:var(--primary);"></i>
+                Pagamento: <span class="fw-600" id="s-payment">Dinheiro</span>
+              </div>
+            </div>
+
+          </div>
+
+          <button type="submit" id="btn-submit-order"
+            class="btn btn-primary w-100 rounded-pill fw-700 py-3 mt-4"
+            disabled>
+            <i class="fa fa-check-circle me-2"></i>Criar Pedido
+          </button>
+          <p class="text-center text-muted small mt-2">
+            Pedidos manuais são criados com status <strong>Confirmado</strong>.
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CLIENT_SEARCH_URL  = '{% url "dashboard:client_search_ajax" %}';
+var CLIENT_PETS_URL    = '/dashboard/gestao/agendamentos/cliente/{pk}/pets/';
+var PRODUCT_SEARCH_URL = '{% url "dashboard:product_search_staff_ajax" %}';
+var CSRF_TOKEN         = '{{ csrf_token }}';
+
+var selectedClient = null;
+var cart = [];  // [{product_id, name, price, quantity, stock}]
+
+/* ════════ UTILITIES ════════ */
+function fmtMoney(val) {
+  return 'R$ ' + parseFloat(val).toFixed(2).replace('.', ',');
+}
+
+function url(tpl, pk) { return tpl.replace('{pk}', pk); }
+
+/* ════════ CLIENT SEARCH ════════ */
+var clientTimer;
+document.getElementById('client-search').addEventListener('input', function () {
+  var q = this.value.trim();
+  clearTimeout(clientTimer);
+  var el = document.getElementById('client-results');
+  if (q.length < 2) { el.classList.remove('show'); return; }
+  clientTimer = setTimeout(function () {
+    fetch(CLIENT_SEARCH_URL + '?q=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (d) { renderClientResults(d.results); });
+  }, 300);
+});
+
+function renderClientResults(results) {
+  var el = document.getElementById('client-results');
+  if (!results.length) {
+    el.innerHTML = '<div class="srd-item text-muted"><i class="fa fa-search me-2"></i>Nenhum cliente encontrado.</div>';
+    el.classList.add('show');
+    return;
+  }
+  el.innerHTML = results.map(function (r) {
+    var contact = r.email || r.phone || '—';
+    return '<div class="srd-item" data-id="' + r.id + '">' +
+      '<div class="srd-icon"><i class="fa fa-user"></i></div>' +
+      '<div><div class="fw-600 small">' + r.name + '</div>' +
+      '<div class="text-muted" style="font-size:.72rem;">' + contact + ' &bull; ' + r.pet_count + ' pet(s)</div></div>' +
+      '</div>';
+  }).join('');
+  el.classList.add('show');
+  el.querySelectorAll('.srd-item[data-id]').forEach(function (item) {
+    item.addEventListener('click', function () { selectClient(parseInt(this.dataset.id)); });
+  });
+}
+
+function selectClient(id) {
+  fetch(url(CLIENT_PETS_URL, id))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      selectedClient = { id: d.client_id, name: d.client_name };
+      document.getElementById('hidden-client-id').value = d.client_id;
+      document.getElementById('sc-name').textContent =
+        d.client_name;
+      var contact = [d.client_phone, d.client_email].filter(Boolean).join(' · ');
+      document.getElementById('sc-contact').textContent = contact || '—';
+      document.getElementById('client-search-area').style.display = 'none';
+      document.getElementById('selected-client').style.display = '';
+      document.getElementById('client-results').classList.remove('show');
+      loadClientAddresses(d.client_id);
+      updateSummary();
+      checkSubmit();
+    });
+}
+
+function loadClientAddresses(clientId) {
+  fetch('/dashboard/gestao/agendamentos/cliente/' + clientId + '/pets/')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      // addresses are fetched separately - use a simple AJAX call
+    });
+  // Actually load addresses via AJAX
+  fetch('/dashboard/gestao/pedidos/buscar-produto/?address_client=' + clientId)
+    .catch(function(){});
+  
+  // For now, show address section based on delivery type toggle
+}
+
+document.getElementById('btn-clear-client').addEventListener('click', function () {
+  selectedClient = null;
+  document.getElementById('hidden-client-id').value = '';
+  document.getElementById('client-search-area').style.display = '';
+  document.getElementById('selected-client').style.display = 'none';
+  document.getElementById('client-search').value = '';
+  document.getElementById('client-addresses').style.display = 'none';
+  updateSummary();
+  checkSubmit();
+});
+
+/* ════════ DELIVERY TYPE ════════ */
+document.querySelectorAll('input[name="delivery_type"]').forEach(function (r) {
+  r.addEventListener('change', function () {
+    var isDelivery = this.value === 'delivery';
+    document.getElementById('client-addresses').style.display =
+      (isDelivery && selectedClient) ? '' : 'none';
+    updateSummary();
+  });
+});
+
+/* ════════ PRODUCT SEARCH ════════ */
+var prodTimer;
+document.getElementById('product-search').addEventListener('input', function () {
+  var q = this.value.trim();
+  clearTimeout(prodTimer);
+  var el = document.getElementById('product-results');
+  if (q.length < 2) { el.classList.remove('show'); return; }
+  prodTimer = setTimeout(function () {
+    fetch(PRODUCT_SEARCH_URL + '?q=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (d) { renderProductResults(d.results); });
+  }, 300);
+});
+
+function renderProductResults(results) {
+  var el = document.getElementById('product-results');
+  if (!results.length) {
+    el.innerHTML = '<div class="srd-item text-muted"><i class="fa fa-box me-2"></i>Nenhum produto encontrado.</div>';
+    el.classList.add('show');
+    return;
+  }
+  el.innerHTML = results.map(function (p) {
+    var stockBadge = p.stock <= 0
+      ? '<span class="badge bg-danger" style="font-size:.65rem;">Sem estoque</span>'
+      : '<span class="badge bg-success" style="font-size:.65rem;">' + p.stock + ' un.</span>';
+    var img = p.image
+      ? '<img src="' + p.image + '" class="srd-thumb">'
+      : '<div class="srd-icon"><i class="fa fa-box"></i></div>';
+    return '<div class="srd-item" data-id="' + p.id + '" data-name="' + p.name + '" ' +
+      'data-price="' + p.price + '" data-stock="' + p.stock + '">' +
+      img +
+      '<div class="flex-grow-1">' +
+        '<div class="fw-600 small">' + p.name + '</div>' +
+        '<div class="text-muted" style="font-size:.72rem;">' +
+          p.brand + ' &bull; ' + p.price_display + ' ' + stockBadge +
+        '</div>' +
+      '</div>' +
+      '<i class="fa fa-plus-circle" style="color:var(--primary);"></i>' +
+      '</div>';
+  }).join('');
+  el.classList.add('show');
+  el.querySelectorAll('.srd-item[data-id]').forEach(function (item) {
+    item.addEventListener('click', function () {
+      addToCart({
+        product_id: parseInt(this.dataset.id),
+        name:       this.dataset.name,
+        price:      parseFloat(this.dataset.price),
+        stock:      parseInt(this.dataset.stock),
+        quantity:   1,
+      });
+      document.getElementById('product-results').classList.remove('show');
+      document.getElementById('product-search').value = '';
+    });
+  });
+}
+
+/* ════════ CART ════════ */
+function addToCart(item) {
+  var existing = cart.find(function (c) { return c.product_id === item.product_id; });
+  if (existing) {
+    if (existing.quantity < existing.stock) {
+      existing.quantity++;
+    } else {
+      alert('Quantidade máxima disponível em estoque.');
+      return;
+    }
+  } else {
+    if (item.stock <= 0) {
+      alert('Este produto está sem estoque.');
+      return;
+    }
+    cart.push(Object.assign({}, item));
+  }
+  renderCart();
+  updateSummary();
+  checkSubmit();
+}
+
+function removeFromCart(idx) {
+  cart.splice(idx, 1);
+  renderCart();
+  updateSummary();
+  checkSubmit();
+}
+
+function updateQty(idx, val) {
+  var qty = parseInt(val);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  if (qty > cart[idx].stock) qty = cart[idx].stock;
+  cart[idx].quantity = qty;
+  renderCart();
+  updateSummary();
+}
+
+function renderCart() {
+  var emptyEl = document.getElementById('cart-empty');
+  var listEl  = document.getElementById('cart-list');
+  var itemsEl = document.getElementById('cart-items');
+
+  if (!cart.length) {
+    emptyEl.style.display = '';
+    listEl.style.display  = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  listEl.style.display  = '';
+
+  itemsEl.innerHTML = cart.map(function (item, idx) {
+    var subtotal = (item.price * item.quantity).toFixed(2).replace('.', ',');
+    return '<div class="cart-item-row">' +
+      '<div class="flex-grow-1">' +
+        '<div class="fw-600 small">' + item.name + '</div>' +
+        '<div class="text-muted" style="font-size:.75rem;">' +
+          fmtMoney(item.price) + ' un.</div>' +
+      '</div>' +
+      '<input type="number" class="cart-qty-input" value="' + item.quantity + '" ' +
+        'min="1" max="' + item.stock + '" ' +
+        'onchange="updateQty(' + idx + ', this.value)">' +
+      '<div class="fw-700 text-end" style="min-width:70px;font-size:.85rem;' +
+        'color:var(--primary);">R$ ' + subtotal + '</div>' +
+      '<button type="button" class="btn btn-link p-0 text-danger" ' +
+        'onclick="removeFromCart(' + idx + ')">' +
+        '<i class="fa fa-trash-alt"></i>' +
+      '</button>' +
+    '</div>';
+  }).join('');
+
+  // Update hidden JSON
+  document.getElementById('hidden-items-json').value = JSON.stringify(
+    cart.map(function (c) {
+      return { product_id: c.product_id, quantity: c.quantity };
+    })
+  );
+}
+
+/* ════════ SUMMARY ════════ */
+function calcTotals() {
+  var subtotal    = cart.reduce(function (s, c) { return s + c.price * c.quantity; }, 0);
+  var isDelivery  = document.querySelector('input[name="delivery_type"]:checked').value === 'delivery';
+  var fee         = isDelivery ? 10 : 0;
+  var discountRaw = parseFloat(document.getElementById('discount-input').value) || 0;
+  var discount    = Math.min(discountRaw, subtotal);
+  var total       = subtotal + fee - discount;
+  return { subtotal: subtotal, fee: fee, discount: discount, total: total };
+}
+
+function updateSummary() {
+  var emptyEl   = document.getElementById('summary-empty');
+  var contentEl = document.getElementById('summary-content');
+
+  if (!cart.length) {
+    emptyEl.style.display   = '';
+    contentEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display   = 'none';
+  contentEl.style.display = '';
+
+  var t = calcTotals();
+
+  // Items
+  document.getElementById('summary-items').innerHTML = cart.map(function (c) {
+    return '<div class="d-flex justify-content-between small py-1">' +
+      '<span>' + c.name + ' ×' + c.quantity + '</span>' +
+      '<span class="fw-600">' + fmtMoney(c.price * c.quantity) + '</span></div>';
+  }).join('');
+
+  document.getElementById('s-subtotal').textContent = fmtMoney(t.subtotal);
+
+  var feeRow = document.getElementById('s-fee-row');
+  feeRow.style.display = t.fee ? 'flex' : 'none';
+
+  var discRow = document.getElementById('s-disc-row');
+  discRow.style.display = t.discount > 0 ? 'flex' : 'none';
+  document.getElementById('s-discount').textContent = '- ' + fmtMoney(t.discount);
+
+  document.getElementById('s-total').textContent = fmtMoney(t.total);
+
+  // Meta
+  document.getElementById('s-client').textContent =
+    selectedClient ? selectedClient.name : '—';
+  document.getElementById('s-delivery').textContent =
+    document.querySelector('input[name="delivery_type"]:checked').value === 'delivery'
+      ? 'Entrega em casa' : 'Retirada na loja';
+  var pm = document.querySelector('input[name="payment_method"]:checked');
+  document.getElementById('s-payment').textContent =
+    pm ? pm.parentElement.querySelector('label').textContent.trim() : '—';
+}
+
+document.getElementById('discount-input').addEventListener('input', updateSummary);
+document.querySelectorAll('input[name="payment_method"]').forEach(function (r) {
+  r.addEventListener('change', updateSummary);
+});
+document.querySelectorAll('input[name="delivery_type"]').forEach(function (r) {
+  r.addEventListener('change', function () { updateSummary(); });
+});
+
+/* ════════ SUBMIT GUARD ════════ */
+function checkSubmit() {
+  var btn = document.getElementById('btn-submit-order');
+  btn.disabled = !(selectedClient && cart.length);
+}
+
+document.getElementById('order-form').addEventListener('submit', function (e) {
+  if (!selectedClient) {
+    e.preventDefault(); alert('Selecione um cliente.');
+    return;
+  }
+  if (!cart.length) {
+    e.preventDefault(); alert('Adicione pelo menos um produto.');
+    return;
+  }
+  // Final update of hidden JSON
+  document.getElementById('hidden-items-json').value = JSON.stringify(
+    cart.map(function (c) {
+      return { product_id: c.product_id, quantity: c.quantity };
+    })
+  );
+});
+
+/* ════════ CLOSE DROPDOWNS ON OUTSIDE CLICK ════════ */
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.search-wrap')) {
+    document.querySelectorAll('.search-results-drop').forEach(function (el) {
+      el.classList.remove('show');
+    });
+  }
+});
+
+/* Init */
+renderCart();
+checkSubmit();
+</script>
+{% endblock %}

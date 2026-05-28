@@ -1,0 +1,12 @@
+Olá, {{ user.first_name }}!
+
+Seu pedido #{{ order.order_number }} foi recebido com sucesso!
+
+DATA: {{ order.created_at|date:"d/m/Y às H:i" }}
+PAGAMENTO: {{ order.get_payment_method_display }}
+ENTREGA: {{ order.get_delivery_type_display }}
+TOTAL: R$ {{ order.total|floatformat:2 }}
+
+Acompanhe: {{ site_url }}/pedidos/pedido/{{ order.order_number }}/
+
+— Equipe Gateen Petshop

@@ -1,0 +1,12 @@
+Olá, {{ user.first_name }}!
+
+LEMBRETE: Agendamento de {{ appt.pet.name }} em 1 hora!
+
+Serviço: {{ appt.get_service_display }}
+Horário: {{ appt.scheduled_at|date:"H:i" }} (hoje)
+
+Local: R. Arlindo Nogueira, 285a — Vila Operária, Teresina – PI
+
+Ver agendamentos: {{ site_url }}/agendamento/meus/
+
+— Equipe Gateen Petshop

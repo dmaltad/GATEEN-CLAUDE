@@ -4,10 +4,15 @@ from . import views
 app_name = 'accounts'
 
 urlpatterns = [
-    path('perfil/',              views.profile_view,  name='profile'),
-    path('perfil/editar/',       views.edit_profile,  name='edit_profile'),
-    path('enderecos/novo/',      views.add_address,   name='add_address'),
-    path('pets/novo/',           views.add_pet,        name='add_pet'),
-    path('pets/<int:pk>/editar/',views.edit_pet,       name='edit_pet'),
-    path('pets/<int:pk>/excluir/',views.delete_pet,   name='delete_pet'),
+    path('perfil/',               views.profile_view,          name='profile'),
+    path('perfil/editar/',        views.edit_profile,          name='edit_profile'),
+    path('enderecos/novo/',       views.add_address,           name='add_address'),
+    path('pets/novo/',            views.add_pet,               name='add_pet'),
+    path('pets/<int:pk>/editar/', views.edit_pet,              name='edit_pet'),
+    path('pets/<int:pk>/excluir/',views.delete_pet,            name='delete_pet'),
+
+    # Convite para completar cadastro (walk-in clients)
+    path('completar-cadastro/<uidb64>/<token>/',
+         views.complete_registration,
+         name='complete_registration'),
 ]

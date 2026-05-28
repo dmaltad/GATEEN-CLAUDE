@@ -1,0 +1,81 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+<div class="header" style="background:linear-gradient(135deg,{{ plan.color }},#4E2B5C);">
+  <div class="header-logo">
+    <span class="header-paw">🐾</span>
+    <div>
+      <div class="header-brand">Gateen Petshop</div>
+      <div class="header-sub">Bem-vindo ao seu novo plano!</div>
+    </div>
+  </div>
+  <div class="icon-badge">⭐</div>
+  <div class="header-title">{{ plan.name }} ativado!</div>
+</div>
+
+<div class="body">
+  <div class="greeting">Olá, {{ user.first_name }}! 🎉</div>
+  <p class="text">
+    Seu plano <strong>{{ plan.name }}</strong> foi ativado com sucesso!
+    Agora você tem acesso a todos os benefícios mensais para cuidar melhor do seu pet.
+  </p>
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Plano</span>
+      <span class="info-value" style="color:{{ plan.color }};">{{ plan.name }}</span>
+    </div>
+    {% if user_plan %}
+    <div class="info-row">
+      <span class="info-label">Válido de</span>
+      <span class="info-value">{{ user_plan.start_date|date:"d/m/Y" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Válido até</span>
+      <span class="info-value">{{ user_plan.end_date|date:"d/m/Y" }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+      <span class="info-label">Valor mensal</span>
+      <span class="info-value">R$ {{ plan.price|floatformat:2 }}/mês</span>
+    </div>
+    {% if plan.grooming_sessions_per_month %}
+    <div class="info-row">
+      <span class="info-label">Sessões de banho e tosa</span>
+      <span class="info-value">{{ plan.grooming_sessions_per_month }}× por mês</span>
+    </div>
+    {% endif %}
+    {% if plan.food_bags_per_month %}
+    <div class="info-row">
+      <span class="info-label">Sacos de ração</span>
+      <span class="info-value">{{ plan.food_bags_per_month }}× por mês</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Benefícios -->
+  {% if plan.features.all %}
+  <p class="text" style="font-weight:700;margin-bottom:8px;">Seus benefícios incluem:</p>
+  {% for feature in plan.features.all %}
+  <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;color:#555;">
+    <span style="color:{{ plan.color }};font-weight:700;">✓</span>
+    {{ feature.description }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if plan.grooming_sessions_per_month %}
+  <div class="highlight-green" style="margin-top:20px;">
+    <p style="color:#065f46;font-weight:600;font-size:14px;">
+      ✂️ Não esqueça de agendar seu(s) banho(s) e tosa(s) mensais!
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="btn-center">
+    <a href="{{ site_url }}/agendamento/agendar/" class="btn-cta">
+      Agendar banho e tosa
+    </a>
+  </div>
+</div>
+{% endblock %}

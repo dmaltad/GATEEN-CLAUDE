@@ -1,0 +1,11 @@
+Olá, {{ user.first_name }}!
+
+Seu plano {{ plan.name }} foi ativado com sucesso!
+
+Valor: R$ {{ plan.price|floatformat:2 }}/mês
+{% if user_plan %}Válido até: {{ user_plan.end_date|date:"d/m/Y" }}{% endif %}
+{% if plan.grooming_sessions_per_month %}Sessões de banho e tosa: {{ plan.grooming_sessions_per_month }}×/mês{% endif %}
+
+Agende seu banho: {{ site_url }}/agendamento/agendar/
+
+— Equipe Gateen Petshop

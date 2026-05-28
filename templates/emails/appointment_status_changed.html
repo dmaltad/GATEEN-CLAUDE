@@ -1,0 +1,83 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+{% with status=appt.status %}
+<div class="header" style="background:linear-gradient(135deg,#00695C,#004D40);">
+  <div class="header-logo">
+    <span class="header-paw">🐾</span>
+    <div>
+      <div class="header-brand">Gateen Petshop</div>
+      <div class="header-sub">Banho & Tosa — Atualização</div>
+    </div>
+  </div>
+  <div class="icon-badge">
+    {% if status == 'confirmed' %}✅
+    {% elif status == 'done' %}🎉
+    {% elif status == 'cancelled' %}❌
+    {% else %}✂️{% endif %}
+  </div>
+  <div class="header-title">
+    {% if status == 'confirmed' %}Agendamento confirmado pela equipe!
+    {% elif status == 'done' %}Banho e tosa concluído!
+    {% elif status == 'cancelled' %}Agendamento cancelado
+    {% else %}Atualização do agendamento{% endif %}
+  </div>
+</div>
+
+<div class="body">
+  <div class="greeting">Olá, {{ user.first_name }}!</div>
+
+  {% if status == 'confirmed' %}
+  <div class="highlight-green">
+    <p style="color:#065f46;font-weight:600;margin-bottom:4px;">✅ Confirmado pela equipe!</p>
+    <p style="color:#166534;font-size:14px;">Nossa equipe confirmou o agendamento de {{ appt.pet.name }}. Até lá!</p>
+  </div>
+  {% elif status == 'done' %}
+  <div class="highlight-green">
+    <p style="color:#065f46;font-weight:600;margin-bottom:4px;">🎉 Serviço concluído!</p>
+    <p style="color:#166534;font-size:14px;">
+      {{ appt.pet.name }} está lindo(a)! Obrigado por escolher a Gateen Petshop.
+      Esperamos vê-los em breve! 🐾
+    </p>
+  </div>
+  {% elif status == 'cancelled' %}
+  <div class="highlight-red">
+    <p style="color:#dc2626;font-weight:600;margin-bottom:4px;">❌ Agendamento cancelado</p>
+    <p style="color:#b91c1c;font-size:14px;">
+      O agendamento foi cancelado.
+      {% if appt.used_plan_session %}A sessão foi devolvida ao seu plano.{% endif %}
+      Você pode fazer um novo agendamento quando quiser!
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Serviço</span>
+      <span class="info-value">{{ appt.get_service_display }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Pet</span>
+      <span class="info-value">{{ appt.pet.name }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Data / Hora</span>
+      <span class="info-value">{{ appt.scheduled_at|date:"d/m/Y \à\s H:i" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Status</span>
+      <span class="info-value">
+        <span class="status-badge status-{{ appt.status }}">{{ appt.get_status_display }}</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="btn-center">
+    <a href="{{ site_url }}/agendamento/meus/"
+      class="btn-cta" style="background:linear-gradient(135deg,#00897B,#00695C);">
+      {% if status == 'cancelled' %}Fazer novo agendamento{% else %}Ver agendamentos{% endif %}
+    </a>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

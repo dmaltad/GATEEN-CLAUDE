@@ -1,0 +1,92 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+{% with status=order.status %}
+<div class="header">
+  <div class="header-logo">
+    <span class="header-paw">🐾</span>
+    <div>
+      <div class="header-brand">Gateen Petshop</div>
+      <div class="header-sub">Atualização do seu pedido</div>
+    </div>
+  </div>
+  <div class="icon-badge">
+    {% if status == 'confirmed' %}✅
+    {% elif status == 'preparing' %}📦
+    {% elif status == 'ready' %}🔔
+    {% elif status == 'shipped' %}🛵
+    {% elif status == 'delivered' %}🏠
+    {% elif status == 'cancelled' %}❌
+    {% else %}📋{% endif %}
+  </div>
+  <div class="header-title">
+    {% if status == 'confirmed' %}Pedido confirmado!
+    {% elif status == 'preparing' %}Estamos preparando seu pedido
+    {% elif status == 'ready' %}Pedido pronto para retirada
+    {% elif status == 'shipped' %}Pedido saiu para entrega!
+    {% elif status == 'delivered' %}Pedido entregue com sucesso!
+    {% elif status == 'cancelled' %}Pedido cancelado
+    {% else %}Atualização do pedido{% endif %}
+  </div>
+</div>
+
+<div class="body">
+  <div class="greeting">Olá, {{ user.first_name }}!</div>
+
+  {% if status == 'confirmed' %}
+  <div class="highlight-green">
+    <p style="color:#065f46;font-weight:600;margin-bottom:4px;">✅ Pagamento confirmado!</p>
+    <p style="color:#166534;font-size:14px;">Seu pagamento foi aprovado e o pedido entrou em nossa fila de produção.</p>
+  </div>
+  {% elif status == 'preparing' %}
+  <div class="highlight">
+    <p style="color:#4E2B5C;font-weight:600;margin-bottom:4px;">📦 Preparando com carinho!</p>
+    <p style="color:#6B3A7D;font-size:14px;">Nossa equipe está separando e embalando os produtos do seu pedido.</p>
+  </div>
+  {% elif status == 'ready' %}
+  <div class="highlight-green">
+    <p style="color:#065f46;font-weight:600;margin-bottom:4px;">🔔 Pronto para retirada!</p>
+    <p style="color:#166534;font-size:14px;">Seu pedido já está disponível para retirada em nossa loja.</p>
+  </div>
+  {% elif status == 'shipped' %}
+  <div class="highlight">
+    <p style="color:#4E2B5C;font-weight:600;margin-bottom:4px;">🛵 A caminho!</p>
+    <p style="color:#6B3A7D;font-size:14px;">Seu pedido saiu para entrega e em breve chegará até você.</p>
+  </div>
+  {% elif status == 'delivered' %}
+  <div class="highlight-green">
+    <p style="color:#065f46;font-weight:600;margin-bottom:4px;">🎉 Entregue com sucesso!</p>
+    <p style="color:#166534;font-size:14px;">Esperamos que você e seu pet adorem os produtos! Obrigado pela confiança.</p>
+  </div>
+  {% elif status == 'cancelled' %}
+  <div class="highlight-red">
+    <p style="color:#dc2626;font-weight:600;margin-bottom:4px;">❌ Pedido cancelado</p>
+    <p style="color:#b91c1c;font-size:14px;">Se você não solicitou o cancelamento, entre em contato conosco.</p>
+  </div>
+  {% endif %}
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Pedido</span>
+      <span class="info-value" style="color:#8A4B9F;">#{{ order.order_number }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Status atual</span>
+      <span class="info-value">
+        <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Total</span>
+      <span class="info-value">R$ {{ order.total|floatformat:2 }}</span>
+    </div>
+  </div>
+
+  <div class="btn-center">
+    <a href="{{ site_url }}/pedidos/pedido/{{ order.order_number }}/" class="btn-cta">
+      Ver detalhes do pedido
+    </a>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

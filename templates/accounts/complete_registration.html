@@ -1,0 +1,77 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Complete seu cadastro — Gateen Petshop{% endblock %}
+
+{% block content %}
+<div class="min-vh-75 d-flex align-items-center justify-content-center py-5">
+  <div class="col-lg-5 col-md-7 col-11">
+
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <div class="auth-header-icon mb-3 mx-auto">
+        <i class="fa fa-key fa-lg" style="color:var(--primary);"></i>
+      </div>
+      <h3 class="fw-800">Complete seu cadastro</h3>
+      <p class="text-muted">
+        Olá, <strong>{{ target_user.first_name }}</strong>! Crie uma senha para
+        acessar sua conta na Gateen Petshop.
+      </p>
+    </div>
+
+    <div class="auth-card card border-0">
+      <div class="card-body p-4">
+
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags|default:'warning' }} rounded-3 small py-2">
+          {{ msg }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-600 small">Nova senha *</label>
+            <div class="password-wrapper">
+              <input type="password" name="password1" id="pw1"
+                class="form-control" placeholder="Mínimo 8 caracteres"
+                autocomplete="new-password" required>
+              <button type="button" class="password-toggle"
+                data-target="#pw1">
+                <i class="fa fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-600 small">Confirmar senha *</label>
+            <div class="password-wrapper">
+              <input type="password" name="password2" id="pw2"
+                class="form-control" placeholder="Repita a senha"
+                autocomplete="new-password" required>
+              <button type="button" class="password-toggle"
+                data-target="#pw2">
+                <i class="fa fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit"
+            class="btn btn-primary w-100 rounded-pill fw-700 py-2">
+            <i class="fa fa-check me-2"></i>Criar senha e acessar
+          </button>
+        </form>
+
+      </div>
+    </div>
+
+    <p class="text-center text-muted small mt-3">
+      <i class="fa fa-shield-alt me-1"></i>
+      Suas informações estão protegidas pela Gateen Petshop.
+    </p>
+
+  </div>
+</div>
+{% endblock %}
